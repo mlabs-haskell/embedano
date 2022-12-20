@@ -19,21 +19,22 @@
 
 This document introduces Embedano – open-source Cardano Embedded Rust SDK. This SDK will provide developer tools for Cardano blockchain interactions on embedded devices.
 
-Embedano does not aim to be full fledged hardware wallet, but rather a tool, that developers can use to build their own:
+Embedano does not aim to be a full-fledged hardware wallet, but rather a tool, that developers can use to build their own:
 
 - Hardware wallet
-- IoT device with access to Cardano blockchain
-- Wearable with access to Cardano blockchain
+- IoT device with access to the Cardano blockchain
+- Wearable with access to the Cardano blockchain
 - Hardware Secure Module / key storage / signing embedded device
-and etc..
+
+Or add the ability to interact with the Cardano blockchain to an existing project.
 
 ## Functionality
 
 ### Core
 
-Core functionality of Rust SDK will include:
+The core functionality of Rust SDK will include:
 
-- Generation, storing and resetting of seed phrase
+- Generation, storing, and resetting of the seed phrase
 - Keys derivation
 - Public Payment Key queries
 - Public Staking Key queries
@@ -46,21 +47,21 @@ Core functionality of Rust SDK will include:
 
 ### Additional
 
-- **USB interface:** interaction with embedded devices (and especially Hardware Wallets) mostly happens via USB. We I’m to provide an interface that will enable communication between core functionality on embedded devices and developer via USB
+- **USB interface:** interaction with embedded devices (and especially Hardware Wallets) mostly happens via USB. We aim to provide an interface that will enable communication between core functionality on embedded devices and developer via USB
 
 ### Tools
 
-- **Scaffold repository:** repository that includes functionalities described above, which can be used as starting point for the embedded device firmware project with Embedano SDK. Will also include necessary documentation on how to build and flash firmware.
+- **Scaffold repository:** repository that includes functionalities described above, which can be used as starting point for the embedded device firmware project with Embedano SDK. Will also include necessary documentation on how to build and flash the firmware.
 
 ## CIP-21 compatibility
 
-Ideally we want to avoid any restrictions and be able to sign any kinds of Cardano transactions, and be as powerful as, say, `cardano-wallet`. But this requires further investigations and testing with hardware. Moreover, it is important to note that some Cardano DEXes require transactions to be CIP-21 compatible, so they can be signed by some popular hardware wallet models.
+Ideally, we want to avoid any restrictions and be able to sign any kind of Cardano transactions, and be as powerful as, say, `cardano-wallet`. But this requires further investigations and testing with hardware. Moreover, it is important to note that some Cardano DEXes require transactions to be CIP-21 compatible, so they can be signed by some popular hardware wallet models.
 
-Potentially, we can provide 2 APIs - for CIP-21 compatible transaction signing, where transaction is streamed to device, and an API for signing the whole transaction for devices that can fit it into memory.
+Potentially, we can provide 2 APIs - for CIP-21 compatible transaction signing, where a transaction is streamed to the device, and an API for signing the whole transaction for devices that can fit it into memory.
 
 ## Hardware
 
-We aim to provide Rust SDK compatible with ARM Cortex-M series of processors.
+We aim to provide Rust SDK compatible with the ARM Cortex-M series of processors.
 Initial development and QA will be performed on chips based on ARM® Cortex™-M:
 
 - STM32F3
@@ -69,23 +70,23 @@ Initial development and QA will be performed on chips based on ARM® Cortex™-M
 ## Technical overview
 
 During the research phase, several existing solutions were studied, such as Trezor, Ledger, BitBox02, and several smaller ones.
-Summing up our findings we can conclude that from the high level perspective complete hardware wallet can consist of the following parts:
+Summing up our findings we can conclude that from the high-level perspective complete hardware wallet can consist of the following parts:
 
 - Encrypted storage
-- Usb interface
-- Api
+- USB interface
+- API
 - Client transport library
-- Client ui
-- Etc
+- Client UI
 
-Although the scope of the project is not the full fledged hardware wallet, but the SDK that should provide developer tools for Cardano blockchain interactions on embedded devices, it is hard to draw exact border where SDK should “end”, i.e.
-which of the parts mentioned above should be provided by SDK and which parts should be implemented by developers using it.
+and so on.
 
-Ideally, we want to implement most of them in a general way to give developers flexible tools. We will start from implementing core functionality and then expand it gradually (e.g. adding USB interface, transport library etc..) as we go.
+Because the scope of the project is not the full-fledged hardware wallet, but SDK that should provide developer tools for Cardano blockchain interactions on embedded devices, it is hard to draw the exact border where SDK should “end”, i.e. which of the parts mentioned above should be provided by SDK and which parts should be implemented by developers using it.
+
+Ideally, we want to implement most of them in a general way to give developers flexible tools. We will start by implementing core functionality and then expand it gradually (e.g. adding a USB interface, transport library, etc..) as we go.
 
 ### Some considerations
 
-There are no 100% ready Cardano solutions in Rust, especially ones that can work without standard library (no_std support), which is required by embedded systems. Solving this problem will be our first goal.
+There are no 100% ready Cardano solutions in Rust, especially ones that can work without the standard library (i.e. provides [no_std support](https://docs.rust-embedded.org/book/intro/no-std.html)), which is required by embedded systems. Solving this problem will be our first goal.
 
 While implementing the USB interface requires a lot of routine work, it appears to be the main mode of interaction with embedded devices and most likely should be part of the SDK.
 
@@ -93,7 +94,7 @@ The way how it should be implemented is still uncertain and needs further study.
 
 ## Further steps
 
-In order to achieve core SDK functionality providing few crates with no_std support would be a good start.
+To achieve core SDK functionality providing a few crates with no_std support would be a good start.
 In particular, we will implement:
 
 - Key management crate with hierarchical deterministic wallets (bip32 ed25519) support
