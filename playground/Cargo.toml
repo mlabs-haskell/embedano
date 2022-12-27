@@ -1,0 +1,9 @@
+[workspace]
+members = [
+#    "bip32",
+#    "ed25519-dalek-bip32",
+#    "rust-ed25519-bip32",
+
+    "rust-bip32-ed25519",
+    "cortex-m-quickstart",
+]
