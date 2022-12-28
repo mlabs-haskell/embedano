@@ -1,4 +1,4 @@
-# Embedano Example Project
+# Embedano: Example Project description
 
 The example project will be a GitHub repository that will contain the source code for CLI (command line interface)  tool and firmware for ARM® Cortex™-M chip that can be built with Embedano SDK. The repository will also provide build scripts and instructions on how to build and flash the firmware and ready-to-go packages for some popular development boards. The project will be based on the scaffold repository, which is also part of the SDK toolset. The project will showcase core libraries' functionality in combination with other tools delivered under Embedano development.
 
