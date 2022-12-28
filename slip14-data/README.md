@@ -6,7 +6,9 @@
     - [Root extended signing key](#root-extended-signing-key)
     - [Extended signing key for address 0](#extended-signing-key-for-address-0)
     - [Verification key for address 0](#verification-key-for-address-0)
+      - [Key hash](#key-hash)
   - [Simple transaction](#simple-transaction)
+    - [Transaction id (body hash)](#transaction-id-body-hash)
     - [Transaction body (a.k.a. raw transaction)](#transaction-body-aka-raw-transaction)
     - [Signed transaction](#signed-transaction)
     - [Tranaction views](#tranaction-views)
@@ -21,7 +23,9 @@ See [slip-0014 HD wallet](https://github.com/satoshilabs/slips/blob/master/slip-
 
 Keys were generated with `cardano-address` and `cardano-wallet` Haskell libraries.
 
-### [Root extended signing key](keys/root-extended-key.skey)
+### Root extended signing key
+
+[Link to file](keys/root-extended-key.skey)
 
 Generated from mnemonic phrase
 
@@ -37,7 +41,9 @@ all all all all all all all all all all all all
 }
 ```
 
-### [Extended signing key for address 0](keys/address-0-signing-key.skey)
+### Extended signing key for address 0
+
+[Link to file](keys/address-0-signing-key.skey)
 
 Derived from root key by path `1852'/1815'/0'/0/0`
 
@@ -49,7 +55,9 @@ Derived from root key by path `1852'/1815'/0'/0/0`
 }
 ```
 
-### [Verification key for address 0](keys/address-0-verification-key.vkey)
+### Verification key for address 0
+
+[Link to file](keys/address-0-verification-key.vkey)
 
 ```shell
 {
@@ -59,15 +67,27 @@ Derived from root key by path `1852'/1815'/0'/0/0`
 }
 ```
 
+#### Key hash
+
+```shell
+80f9e2c88e6c817008f3a812ed889b4a4da8e0bd103f86e7335422aa
+```
+
 ## Simple transaction
 
-Simple transaction that pays 111 Ada from slip wallet address 0 to some other address on `Mainnet`.
+Simple transaction that pays 111 Ada from slip-0014 wallet address 0 to some other address on `Mainnet`.
 
 Transaction was generated and signed with `cardano-cli` v 1.35.3
 
-Transaction id (body hash): `bb1eb401cd03b0cd8caa08997df0a2ab226772c4d3a08adfb5a60ba34de12dfb`
+### Transaction id (body hash)
 
-### [Transaction body (a.k.a. raw transaction)](txs/tx-bb1eb401cd03b0cd8caa08997df0a2ab226772c4d3a08adfb5a60ba34de12dfb.raw)
+ ```shell
+bb1eb401cd03b0cd8caa08997df0a2ab226772c4d3a08adfb5a60ba34de12dfb
+```
+
+### Transaction body (a.k.a. raw transaction)
+
+[Link to file](txs/tx-bb1eb401cd03b0cd8caa08997df0a2ab226772c4d3a08adfb5a60ba34de12dfb.raw)
 
 ```shell
 {
@@ -77,9 +97,9 @@ Transaction id (body hash): `bb1eb401cd03b0cd8caa08997df0a2ab226772c4d3a08adfb5a
 }
 ```
 
+### Signed transaction
 
-
-### [Signed transaction](txs/tx-bb1eb401cd03b0cd8caa08997df0a2ab226772c4d3a08adfb5a60ba34de12dfb.signed)
+[Link to file](txs/tx-bb1eb401cd03b0cd8caa08997df0a2ab226772c4d3a08adfb5a60ba34de12dfb.signed)
 
 ```shell
 {
@@ -93,7 +113,11 @@ Transaction id (body hash): `bb1eb401cd03b0cd8caa08997df0a2ab226772c4d3a08adfb5a
 
 #### Body
 
-Result of calling `cardano-cli transaction view --tx-body-file tx-{id}.raw`
+Result of calling
+
+```shell
+cardano-cli transaction view --tx-body-file tx-bb1eb401cd03b0cd8caa08997df0a2ab226772c4d3a08adfb5a60ba34de12dfb.raw
+```
 
 ```shell
 auxiliary scripts: null
@@ -135,7 +159,11 @@ withdrawals: null
 
 #### Singed
 
-Result of calling `cardano-cli transaction view --tx-file tx-{id}.signed`
+Result of calling
+
+```shell
+cardano-cli transaction view --tx-file tx-bb1eb401cd03b0cd8caa08997df0a2ab226772c4d3a08adfb5a60ba34de12dfb.signed
+```
 
 ```shell
 auxiliary scripts: null
