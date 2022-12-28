@@ -19,7 +19,7 @@ See [slip-0014 HD wallet](https://github.com/satoshilabs/slips/blob/master/slip-
 
 ## Keys
 
-Keys were generated with `cardano-address` and `cardano-wallet` haskell libraries.
+Keys were generated with `cardano-address` and `cardano-wallet` Haskell libraries.
 
 ### [Root extended signing key](keys/root-extended-key.skey)
 
