@@ -1,8 +1,8 @@
-# Embedano project
+# Embedano: Project Design document
 
 ## Table of content
 
-- [Embedano project](#embedano-project)
+- [Embedano: Project Design document](#embedano-project-design-document)
   - [Table of content](#table-of-content)
   - [Introduction](#introduction)
   - [Functionality](#functionality)
