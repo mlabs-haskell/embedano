@@ -4,4 +4,4 @@ Secure and open-source software platform for embedded devices on Cardano blockch
 
 [Catalyst Fund9 page](https://cardano.ideascale.com/c/idea/414017)
 
-[Design doc](design-doc.md)
+[Design doc](docs/design-doc.md)
