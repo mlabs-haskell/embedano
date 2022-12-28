@@ -1,0 +1,5 @@
+{
+    "type": "PaymentExtendedSigningKeyShelley_ed25519_bip32",
+    "description": "Root Extended Key",
+    "cborHex": "588078fe04891cbda885b3ee9b7a60bb5991c3209b07f16324c2d68cb9c7c328ed512a18cdf9b5c0fa98e7d620ae9d851a58aca7e4e0ab46f607c03e78498b345b1b80def65319d69eb65c59d6a67b18b27f03c9c005f5499f75bdb8ac5ba4b5104b7c0b5c44c1ddb9049bfcaf4ec5d73236392321c69979bbcff1f7c1b6d74c9c5a"
+}
