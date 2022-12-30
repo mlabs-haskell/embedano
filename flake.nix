@@ -37,7 +37,9 @@
           ];
         };
 
-        qemuShell = shell // pkgs.mkShell { buildInputs = shell.buildInputs ++ [ pkgs.qemu ]; };
+        qemuShell = shell.overrideAttrs (o: {
+          buildInputs = o.buildInputs ++ [ pkgs.qemu ];
+        });
       in
       {
         devShells.default = shell;
