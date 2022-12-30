@@ -1,7 +1,7 @@
 {
 
   description = "embedano";
-  
+
   inputs = {
     nixpkgs.url = github:NixOS/nixpkgs/release-22.05;
     utils.url = github:numtide/flake-utils;
@@ -23,7 +23,6 @@
         rust = pkgs.rust-bin.nightly.latest;
         shell = pkgs.mkShell {
           buildInputs = [
-            pkgs.qemu
             pkgs.nixpkgs-fmt
 
             (rust.default.override {
@@ -37,8 +36,11 @@
             })
           ];
         };
+
+        qemuShell = shell // pkgs.mkShell { buildInputs = shell.buildInputs ++ [ pkgs.qemu ]; };
       in
       {
         devShells.default = shell;
+        devShells.qemuShell = qemuShell;
       });
 }
