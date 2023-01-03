@@ -21,7 +21,7 @@
         pkgs = import nixpkgs { inherit system; overlays = [ rust-overlay.overlays.default ]; };
         # rust = pkgs.rust-bin.stable."1.65.0";
         rust = pkgs.rust-bin.nightly.latest;
-        shell = pkgs.mkShell {
+        rustDevShell = pkgs.mkShell {
           buildInputs = [
             pkgs.nixpkgs-fmt
 
@@ -37,12 +37,14 @@
           ];
         };
 
-        qemuShell = shell.overrideAttrs (o: {
+        qemuDevShell = rustDevShell.overrideAttrs (o: {
           buildInputs = o.buildInputs ++ [ pkgs.qemu ];
         });
       in
       {
-        devShells.default = shell;
-        devShells.qemuShell = qemuShell;
+        devShells = rec {
+          default = rustDevShell;
+          withQemu = qemuDevShell;
+        };
       });
 }

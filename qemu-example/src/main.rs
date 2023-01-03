@@ -24,6 +24,9 @@ const TEST_SEED: &[u8] = b"\xf8\xcb\x28\x85\x37\x60\x2b\x90\xd1\x29\x75\x4b\xdd\
 
 #[entry]
 fn main() -> ! {
+
+    hprintln!("Test: Generating keys");
+
     // from example/allocator.rs
     unsafe { ALLOCATOR.init(cortex_m_rt::heap_start() as usize, HEAP_SIZE) }
 
