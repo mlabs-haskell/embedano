@@ -99,5 +99,3 @@ In particular, we will implement:
 
 - Key management crate with hierarchical deterministic wallets (bip32 ed25519) support
 - Crate that will provide tools for Cardano transactions (and arbitrary data) signing
-
-While we consider what other parts should and can be implemented, the SDK design highly likely will go through several iterations of refining.
