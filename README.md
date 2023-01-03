@@ -34,7 +34,7 @@ This setup also includes a development shell with [QEMU emulator](https://www.qe
 nix develop .#withQemu
 ```
 
-Be aware, that shell with QEMU will download QEMU (~1.5 Gb). Runnable example can be found in [qemu-example](qemu-example), e.g. from repository root run:
+Be aware, that shell with QEMU will download QEMU (~1.5 Gb). Runnable example can be found in [qemu-example](qemu-example/build.rs), e.g. from repository root run:
 
 ```shell
 nix develop .#withQemu
