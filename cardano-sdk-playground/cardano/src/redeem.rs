@@ -13,11 +13,7 @@ use cryptoxide::ed25519;
 use serde;
 use util::hex;
 
-use std::{
-    cmp, fmt,
-    io::{BufRead, Write},
-    result,
-};
+use core::{cmp, fmt, result};
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
 #[cfg_attr(feature = "generic-serialization", derive(Serialize, Deserialize))]
@@ -54,8 +50,8 @@ impl From<hex::Error> for Error {
         Error::HexadecimalError(e)
     }
 }
-impl ::std::error::Error for Error {
-    fn cause(&self) -> Option<&::std::error::Error> {
+impl ::core::error::Error for Error {
+    fn cause(&self) -> Option<&::core::error::Error> {
         match self {
             Error::HexadecimalError(ref err) => Some(err),
             _ => None,
@@ -228,75 +224,75 @@ impl Ord for Signature {
 // ---------------------------------------------------------------------------
 //                                      CBOR
 // ---------------------------------------------------------------------------
-
-impl cbor_event::se::Serialize for PublicKey {
-    fn serialize<'se, W: Write>(
-        &self,
-        serializer: &'se mut Serializer<W>,
-    ) -> cbor_event::Result<&'se mut Serializer<W>> {
-        serializer.write_bytes(self.0.as_ref())
-    }
-}
-impl cbor_event::de::Deserialize for PublicKey {
-    fn deserialize<R: BufRead>(reader: &mut Deserializer<R>) -> cbor_event::Result<Self> {
-        match PublicKey::from_slice(&reader.bytes()?) {
-            Ok(digest) => Ok(digest),
-            Err(Error::InvalidPublicKeySize(sz)) => {
-                Err(cbor_event::Error::NotEnough(sz, PUBLICKEY_SIZE))
-            }
-            Err(err) => Err(cbor_event::Error::CustomError(format!(
-                "unexpected error: {:?}",
-                err
-            ))),
-        }
-    }
-}
-
-impl cbor_event::se::Serialize for PrivateKey {
-    fn serialize<'se, W: Write>(
-        &self,
-        serializer: &'se mut Serializer<W>,
-    ) -> cbor_event::Result<&'se mut Serializer<W>> {
-        serializer.write_bytes(self.0.as_ref())
-    }
-}
-impl cbor_event::de::Deserialize for PrivateKey {
-    fn deserialize<R: BufRead>(reader: &mut Deserializer<R>) -> cbor_event::Result<Self> {
-        match PrivateKey::from_slice(&reader.bytes()?) {
-            Ok(digest) => Ok(digest),
-            Err(Error::InvalidPrivateKeySize(sz)) => {
-                Err(cbor_event::Error::NotEnough(sz, PRIVATEKEY_SIZE))
-            }
-            Err(err) => Err(cbor_event::Error::CustomError(format!(
-                "unexpected error: {:?}",
-                err
-            ))),
-        }
-    }
-}
-
-impl cbor_event::se::Serialize for Signature {
-    fn serialize<'se, W: Write>(
-        &self,
-        serializer: &'se mut Serializer<W>,
-    ) -> cbor_event::Result<&'se mut Serializer<W>> {
-        serializer.write_bytes(self.0.as_ref())
-    }
-}
-impl cbor_event::de::Deserialize for Signature {
-    fn deserialize<R: BufRead>(reader: &mut Deserializer<R>) -> cbor_event::Result<Self> {
-        match Signature::from_slice(&reader.bytes()?) {
-            Ok(digest) => Ok(digest),
-            Err(Error::InvalidSignatureSize(sz)) => {
-                Err(cbor_event::Error::NotEnough(sz, SIGNATURE_SIZE))
-            }
-            Err(err) => Err(cbor_event::Error::CustomError(format!(
-                "unexpected error: {:?}",
-                err
-            ))),
-        }
-    }
-}
+// TODO: rewrite with minicbor
+// impl cbor_event::se::Serialize for PublicKey {
+//     fn serialize<'se, W: Write>(
+//         &self,
+//         serializer: &'se mut Serializer<W>,
+//     ) -> cbor_event::Result<&'se mut Serializer<W>> {
+//         serializer.write_bytes(self.0.as_ref())
+//     }
+// }
+// impl cbor_event::de::Deserialize for PublicKey {
+//     fn deserialize<R: BufRead>(reader: &mut Deserializer<R>) -> cbor_event::Result<Self> {
+//         match PublicKey::from_slice(&reader.bytes()?) {
+//             Ok(digest) => Ok(digest),
+//             Err(Error::InvalidPublicKeySize(sz)) => {
+//                 Err(cbor_event::Error::NotEnough(sz, PUBLICKEY_SIZE))
+//             }
+//             Err(err) => Err(cbor_event::Error::CustomError(format!(
+//                 "unexpected error: {:?}",
+//                 err
+//             ))),
+//         }
+//     }
+// }
+//
+// impl cbor_event::se::Serialize for PrivateKey {
+//     fn serialize<'se, W: Write>(
+//         &self,
+//         serializer: &'se mut Serializer<W>,
+//     ) -> cbor_event::Result<&'se mut Serializer<W>> {
+//         serializer.write_bytes(self.0.as_ref())
+//     }
+// }
+// impl cbor_event::de::Deserialize for PrivateKey {
+//     fn deserialize<R: BufRead>(reader: &mut Deserializer<R>) -> cbor_event::Result<Self> {
+//         match PrivateKey::from_slice(&reader.bytes()?) {
+//             Ok(digest) => Ok(digest),
+//             Err(Error::InvalidPrivateKeySize(sz)) => {
+//                 Err(cbor_event::Error::NotEnough(sz, PRIVATEKEY_SIZE))
+//             }
+//             Err(err) => Err(cbor_event::Error::CustomError(format!(
+//                 "unexpected error: {:?}",
+//                 err
+//             ))),
+//         }
+//     }
+// }
+//
+// impl cbor_event::se::Serialize for Signature {
+//     fn serialize<'se, W: Write>(
+//         &self,
+//         serializer: &'se mut Serializer<W>,
+//     ) -> cbor_event::Result<&'se mut Serializer<W>> {
+//         serializer.write_bytes(self.0.as_ref())
+//     }
+// }
+// impl cbor_event::de::Deserialize for Signature {
+//     fn deserialize<R: BufRead>(reader: &mut Deserializer<R>) -> cbor_event::Result<Self> {
+//         match Signature::from_slice(&reader.bytes()?) {
+//             Ok(digest) => Ok(digest),
+//             Err(Error::InvalidSignatureSize(sz)) => {
+//                 Err(cbor_event::Error::NotEnough(sz, SIGNATURE_SIZE))
+//             }
+//             Err(err) => Err(cbor_event::Error::CustomError(format!(
+//                 "unexpected error: {:?}",
+//                 err
+//             ))),
+//         }
+//     }
+// }
 
 // ---------------------------------------------------------------------------
 //                                      Serde

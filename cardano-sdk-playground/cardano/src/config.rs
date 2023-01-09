@@ -7,15 +7,10 @@
 use address;
 use cbor_event::{self, de::Deserializer, se::Serializer};
 use coin;
+use core::{fmt, time::Duration};
 use fee;
 use hdwallet;
 use redeem;
-use std::{
-    collections::BTreeMap,
-    fmt,
-    io::{BufRead, Write},
-    time::{Duration, SystemTime},
-};
 
 /// this is the protocol magic number
 ///
@@ -47,7 +42,7 @@ impl fmt::Display for ProtocolMagic {
         write!(f, "{}", self.0)
     }
 }
-impl ::std::ops::Deref for ProtocolMagic {
+impl ::core::ops::Deref for ProtocolMagic {
     type Target = u32;
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -63,20 +58,21 @@ impl Default for ProtocolMagic {
         ProtocolMagic::from(764824073)
     }
 }
-impl cbor_event::se::Serialize for ProtocolMagic {
-    fn serialize<'se, W: Write>(
-        &self,
-        serializer: &'se mut Serializer<W>,
-    ) -> cbor_event::Result<&'se mut Serializer<W>> {
-        serializer.write_unsigned_integer(self.0 as u64)
-    }
-}
-impl cbor_event::Deserialize for ProtocolMagic {
-    fn deserialize<R: BufRead>(reader: &mut Deserializer<R>) -> cbor_event::Result<Self> {
-        let v = reader.unsigned_integer()? as u32;
-        Ok(ProtocolMagic::from(v))
-    }
-}
+// TODO: rewrite with minicbor
+// impl cbor_event::se::Serialize for ProtocolMagic {
+//     fn serialize<'se, W: Write>(
+//         &self,
+//         serializer: &'se mut Serializer<W>,
+//     ) -> cbor_event::Result<&'se mut Serializer<W>> {
+//         serializer.write_unsigned_integer(self.0 as u64)
+//     }
+// }
+// impl cbor_event::Deserialize for ProtocolMagic {
+//     fn deserialize<R: BufRead>(reader: &mut Deserializer<R>) -> cbor_event::Result<Self> {
+//         let v = reader.unsigned_integer()? as u32;
+//         Ok(ProtocolMagic::from(v))
+//     }
+// }
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
 #[cfg_attr(feature = "generic-serialization", derive(Serialize, Deserialize))]

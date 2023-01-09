@@ -1,10 +1,9 @@
 //! module to provide some handy interfaces atop the hashes so we have
 //! the common interfaces for the project to work with.
 
-use std::{
+use core::{
     fmt,
     hash::{Hash, Hasher},
-    io::{BufRead, Write},
     result,
     str::FromStr,
 };
@@ -42,8 +41,8 @@ impl From<hex::Error> for Error {
         Error::HexadecimalError(e)
     }
 }
-impl ::std::error::Error for Error {
-    fn cause(&self) -> Option<&::std::error::Error> {
+impl ::core::error::Error for Error {
+    fn cause(&self) -> Option<&::core::error::Error> {
         match self {
             Error::HexadecimalError(ref err) => Some(err),
             Error::InvalidHashSize(_, _) => None,
@@ -127,29 +126,30 @@ macro_rules! define_hash_object {
                 Self::try_from_slice(&bytes)
             }
         }
-        impl cbor_event::de::Deserialize for $hash_ty {
-            fn deserialize<R: BufRead>(reader: &mut Deserializer<R>) -> cbor_event::Result<Self> {
-                let bytes = reader.bytes()?;
-                match Self::try_from_slice(&bytes) {
-                    Ok(digest) => Ok(digest),
-                    Err(Error::InvalidHashSize(sz, expected)) => {
-                        Err(cbor_event::Error::NotEnough(sz, expected))
-                    }
-                    Err(err) => Err(cbor_event::Error::CustomError(format!(
-                        "unexpected error: {:?}",
-                        err
-                    ))),
-                }
-            }
-        }
-        impl cbor_event::se::Serialize for $hash_ty {
-            fn serialize<'se, W: Write>(
-                &self,
-                serializer: &'se mut Serializer<W>,
-            ) -> cbor_event::Result<&'se mut Serializer<W>> {
-                serializer.write_bytes(self.as_ref())
-            }
-        }
+        // TODO: rewrite with minicbor
+        // impl cbor_event::de::Deserialize for $hash_ty {
+        //     fn deserialize<R: BufRead>(reader: &mut Deserializer<R>) -> cbor_event::Result<Self> {
+        //         let bytes = reader.bytes()?;
+        //         match Self::try_from_slice(&bytes) {
+        //             Ok(digest) => Ok(digest),
+        //             Err(Error::InvalidHashSize(sz, expected)) => {
+        //                 Err(cbor_event::Error::NotEnough(sz, expected))
+        //             }
+        //             Err(err) => Err(cbor_event::Error::CustomError(format!(
+        //                 "unexpected error: {:?}",
+        //                 err
+        //             ))),
+        //         }
+        //     }
+        // }
+        // impl cbor_event::se::Serialize for $hash_ty {
+        //     fn serialize<'se, W: Write>(
+        //         &self,
+        //         serializer: &'se mut Serializer<W>,
+        //     ) -> cbor_event::Result<&'se mut Serializer<W>> {
+        //         serializer.write_bytes(self.as_ref())
+        //     }
+        // }
 
         #[cfg(feature = "generic-serialization")]
         impl serde::Serialize for $hash_ty {

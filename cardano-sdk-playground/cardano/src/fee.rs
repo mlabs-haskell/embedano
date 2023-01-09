@@ -3,7 +3,7 @@
 use cbor_event;
 use coin;
 use coin::Coin;
-use std::{
+use core::{
     ops::{Add, Mul},
     result,
 };
@@ -40,16 +40,16 @@ impl From<cbor_event::Error> for Error {
         Error::CborError(e)
     }
 }
-impl ::std::error::Error for Error {
-    fn cause(&self) -> Option<&::std::error::Error> {
+impl ::core::error::Error for Error {
+    fn cause(&self) -> Option<&::core::error::Error> {
         match self {
             Error::CborError(ref err) => Some(err),
             Error::CoinError(ref err) => Some(err),
         }
     }
 }
-impl ::std::fmt::Display for Error {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+impl ::core::fmt::Display for Error {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         match self {
             Error::CborError(_) => write!(f, "invalid cbor encoding"),
             Error::CoinError(_) => write!(f, "invalid Ada value"),

@@ -19,11 +19,10 @@ use cryptoxide::util::fixed_time_eq;
 
 use bip::bip39;
 
-use std::hash::{Hash, Hasher};
-use std::marker::PhantomData;
-use std::{
+use core::hash::{Hash, Hasher};
+use core::marker::PhantomData;
+use core::{
     fmt,
-    io::{BufRead, Write},
     result,
 };
 use util::{hex, securemem};
@@ -105,8 +104,8 @@ impl From<hex::Error> for Error {
         Error::HexadecimalError(e)
     }
 }
-impl ::std::error::Error for Error {
-    fn cause(&self) -> Option<&::std::error::Error> {
+impl ::core::error::Error for Error {
+    fn cause(&self) -> Option<&::core::error::Error> {
         match self {
             Error::HexadecimalError(ref err) => Some(err),
             _ => None,
@@ -368,9 +367,9 @@ impl fmt::Display for XPrv {
         write!(f, "{}", hex::encode(self.as_ref()))
     }
 }
-impl ::std::str::FromStr for XPrv {
+impl ::core::str::FromStr for XPrv {
     type Err = Error;
-    fn from_str(s: &str) -> ::std::result::Result<Self, Self::Err> {
+    fn from_str(s: &str) -> ::core::result::Result<Self, Self::Err> {
         XPrv::from_hex(s)
     }
 }
@@ -529,33 +528,34 @@ impl AsRef<[u8]> for XPub {
         &self.0
     }
 }
-impl ::std::str::FromStr for XPub {
+impl ::core::str::FromStr for XPub {
     type Err = Error;
-    fn from_str(s: &str) -> ::std::result::Result<Self, Self::Err> {
+    fn from_str(s: &str) -> ::core::result::Result<Self, Self::Err> {
         XPub::from_hex(s)
     }
 }
-impl cbor_event::se::Serialize for XPub {
-    fn serialize<'se, W: Write>(
-        &self,
-        serializer: &'se mut Serializer<W>,
-    ) -> cbor_event::Result<&'se mut Serializer<W>> {
-        serializer.write_bytes(self.as_ref())
-    }
-}
-impl cbor_event::de::Deserialize for XPub {
-    fn deserialize<R: BufRead>(reader: &mut Deserializer<R>) -> cbor_event::Result<Self> {
-        let bytes = reader.bytes()?;
-        match XPub::from_slice(&bytes) {
-            Ok(pk) => Ok(pk),
-            Err(Error::InvalidXPubSize(sz)) => Err(cbor_event::Error::NotEnough(sz, XPUB_SIZE)),
-            Err(err) => Err(cbor_event::Error::CustomError(format!(
-                "unexpected error: {:?}",
-                err
-            ))),
-        }
-    }
-}
+// TODO: rewrite with minicbor
+// impl cbor_event::se::Serialize for XPub {
+//     fn serialize<'se, W: Write>(
+//         &self,
+//         serializer: &'se mut Serializer<W>,
+//     ) -> cbor_event::Result<&'se mut Serializer<W>> {
+//         serializer.write_bytes(self.as_ref())
+//     }
+// }
+// impl cbor_event::de::Deserialize for XPub {
+//     fn deserialize<R: BufRead>(reader: &mut Deserializer<R>) -> cbor_event::Result<Self> {
+//         let bytes = reader.bytes()?;
+//         match XPub::from_slice(&bytes) {
+//             Ok(pk) => Ok(pk),
+//             Err(Error::InvalidXPubSize(sz)) => Err(cbor_event::Error::NotEnough(sz, XPUB_SIZE)),
+//             Err(err) => Err(cbor_event::Error::CustomError(format!(
+//                 "unexpected error: {:?}",
+//                 err
+//             ))),
+//         }
+//     }
+// }
 #[cfg(feature = "generic-serialization")]
 impl serde::Serialize for XPub {
     #[inline]
@@ -677,29 +677,30 @@ impl<T> AsRef<[u8]> for Signature<T> {
         &self.bytes
     }
 }
-impl<T> cbor_event::se::Serialize for Signature<T> {
-    fn serialize<'se, W: Write>(
-        &self,
-        serializer: &'se mut Serializer<W>,
-    ) -> cbor_event::Result<&'se mut Serializer<W>> {
-        serializer.write_bytes(self.as_ref())
-    }
-}
-impl<T> cbor_event::de::Deserialize for Signature<T> {
-    fn deserialize<R: BufRead>(reader: &mut Deserializer<R>) -> cbor_event::Result<Self> {
-        let bytes = reader.bytes()?;
-        match Signature::from_slice(&bytes) {
-            Ok(signature) => Ok(signature),
-            Err(Error::InvalidSignatureSize(sz)) => {
-                Err(cbor_event::Error::NotEnough(sz, SIGNATURE_SIZE))
-            }
-            Err(err) => Err(cbor_event::Error::CustomError(format!(
-                "unexpected error: {:?}",
-                err
-            ))),
-        }
-    }
-}
+// TODO: rewrite with minicbor
+// impl<T> cbor_event::se::Serialize for Signature<T> {
+//     fn serialize<'se, W: Write>(
+//         &self,
+//         serializer: &'se mut Serializer<W>,
+//     ) -> cbor_event::Result<&'se mut Serializer<W>> {
+//         serializer.write_bytes(self.as_ref())
+//     }
+// }
+// impl<T> cbor_event::de::Deserialize for Signature<T> {
+//     fn deserialize<R: BufRead>(reader: &mut Deserializer<R>) -> cbor_event::Result<Self> {
+//         let bytes = reader.bytes()?;
+//         match Signature::from_slice(&bytes) {
+//             Ok(signature) => Ok(signature),
+//             Err(Error::InvalidSignatureSize(sz)) => {
+//                 Err(cbor_event::Error::NotEnough(sz, SIGNATURE_SIZE))
+//             }
+//             Err(err) => Err(cbor_event::Error::CustomError(format!(
+//                 "unexpected error: {:?}",
+//                 err
+//             ))),
+//         }
+//     }
+// }
 #[cfg(feature = "generic-serialization")]
 impl<T> serde::Serialize for Signature<T> {
     #[inline]
@@ -1220,7 +1221,7 @@ mod tests {
 
     #[test]
     fn unit_derivation_v2() {
-        use std::str::FromStr;
+        use core::str::FromStr;
         let ds = DerivationScheme::V2;
 
         let root_prv = XPrv::from_str("402b03cd9c8bed9ba9f9bd6cd9c315ce9fcc59c7c25d37c85a36096617e69d418e35cb4a3b737afd007f0688618f21a8831643c0e6c77fc33c06026d2a0fc93832596435e70647d7d98ef102a32ea40319ca8fb6c851d7346d3bd8f9d1492658").unwrap();

@@ -55,8 +55,8 @@ impl From<cbor_event::Error> for Error {
     }
 }
 
-impl ::std::error::Error for Error {
-    fn cause(&self) -> Option<&::std::error::Error> {
+impl ::core::error::Error for Error {
+    fn cause(&self) -> Option<&::core::error::Error> {
         match self {
             Error::CoinError(ref err) => Some(err),
             Error::CborError(ref err) => Some(err),

@@ -13,7 +13,7 @@
 //! * Redeem Key
 //! * Wallet abstraction
 //!
-// #![no_std]
+#![no_std]
 #![cfg_attr(feature = "with-bench", feature(test))]
 
 #[cfg(feature = "generic-serialization")]

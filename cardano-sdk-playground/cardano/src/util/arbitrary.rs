@@ -1,5 +1,5 @@
 use quickcheck::{Arbitrary, Gen};
-use std::ops::Deref;
+use core::ops::Deref;
 
 use super::super::*;
 
@@ -54,7 +54,7 @@ impl Arbitrary for Wrapper<coin::Coin> {
 
 impl Arbitrary for Wrapper<hdwallet::Seed> {
     fn arbitrary<G: Gen>(g: &mut G) -> Self {
-        let vec: Vec<u8> = ::std::iter::repeat_with(|| Arbitrary::arbitrary(g))
+        let vec: Vec<u8> = ::core::iter::repeat_with(|| Arbitrary::arbitrary(g))
             .take(hdwallet::SEED_SIZE)
             .collect();
         Wrapper(hdwallet::Seed::from_slice(&vec).unwrap())
@@ -96,7 +96,7 @@ impl Arbitrary for Wrapper<hash::Blake2b256> {
     fn arbitrary<G: Gen>(g: &mut G) -> Self {
         use super::try_from_slice::TryFromSlice;
 
-        let vec: Vec<u8> = ::std::iter::repeat_with(|| Arbitrary::arbitrary(g))
+        let vec: Vec<u8> = ::core::iter::repeat_with(|| Arbitrary::arbitrary(g))
             .take(hash::Blake2b256::HASH_SIZE)
             .collect();
 

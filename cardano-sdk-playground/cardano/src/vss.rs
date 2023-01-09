@@ -1,7 +1,6 @@
-use cbor_event::{self, de::Deserializer, se::Serializer};
-use std::{
+// use cbor_event::{self, de::Deserializer, se::Serializer};
+use core::{
     fmt,
-    io::{BufRead, Write},
     result,
 };
 use util::hex;
@@ -26,25 +25,26 @@ impl fmt::Display for Error {
     }
 }
 pub type Result<T> = result::Result<T, Error>;
-impl ::std::error::Error for Error {}
+impl ::core::error::Error for Error {}
 
 // TODO: decode to 35 bytes public-key http://hackage.haskell.org/package/pvss/docs/Crypto-SCRAPE.html#t:Point
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct PublicKey(pub Vec<u8>);
-impl cbor_event::se::Serialize for PublicKey {
-    fn serialize<'se, W: Write>(
-        &self,
-        serializer: &'se mut Serializer<W>,
-    ) -> cbor_event::Result<&'se mut Serializer<W>> {
-        serializer.write_bytes(&self.0)
-    }
-}
-impl cbor_event::de::Deserialize for PublicKey {
-    fn deserialize<R: BufRead>(reader: &mut Deserializer<R>) -> cbor_event::Result<Self> {
-        let bytes = reader.bytes()?;
-        Ok(PublicKey(bytes))
-    }
-}
+// TODO: rewrite with minicbor
+// impl cbor_event::se::Serialize for PublicKey {
+//     fn serialize<'se, W: Write>(
+//         &self,
+//         serializer: &'se mut Serializer<W>,
+//     ) -> cbor_event::Result<&'se mut Serializer<W>> {
+//         serializer.write_bytes(&self.0)
+//     }
+// }
+// impl cbor_event::de::Deserialize for PublicKey {
+//     fn deserialize<R: BufRead>(reader: &mut Deserializer<R>) -> cbor_event::Result<Self> {
+//         let bytes = reader.bytes()?;
+//         Ok(PublicKey(bytes))
+//     }
+// }
 
 // XXX Signature and impls copied with slight modifications from redeem.rs
 pub struct Signature([u8; SIGNATURE_SIZE]);
@@ -88,21 +88,22 @@ impl AsRef<[u8]> for Signature {
         &self.0
     }
 }
-impl cbor_event::se::Serialize for Signature {
-    fn serialize<'se, W: Write>(
-        &self,
-        serializer: &'se mut Serializer<W>,
-    ) -> cbor_event::Result<&'se mut Serializer<W>> {
-        serializer.write_bytes(self.as_ref())
-    }
-}
-impl cbor_event::de::Deserialize for Signature {
-    fn deserialize<R: BufRead>(reader: &mut Deserializer<R>) -> cbor_event::Result<Self> {
-        match Self::from_slice(reader.bytes()?.as_ref()) {
-            Ok(sig) => Ok(sig),
-            Err(Error::InvalidSignatureSize(sz)) => {
-                Err(cbor_event::Error::NotEnough(SIGNATURE_SIZE, sz))
-            } // Err(err) => Err(cbor_event::Error::CustomError(format!("unexpected error: {}", err))),
-        }
-    }
-}
+// TODO: rewrite with minicbor
+// impl cbor_event::se::Serialize for Signature {
+//     fn serialize<'se, W: Write>(
+//         &self,
+//         serializer: &'se mut Serializer<W>,
+//     ) -> cbor_event::Result<&'se mut Serializer<W>> {
+//         serializer.write_bytes(self.as_ref())
+//     }
+// }
+// impl cbor_event::de::Deserialize for Signature {
+//     fn deserialize<R: BufRead>(reader: &mut Deserializer<R>) -> cbor_event::Result<Self> {
+//         match Self::from_slice(reader.bytes()?.as_ref()) {
+//             Ok(sig) => Ok(sig),
+//             Err(Error::InvalidSignatureSize(sz)) => {
+//                 Err(cbor_event::Error::NotEnough(SIGNATURE_SIZE, sz))
+//             } // Err(err) => Err(cbor_event::Error::CustomError(format!("unexpected error: {}", err))),
+//         }
+//     }
+// }

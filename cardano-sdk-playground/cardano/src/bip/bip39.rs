@@ -48,10 +48,10 @@
 //! ```
 //!
 
+use core::{error, fmt, ops::Deref, result, str};
 use cryptoxide::hmac::Hmac;
 use cryptoxide::pbkdf2::pbkdf2;
 use cryptoxide::sha2::Sha512;
-use std::{error, fmt, ops::Deref, result, str};
 use util::{hex, securemem};
 
 /// Error regarding BIP39 operations
@@ -849,7 +849,7 @@ pub mod dictionary {
     //! our output (or input) UTF8 strings.
     //!
 
-    use std::{error, fmt, result};
+    use core::{error, fmt, result};
 
     use super::MnemonicIndex;
 

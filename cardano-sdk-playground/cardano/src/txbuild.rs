@@ -10,8 +10,8 @@
 
 use coin::{Coin, CoinDiff};
 use fee::{Fee, FeeAlgorithm};
-use std::iter::Iterator;
-use std::{error, fmt, iter, result};
+use core::iter::Iterator;
+use core::{error, fmt, iter, result};
 use tx::{txaux_serialize_size, Tx, TxAux, TxInWitness, TxOut, TxWitness, TxoPointer};
 use txutils::OutputPolicy;
 use {coin, fee};

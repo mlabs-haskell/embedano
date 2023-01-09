@@ -11,7 +11,7 @@ pub trait TryFromSlice: Sized {
     /// the error kind. We expect Display for now so we don't have to
     /// implement all instances yet to all the Error kinds but this
     /// will soon be extended to require the `Error` trait
-    type Error: ::std::error::Error;
+    type Error: ::core::error::Error;
 
     /// attempt to construct the object from the given slice
     fn try_from_slice(slice: &[u8]) -> Result<Self, Self::Error>;

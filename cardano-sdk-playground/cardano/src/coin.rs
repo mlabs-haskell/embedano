@@ -5,8 +5,8 @@
 //!
 
 use cbor_event::{self, de::Deserializer, se::Serializer};
-use std::cmp::Ordering;
-use std::{fmt, io::BufRead, ops, result};
+use core::cmp::Ordering;
+use core::{fmt, ops, result};
 
 /// maximum value of a Lovelace.
 pub const MAX_COIN: u64 = 45_000_000_000__000_000;
@@ -38,7 +38,7 @@ impl fmt::Display for Error {
         }
     }
 }
-impl ::std::error::Error for Error {}
+impl ::core::error::Error for Error {}
 
 pub type Result<T> = result::Result<T, Error>;
 
@@ -118,7 +118,7 @@ impl fmt::Display for Coin {
         write!(f, "{}.{:06}", self.0 / 1000000, self.0 % 1000000)
     }
 }
-impl ::std::str::FromStr for Coin {
+impl ::core::str::FromStr for Coin {
     type Err = Error;
     fn from_str(s: &str) -> result::Result<Self, Self::Err> {
         let v: u64 = match s.parse() {
@@ -128,20 +128,21 @@ impl ::std::str::FromStr for Coin {
         Coin::new(v)
     }
 }
-impl cbor_event::se::Serialize for Coin {
-    fn serialize<'se, W: ::std::io::Write>(
-        &self,
-        serializer: &'se mut Serializer<W>,
-    ) -> cbor_event::Result<&'se mut Serializer<W>> {
-        serializer.write_unsigned_integer(self.0)
-    }
-}
-impl cbor_event::de::Deserialize for Coin {
-    fn deserialize<R: BufRead>(reader: &mut Deserializer<R>) -> cbor_event::Result<Self> {
-        Coin::new(reader.unsigned_integer()?)
-            .map_err(|err| cbor_event::Error::CustomError(format!("{}", err)))
-    }
-}
+// TODO: rewrite with minicbor
+// impl cbor_event::se::Serialize for Coin {
+//     fn serialize<'se, W: ::std::io::Write>(
+//         &self,
+//         serializer: &'se mut Serializer<W>,
+//     ) -> cbor_event::Result<&'se mut Serializer<W>> {
+//         serializer.write_unsigned_integer(self.0)
+//     }
+// }
+// impl cbor_event::de::Deserialize for Coin {
+//     fn deserialize<R: BufRead>(reader: &mut Deserializer<R>) -> cbor_event::Result<Self> {
+//         Coin::new(reader.unsigned_integer()?)
+//             .map_err(|err| cbor_event::Error::CustomError(format!("{}", err)))
+//     }
+// }
 impl ops::Add for Coin {
     type Output = Result<Coin>;
     fn add(self, other: Coin) -> Self::Output {

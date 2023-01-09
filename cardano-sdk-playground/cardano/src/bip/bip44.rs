@@ -16,10 +16,10 @@
 //! assert!(scheme_value == 0);
 //! ```
 
+use core::{error, fmt, result};
 use hdpayload::Path;
 #[cfg(feature = "generic-serialization")]
 use serde;
-use std::{error, fmt, result};
 
 /// the BIP44 derivation path has a specific length
 pub const BIP44_PATH_LENGTH: usize = 5;

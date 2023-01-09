@@ -10,7 +10,7 @@
 //! assert!(example.as_ref() == decode(&encode(example)).unwrap().as_slice());
 //! ```
 //!
-use std::{fmt, result};
+use core::{fmt, result};
 
 const ALPHABET: &'static [u8] = b"0123456789abcdef";
 
@@ -31,7 +31,7 @@ impl fmt::Display for Error {
         }
     }
 }
-impl ::std::error::Error for Error {}
+impl ::core::error::Error for Error {}
 
 pub type Result<T> = result::Result<T, Error>;
 
