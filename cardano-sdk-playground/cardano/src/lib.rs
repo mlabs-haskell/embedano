@@ -14,7 +14,10 @@
 //! * Wallet abstraction
 //!
 #![no_std]
+#![feature(error_in_core)]
 #![cfg_attr(feature = "with-bench", feature(test))]
+
+extern crate alloc;
 
 #[cfg(feature = "generic-serialization")]
 #[macro_use]
@@ -50,20 +53,16 @@ pub mod address;
 pub mod coin;
 pub mod config;
 mod crc32;
-pub mod fee;
 pub mod hash;
 pub mod hdpayload;
 pub mod hdwallet;
-pub mod input_selection;
 pub mod paperwallet;
 pub mod redeem;
 pub mod tx;
-pub mod txbuild;
 pub mod txutils;
 pub mod util;
 
 pub mod bip;
-pub mod cbor;
 pub mod wallet;
 
 pub mod merkle;

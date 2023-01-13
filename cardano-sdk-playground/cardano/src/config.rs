@@ -4,13 +4,7 @@
 //! operability with the appropriate network or different option.
 //!
 
-use address;
-use cbor_event::{self, de::Deserializer, se::Serializer};
-use coin;
-use core::{fmt, time::Duration};
-use fee;
-use hdwallet;
-use redeem;
+use core::fmt;
 
 /// this is the protocol magic number
 ///

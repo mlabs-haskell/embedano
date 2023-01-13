@@ -1,5 +1,7 @@
-use quickcheck::{Arbitrary, Gen};
+use alloc::vec::Vec;
+
 use core::ops::Deref;
+use quickcheck::{Arbitrary, Gen};
 
 use super::super::*;
 

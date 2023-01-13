@@ -1,3 +1,5 @@
+use alloc::vec::Vec;
+
 const NUM_BITS_PER_BLOCK: usize = 11;
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]

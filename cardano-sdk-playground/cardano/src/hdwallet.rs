@@ -21,13 +21,8 @@ use bip::bip39;
 
 use core::hash::{Hash, Hasher};
 use core::marker::PhantomData;
-use core::{
-    fmt,
-    result,
-};
+use core::{fmt, result};
 use util::{hex, securemem};
-
-use cbor_event::{self, de::Deserializer, se::Serializer};
 
 #[cfg(feature = "generic-serialization")]
 use serde;

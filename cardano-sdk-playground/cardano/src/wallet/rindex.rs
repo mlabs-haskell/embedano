@@ -1,19 +1,17 @@
+use alloc::{vec, vec::Vec};
+
 use address::{AddrType, Attributes, ExtendedAddr, SpendingData};
 use bip::bip39;
 use cbor_event;
-use coin::{self, Coin};
 use config::{NetworkMagic, ProtocolMagic};
-use cryptoxide;
-use cryptoxide::digest::Digest;
-use fee::{self, FeeAlgorithm};
-use hdpayload;
-use hdwallet::{self, DerivationScheme, XPrv, XPub};
-use input_selection;
 /// 2 Level of randomly chosen hard derivation indexes Wallet
 ///
-use std::{error, fmt, iter, ops::Deref};
-use tx::{self, Tx, TxAux, TxId, TxInWitness};
-use txutils::{self, OutputPolicy};
+use core::{error, fmt, ops::Deref};
+use cryptoxide;
+use cryptoxide::digest::Digest;
+use hdpayload;
+use hdwallet::{self, DerivationScheme, XPrv, XPub};
+use tx::{TxId, TxInWitness};
 
 use super::scheme;
 
@@ -25,8 +23,8 @@ impl Addressing {
         Addressing(account, index)
     }
 }
-impl ::std::fmt::Display for Addressing {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+impl ::core::fmt::Display for Addressing {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{}.{}", self.0, self.1)
     }
 }
@@ -116,96 +114,6 @@ impl Wallet {
         }
 
         None
-    }
-
-    pub fn move_transaction(
-        &self,
-        protocol_magic: ProtocolMagic,
-        inputs: &Vec<txutils::TxoPointerInfo<Addressing>>,
-        output_policy: &txutils::OutputPolicy,
-    ) -> input_selection::Result<(TxAux, fee::Fee)> {
-        if inputs.len() == 0 {
-            return Err(input_selection::Error::NoInputs);
-        }
-
-        let alg = fee::LinearFee::default();
-
-        let total_input: Coin = {
-            let mut total = Coin::zero();
-            for ref i in inputs.iter() {
-                let acc = total + i.value;
-                total = acc?
-            }
-            total
-        };
-
-        let tx_base = Tx::new_with(
-            inputs.iter().cloned().map(|input| input.txin).collect(),
-            vec![],
-        );
-        let fake_witnesses: Vec<tx::TxInWitness> = iter::repeat(tx::TxInWitness::fake())
-            .take(inputs.len())
-            .collect();
-
-        let min_fee_for_inputs = alg
-            .calculate_for_txaux_component(&tx_base, &fake_witnesses)?
-            .to_coin();
-        let mut out_total = match total_input - min_fee_for_inputs {
-            Err(coin::Error::Negative) => return Err(input_selection::Error::NotEnoughInput),
-            Err(err) => unreachable!("{}", err),
-            Ok(c) => c,
-        };
-
-        loop {
-            let mut tx = tx_base.clone();
-            match output_policy {
-                OutputPolicy::One(change_addr) => {
-                    let txout = tx::TxOut::new(change_addr.clone(), out_total);
-                    tx.add_output(txout);
-                }
-            };
-
-            let current_diff = (total_input - tx.get_output_total()?).unwrap_or(Coin::zero());
-            let txaux_fee: fee::Fee = alg.calculate_for_txaux_component(&tx, &fake_witnesses)?;
-
-            if current_diff == txaux_fee.to_coin() {
-                // let witnesses = self.sign_tx(&tx, &inputs);
-                /*
-                match total_input - tx.get_output_total() {
-                    None => {},
-                    Some(fee) => {
-                        assert_eq!(witnesses.len(), fake_witnesses.len());
-                        let txaux = tx::TxAux::new(tx, witnesses);
-                        return Ok((txaux, txaux_fee))
-                    },
-                }
-                */
-                let witnesses = scheme::Wallet::sign_tx(
-                    self,
-                    protocol_magic,
-                    &tx.id(),
-                    inputs.iter().map(|tii| tii.address_identified),
-                );
-                assert_eq!(witnesses.len(), fake_witnesses.len());
-                let txaux = tx::TxAux::new(tx, tx::TxWitness::from(witnesses));
-                return Ok((txaux, txaux_fee));
-            } else {
-                // already above..
-                if current_diff > txaux_fee.to_coin() {
-                    let r = (out_total + Coin::unit())?;
-                    out_total = r
-                } else {
-                    // not enough fee, so reduce the output_total
-                    match out_total - Coin::unit() {
-                        Err(coin::Error::Negative) => {
-                            return Err(input_selection::Error::NotEnoughInput);
-                        }
-                        Err(err) => unreachable!("{}", err),
-                        Ok(o) => out_total = o,
-                    }
-                }
-            }
-        }
     }
 }
 impl Deref for Wallet {
@@ -336,7 +244,7 @@ impl error::Error for Error {
     }
 }
 
-pub type Result<T> = ::std::result::Result<T, Error>;
+pub type Result<T> = ::core::result::Result<T, Error>;
 
 #[derive(Clone)]
 pub struct RootKey {
@@ -594,12 +502,14 @@ mod test {
     use crate::wallet::rindex;
     use crate::wallet::scheme::Wallet;
 
+    use txutils::{self, OutputPolicy};
+
     const MNEMONICS: &'static str =
         "edge club wrap where juice nephew whip entry cover bullet cause jeans";
 
     lazy_static! {
         static ref OUTPUT: ExtendedAddr = {
-            use std::str::FromStr;
+            use core::str::FromStr;
             ExtendedAddr::from_str("Ae2tdPwUPEZ81gMkWH2PgB55y18pp2hxDxM2cmzBNnQtyLhJHqUp622zVgz")
                 .unwrap()
         };
@@ -645,25 +555,6 @@ mod test {
             txin: txin,
             value: Coin::from(1_000_000u32),
             address_identified: Addressing::new(account, index),
-        }
-    }
-
-    #[test]
-    fn test_move_rindex_wallet() {
-        let wallet = rindex::Wallet::from_daedalus_mnemonics(
-            DerivationScheme::V1,
-            &bip39::dictionary::ENGLISH,
-            MNEMONICS,
-        )
-        .unwrap();
-        let policy = OutputPolicy::One(OUTPUT.clone());
-        let (txaux, _) = wallet
-            .move_transaction(*PROTOCOL_MAGIC, &INPUTS, &policy)
-            .unwrap();
-
-        for (witness, address) in txaux.witness.iter().zip(ADDRESSES.iter()) {
-            assert!(witness.verify_address(address));
-            assert!(witness.verify_tx(*PROTOCOL_MAGIC, &txaux.tx));
         }
     }
 }

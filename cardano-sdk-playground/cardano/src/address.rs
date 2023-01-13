@@ -8,13 +8,14 @@
 //! All this components form an `ExtendedAddr`, which serialized
 //! to binary makes an `Addr`
 //!
+use alloc::vec::Vec;
+
 #[cfg(feature = "generic-serialization")]
 use serde;
 
 use hash::{Blake2b224, Sha3_256};
 
-use cbor;
-use cbor_event::{self, de::Deserializer, se::Serializer};
+use cbor_event::{self, de::Deserializer};
 use config::NetworkMagic;
 use hdpayload::HDAddressPayload;
 use hdwallet::XPub;
@@ -359,19 +360,20 @@ impl fmt::Display for HashedSpendingData {
         fmt::Display::fmt(&self.0, f)
     }
 }
-impl cbor_event::se::Serialize for HashedSpendingData {
-    fn serialize<'se, W: Write>(
-        &self,
-        serializer: &'se mut Serializer<W>,
-    ) -> cbor_event::Result<&'se mut Serializer<W>> {
-        serializer.serialize(&self.0)
-    }
-}
-impl cbor_event::de::Deserialize for HashedSpendingData {
-    fn deserialize<R: BufRead>(reader: &mut Deserializer<R>) -> cbor_event::Result<Self> {
-        cbor_event::de::Deserialize::deserialize(reader).map(|digest| HashedSpendingData(digest))
-    }
-}
+// TODO: rewrite with minicbor
+// impl cbor_event::se::Serialize for HashedSpendingData {
+//     fn serialize<'se, W: Write>(
+//         &self,
+//         serializer: &'se mut Serializer<W>,
+//     ) -> cbor_event::Result<&'se mut Serializer<W>> {
+//         serializer.serialize(&self.0)
+//     }
+// }
+// impl cbor_event::de::Deserialize for HashedSpendingData {
+//     fn deserialize<R: BufRead>(reader: &mut Deserializer<R>) -> cbor_event::Result<Self> {
+//         cbor_event::de::Deserialize::deserialize(reader).map(|digest| HashedSpendingData(digest))
+//     }
+// }
 impl TryFromSlice for HashedSpendingData {
     type Error = <Blake2b224 as TryFromSlice>::Error;
     fn try_from_slice(slice: &[u8]) -> ::core::result::Result<Self, Self::Error> {
@@ -428,10 +430,11 @@ impl TryFromSlice for Addr {
     fn try_from_slice(slice: &[u8]) -> ::core::result::Result<Self, Self::Error> {
         let mut v = Vec::new();
         // TODO we only want validation of slice here, but we don't have api to do that yet.
-        {
-            let mut raw = Deserializer::from(std::io::Cursor::new(&slice));
-            let _: ExtendedAddr = cbor_event::de::Deserialize::deserialize(&mut raw)?;
-        }
+        // TODO review
+        // {
+        //     let mut raw = Deserializer::from(core::io::Cursor::new(&slice));
+        //     let _: ExtendedAddr = cbor_event::de::Deserialize::deserialize(&mut raw)?;
+        // }
         v.extend_from_slice(slice);
         Ok(Addr(v))
     }
@@ -574,7 +577,7 @@ impl ::core::str::FromStr for ExtendedAddr {
 impl TryFromSlice for ExtendedAddr {
     type Error = cbor_event::Error;
     fn try_from_slice(slice: &[u8]) -> ::core::result::Result<Self, Self::Error> {
-        let mut raw = Deserializer::from(std::io::Cursor::new(slice));
+        let mut raw = Deserializer::from(core::io::Cursor::new(slice));
         cbor_event::de::Deserialize::deserialize(&mut raw)
     }
 }

@@ -6,8 +6,6 @@
 //!
 //! On the **mainnet** you can use the redeem keys to claim redeem addresses.
 //!
-
-use cbor_event::{self, de::Deserializer, se::Serializer};
 use cryptoxide::ed25519;
 #[cfg(feature = "generic-serialization")]
 use serde;

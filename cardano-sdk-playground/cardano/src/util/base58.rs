@@ -12,6 +12,11 @@
 //! assert_eq!(encoded, base58::encode(decoded));
 //! ```
 
+use alloc::{
+    string::String,
+    {vec, vec::Vec},
+};
+
 pub const ALPHABET: &'static str = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Copy, Clone)]

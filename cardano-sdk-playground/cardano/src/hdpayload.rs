@@ -8,6 +8,8 @@
 //! symmetric key used to encrypt, can then decrypt the address
 //! payload and find the derivation path associated with it.
 //!
+use alloc::{vec, vec::Vec};
+
 use cryptoxide::chacha20poly1305::ChaCha20Poly1305;
 use cryptoxide::hmac::Hmac;
 use cryptoxide::pbkdf2::pbkdf2;
@@ -64,7 +66,7 @@ impl fmt::Display for Error {
     }
 }
 impl ::core::error::Error for Error {
-    fn cause(&self) -> Option<&::core::error::Error> {
+    fn cause(&self) -> Option<&dyn::core::error::Error> {
         match self {
             Error::CborError(ref err) => Some(err),
             _ => None,
@@ -484,4 +486,3 @@ mod bench {
         })
     }
 }
-

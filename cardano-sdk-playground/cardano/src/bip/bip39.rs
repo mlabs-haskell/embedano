@@ -47,6 +47,10 @@
 //! let seed = Seed::from_mnemonic_string(&mnemonic_phrase, b"some password");
 //! ```
 //!
+use alloc::{
+    string::String,
+    {vec, vec::Vec},
+};
 
 use core::{error, fmt, ops::Deref, result, str};
 use cryptoxide::hmac::Hmac;
@@ -848,6 +852,8 @@ pub mod dictionary {
     //! UTF8 NFKD by default. Users must be sure to compose (or decompose)
     //! our output (or input) UTF8 strings.
     //!
+
+    use alloc::string::String;
 
     use core::{error, fmt, result};
 

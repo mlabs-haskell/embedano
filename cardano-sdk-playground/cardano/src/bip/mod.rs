@@ -5,4 +5,4 @@
 //!
 
 pub mod bip39;
-pub mod bip44;
+// pub mod bip44;

@@ -4,7 +4,6 @@
 //! such as a min bound of 0 and a max bound of `MAX_COIN`.
 //!
 
-use cbor_event::{self, de::Deserializer, se::Serializer};
 use core::cmp::Ordering;
 use core::{fmt, ops, result};
 

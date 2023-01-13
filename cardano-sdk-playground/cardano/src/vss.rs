@@ -1,8 +1,7 @@
 // use cbor_event::{self, de::Deserializer, se::Serializer};
-use core::{
-    fmt,
-    result,
-};
+use alloc::vec::Vec;
+
+use core::{fmt, result};
 use util::hex;
 
 const SIGNATURE_SIZE: usize = 64;

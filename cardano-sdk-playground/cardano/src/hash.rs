@@ -12,7 +12,6 @@ use cryptoxide::blake2b::Blake2b;
 use cryptoxide::digest::Digest;
 use cryptoxide::sha3::Sha3;
 
-use cbor_event::{self, de::Deserializer, se::Serializer};
 use util::{hex, try_from_slice::TryFromSlice};
 
 #[cfg(feature = "generic-serialization")]
@@ -42,7 +41,7 @@ impl From<hex::Error> for Error {
     }
 }
 impl ::core::error::Error for Error {
-    fn cause(&self) -> Option<&::core::error::Error> {
+    fn cause(&self) -> Option<&dyn::core::error::Error> {
         match self {
             Error::HexadecimalError(ref err) => Some(err),
             Error::InvalidHashSize(_, _) => None,
