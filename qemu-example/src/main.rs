@@ -4,16 +4,16 @@
 
 // pick a panicking behavior
 use panic_halt as _; // you can put a breakpoint on `rust_begin_unwind` to catch panics
-// use panic_abort as _; // requires nightly
-// use panic_itm as _; // logs messages over ITM; requires ITM support
-// use panic_semihosting as _; // logs messages to the host stderr; requires a debugger
+                     // use panic_abort as _; // requires nightly
+                     // use panic_itm as _; // logs messages over ITM; requires ITM support
+                     // use panic_semihosting as _; // logs messages to the host stderr; requires a debugger
 
 // use cortex_m::asm;
-use cortex_m_semihosting::{debug, hprintln};
-use cortex_m_rt::entry;
-use core::alloc::Layout;
 use alloc_cortex_m::CortexMHeap;
 use bip32_ed25519::{Xprv, ED25519_EXPANDED_SECRET_KEY_SIZE};
+use core::alloc::Layout;
+use cortex_m_rt::entry;
+use cortex_m_semihosting::{debug, hprintln};
 
 #[global_allocator]
 static ALLOCATOR: CortexMHeap = CortexMHeap::empty();
@@ -24,7 +24,6 @@ const TEST_SEED: &[u8] = b"\xf8\xcb\x28\x85\x37\x60\x2b\x90\xd1\x29\x75\x4b\xdd\
 
 #[entry]
 fn main() -> ! {
-
     hprintln!("Test: Generating keys");
 
     // from example/allocator.rs
@@ -39,7 +38,7 @@ fn main() -> ! {
 
     hprintln!("XPrv: {:?}", root_xprv_key).unwrap();
     hprintln!("XPub: {:?}", root_xpub_key.pubkey_bytes()).unwrap();
-    
+
     debug::exit(debug::EXIT_SUCCESS);
 
     loop {}
