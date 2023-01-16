@@ -1,4 +1,6 @@
 [workspace]
 members = [
-	"cardano",
+	"cardano-tmp",
+	"cardano-origin",
+	"cardano-embedded-sdk",
 ]

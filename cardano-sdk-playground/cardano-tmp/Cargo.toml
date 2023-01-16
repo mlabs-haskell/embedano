@@ -1,0 +1,30 @@
+[package]
+name = "cardano-tmp"
+version = "0.1.1"
+authors = ["Vincent Hanquez <vincent.hanquez@iohk.io>", "Nicolas Di Prima <nicolas.diprima@iohk.io>"]
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/input-output-hk/rust-cardano"
+homepage = "https://github.com/input-output-hk/rust-cardano/cardano#README.md"
+description = """
+The Cardano library. This includes full support for the Cardano blockchain and wallets. It also provides helpers to maintain HDWallets and includes a transaction build engine.
+"""
+keywords = [ "Cardano", "Wallet", "Crypto" ]
+
+[build-dependencies]
+
+[dependencies]
+cryptoxide = "0.1"
+cbor_event = "^2.1.1"
+
+ufmt = "0.2.0"
+serde = { version = "1.0", default-features = false }
+serde_derive = { version = "1.0", default-features = false }
+
+[dev-dependencies]
+lazy_static = "1.2"
+rand = "0.6"
+serde_json = "1.0"
+unicode-normalization = "0.1"
+quickcheck = "0.8"
+base64 = "0.9"
