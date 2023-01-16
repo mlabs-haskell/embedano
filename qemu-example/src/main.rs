@@ -48,6 +48,7 @@ fn main() -> ! {
 fn alloc_error(_layout: Layout) -> ! {
     hprintln!("ALLOC ERROR").unwrap();
     debug::exit(debug::EXIT_FAILURE);
+    let f: [u32] = todo!();
 
     loop {}
 }
