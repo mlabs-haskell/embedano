@@ -23,7 +23,7 @@ Some questions and considerations below.
 
 ### Sign simple Cardano transaction
 
-We will need to sign transaction body. Probably, the most general user-facing API for that could be something like
+We will need to sign hash transaction body (transaction id). Probably, the most general user-facing API for that could be something like
 
 ```rust
 fn sign_tx_body(key_path: KeyPath, tx_id: TxId) -> Result<Witness, SomeError>
@@ -40,7 +40,7 @@ or maybe
 Witness = (Signature, PaymentKey, KeyPath)
 ```
 
-*Question:* how are we going to return key and signature of `Witness`? Hex encoded CBOR?
+*Question:* how are we going to return key and signature of `Witness`? ~~Hex encoded CBOR?~~ After catch up call on 16.01: it probably will be something more low level. The user of the SDK can serialize it to CBOR or whatever.
 
 ### Proof that Payment key belongs to particular HD wallet
 
@@ -54,15 +54,16 @@ Proof of key ownership will require `Account Discovery` (see links below). Maybe
 fn confirm_ownership(key_path: KeyPath, payment_key: PaymentKey) -> Result<Proof, SomeError>
 ```
 
-*Question:* how to pass Payment Key - hex encoded CBOR?
+Representation of `PaymentKey` - TBD
 
-*Question:* how do we provide proof, i.e. what will be the return type of proving function? Encoded nonce or signature that can be verified with payment key?
+*Question:* how do we define `Proof`? Encoded nonce or signature that can be verified with payment key?
 
 ### Signing arbitrary data
 
 ```rust
 fn sign_data(key_path: KeyPath, data: Payload) -> Result<Witness, SomeError>
 ```
+
 where `Payload` is some binary data.
 
 *Question:* do we need to support some other types of `data` like hex encoded bytes?
