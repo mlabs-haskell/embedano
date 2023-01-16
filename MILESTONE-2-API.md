@@ -1,4 +1,15 @@
-# SDK API (draft)
+# SDK API
+
+- [SDK API](#sdk-api)
+  - [API draft](#api-draft)
+    - [Sign simple Cardano transaction](#sign-simple-cardano-transaction)
+    - [Proof that Payment key belongs to particular HD wallet](#proof-that-payment-key-belongs-to-particular-hd-wallet)
+    - [Signing arbitrary data](#signing-arbitrary-data)
+    - [Derive payment key](#derive-payment-key)
+  - [Testing and Verifying results](#testing-and-verifying-results)
+  - [Links](#links)
+
+## API draft
 
 SDK API should allow us to reach 3 main goals - we should be able to:
 
@@ -10,7 +21,7 @@ For all 3 cases we will need to be able to derive payment key for specific deriv
 
 Some questions and considerations below.
 
-## Sign simple Cardano transaction
+### Sign simple Cardano transaction
 
 We will need to sign transaction body. Probably, the most general user-facing API for that could be something like
 
@@ -31,7 +42,7 @@ Witness = (Signature, PaymentKey, KeyPath)
 
 *Question:* how are we going to return key and signature of `Witness`? Hex encoded CBOR?
 
-## Proof that Payment key belongs to particular HD wallet
+### Proof that Payment key belongs to particular HD wallet
 
 ```rust
 fn proof_ownership(payment_key: PaymentKey) -> Result<Proof, SomeError>
@@ -47,7 +58,7 @@ fn confirm_ownership(key_path: KeyPath, payment_key: PaymentKey) -> Result<Proof
 
 *Question:* how do we provide proof, i.e. what will be the return type of proving function? Encoded nonce or signature that can be verified with payment key?
 
-## Signing arbitrary data
+### Signing arbitrary data
 
 ```rust
 fn sign_data(key_path: KeyPath, data: Payload) -> Result<Witness, SomeError>
@@ -56,11 +67,17 @@ where `Payload` is some binary data.
 
 *Question:* do we need to support some other types of `data` like hex encoded bytes?
 
-## Derive payment key
+### Derive payment key
 
 ```rust
 fn derive_key(key_path: KeyPath) -> Result<PaymentKey, SomeError>
 ```
+
+## Testing and Verifying results
+
+We will need some reference to verify that our signing works correctly. On early stage we can use [slip wallet and related data](./slip14-data/) to verify. On later stage - probably another Rust library (could be with `std` support) or something built around IOG binaries.
+
+TODO: get signature from signed transaction and add to slip14 data docs
 
 ## Links
 
