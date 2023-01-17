@@ -11,12 +11,13 @@
     - [Transaction id (body hash)](#transaction-id-body-hash)
     - [Transaction body (a.k.a. raw transaction)](#transaction-body-aka-raw-transaction)
     - [Signed transaction](#signed-transaction)
-    - [Tranaction views](#tranaction-views)
+    - [Transaction views](#transaction-views)
       - [Body](#body)
       - [Singed](#singed)
-
+      - [Witness](#witness)
 
 ## SLIP-0014
+
 See [slip-0014 HD wallet](https://github.com/satoshilabs/slips/blob/master/slip-0014.md)
 
 ## Keys
@@ -109,7 +110,7 @@ bb1eb401cd03b0cd8caa08997df0a2ab226772c4d3a08adfb5a60ba34de12dfb
 }
 ```
 
-### Tranaction views
+### Transaction views
 
 #### Body
 
@@ -204,4 +205,18 @@ withdrawals: null
 witnesses:
 - key: VKey (VerKeyEd25519DSIGN "5d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c1")
   signature: SignedDSIGN (SigEd25519DSIGN "e6766adf71231ec80faddbe12dcea623fd6bc31982cdbc69e90fb8c4dd937d4cdc87c2d3287a1c62be928a4ec01b970099410301adba27ca20fee0c08f68e50a")
+```
+
+#### Witness
+
+Witness built with `cardano-cli`.
+
+[Link to file](txs/tx-witness-bb1eb401cd03b0cd8caa08997df0a2ab226772c4d3a08adfb5a60ba34de12dfb.wit)
+
+```shell
+{
+    "type": "TxWitness BabbageEra",
+    "description": "",
+    "cborHex": "82008258205d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c15840e6766adf71231ec80faddbe12dcea623fd6bc31982cdbc69e90fb8c4dd937d4cdc87c2d3287a1c62be928a4ec01b970099410301adba27ca20fee0c08f68e50a"
+}
 ```
