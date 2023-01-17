@@ -8,7 +8,7 @@ use crate::hdpayload;
 use crate::hdwallet::{self, DerivationScheme, XPrv, XPub};
 /// 2 Level of randomly chosen hard derivation indexes Wallet
 ///
-use crate::tx::{self, Tx, TxAux, TxId, TxInWitness};
+use crate::tx::{TxId, TxInWitness};
 
 use super::scheme;
 
@@ -257,33 +257,35 @@ impl RootKey {
             derivation_scheme,
         }
     }
-    // TODO: cbor
-    // pub fn from_daedalus_mnemonics<D>(
-    //     derivation_scheme: DerivationScheme,
-    //     dic: &D,
-    //     mnemonics_phrase: &str,
-    // ) -> Result<Self>
-    // where
-    //     D: bip39::dictionary::Language,
-    // {
-    //     let mnemonics = bip39::Mnemonics::from_string(dic, mnemonics_phrase)?;
-    //     let entropy = bip39::Entropy::from_mnemonics(&mnemonics)?;
-    //
-    //     let entropy_bytes = cbor_event::Value::Bytes(Vec::from(entropy.as_ref()));
-    //     let entropy_cbor = cbor!(&entropy_bytes)?;
-    //     let seed: Vec<u8> = {
-    //         let mut blake2b = cryptoxide::blake2b::Blake2b::new(32);
-    //         blake2b.input(&entropy_cbor);
-    //         let mut out = [0; 32];
-    //         blake2b.result(&mut out);
-    //         let mut se = cbor_event::se::Serializer::new_vec();
-    //         se.write_bytes(&Vec::from(&out[..]))?;
-    //         se.finalize()
-    //     };
-    //
-    //     let xprv = XPrv::generate_from_daedalus_seed(&seed);
-    //     Ok(RootKey::new(xprv, derivation_scheme))
-    // }
+
+    pub fn from_daedalus_mnemonics<D>(
+        derivation_scheme: DerivationScheme,
+        dic: &D,
+        mnemonics_phrase: &str,
+    ) -> Result<Self>
+    where
+        D: bip39::dictionary::Language,
+    {
+        // TODO: cbor
+        // let mnemonics = bip39::Mnemonics::from_string(dic, mnemonics_phrase)?;
+        // let entropy = bip39::Entropy::from_mnemonics(&mnemonics)?;
+        //
+        // let entropy_bytes = cbor_event::Value::Bytes(Vec::from(entropy.as_ref()));
+        // let entropy_cbor = cbor!(&entropy_bytes)?;
+        // let seed: Vec<u8> = {
+        //     let mut blake2b = cryptoxide::blake2b::Blake2b::new(32);
+        //     blake2b.input(&entropy_cbor);
+        //     let mut out = [0; 32];
+        //     blake2b.result(&mut out);
+        //     let mut se = cbor_event::se::Serializer::new_vec();
+        //     se.write_bytes(&Vec::from(&out[..]))?;
+        //     se.finalize()
+        // };
+        //
+        // let xprv = XPrv::generate_from_daedalus_seed(&seed);
+        // Ok(RootKey::new(xprv, derivation_scheme))
+        todo!()
+    }
 
     /// Converts into the inner `XPrv` value
     pub fn into_xprv(self) -> XPrv {

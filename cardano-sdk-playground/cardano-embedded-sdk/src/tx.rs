@@ -7,7 +7,6 @@
 //! `TxAux` : Signed Tx (Tx + Witness)
 //!
 use alloc::vec::Vec;
-
 use core::fmt;
 
 use crate::{
@@ -16,11 +15,9 @@ use crate::{
     config::ProtocolMagic,
     hash::Blake2b256,
     hdwallet::{Signature, XPrv, XPub, SIGNATURE_SIZE, XPUB_SIZE},
-    merkle, redeem,
+    redeem,
     tags::SigningTag,
 };
-
-use cbor_event::{self, se::Serializer};
 
 // Transaction IDs are either a hash of the CBOR serialisation of a
 // given Tx, or a hash of a redeem address.
@@ -35,13 +32,14 @@ pub fn redeem_pubkey_to_txid(
         SpendingData::RedeemASD(*pubkey),
         Attributes::new_bootstrap_era(None, protocol_magic.into()),
     );
-    let txid = Blake2b256::new(&cbor!(&address).unwrap());
-    (txid, address)
+    // TODO: cbor
+    // let txid = Blake2b256::new(&cbor!(&address).unwrap());
+    // (txid, address)
+    todo!()
 }
 
 /// Tx Output composed of an address and a coin value
-#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
-// #[cfg_attr(feature = "generic-serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct TxOut {
     pub address: ExtendedAddr,
     pub value: Coin,
@@ -59,6 +57,7 @@ impl TxOut {
         }
     }
 }
+// TODO: cbor
 // impl cbor_event::de::Deserialize for TxOut {
 //     fn deserialize<R: BufRead>(reader: &mut Deserializer<R>) -> cbor_event::Result<Self> {
 //         reader.tuple(2, "TxOut")?;
@@ -93,8 +92,7 @@ type RedeemerScript = TODO;
 /// * ScriptWitness: a witness for ScriptASD.
 /// * RedeemWitness: a witness for RedeemASD type, similar to PkWitness
 ///                  but for normal Public Key.
-#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
-// #[cfg_attr(feature = "generic-serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub enum TxInWitness {
     /// signature of the `Tx` with the associated `XPub`
     /// the `XPub` is the public key set in the AddrSpendingData
@@ -141,14 +139,15 @@ impl TxInWitness {
         sign_tag: SigningTag,
         txid: &TxId,
     ) -> Vec<u8> {
-        let mut se = Serializer::new_vec();
-        se.write_unsigned_integer(sign_tag as u64)
-            .expect("write the sign tag")
-            .serialize(&protocol_magic)
-            .expect("serialize protocol magic")
-            .serialize(txid)
-            .expect("serialize Tx's Id");
-        se.finalize()
+        // let mut se = Serializer::new_vec();
+        // se.write_unsigned_integer(sign_tag as u64)
+        //     .expect("write the sign tag")
+        //     .serialize(&protocol_magic)
+        //     .expect("serialize protocol magic")
+        //     .serialize(txid)
+        //     .expect("serialize Tx's Id");
+        // se.finalize()
+        todo!()
     }
 
     /// verify a given extended address is associated to the witness.
@@ -195,7 +194,7 @@ impl TxInWitness {
         self.verify_address(address) && self.verify_tx(protocol_magic, tx)
     }
 }
-// TODO: rewrite with minicbor
+// TODO: cbor
 // impl cbor_event::se::Serialize for TxInWitness {
 //     fn serialize<'se, W: Write>(
 //         &self,
@@ -272,8 +271,7 @@ impl TxInWitness {
 /// Structure used for addressing a specific output of a transaction
 /// built from a TxId (hash of the tx) and the offset in the outputs of this
 /// transaction.
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Serialize, Deserialize)]
-// #[cfg_attr(feature = "generic-serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
 pub struct TxoPointer {
     pub id: TxId,
     pub index: u32,
@@ -296,7 +294,7 @@ impl TxoPointer {
         }
     }
 }
-// TODO: rewrite with minicbor
+// TODO: cbor
 // impl cbor_event::se::Serialize for TxoPointer {
 //     fn serialize<'se, W: Write>(
 //         &self,
@@ -336,8 +334,7 @@ impl TxoPointer {
 // }
 
 /// A Transaction containing tx inputs and tx outputs.
-#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
-// #[cfg_attr(feature = "generic-serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Tx {
     pub inputs: Vec<TxoPointer>,
     pub outputs: Vec<TxOut>,
@@ -367,8 +364,10 @@ impl Tx {
         }
     }
     pub fn id(&self) -> TxId {
-        let buf = cbor!(self).expect("encode Tx");
-        TxId::new(&buf)
+        // TODO: cbor
+        // let buf = cbor!(self).expect("encode Tx");
+        // TxId::new(&buf)
+        todo!()
     }
     pub fn add_input(&mut self, i: TxoPointer) {
         self.inputs.push(i)
@@ -384,7 +383,7 @@ impl Tx {
         Ok(total)
     }
 }
-// TODO: rewrite with minicbor
+// TODO: cbor
 // impl cbor_event::se::Serialize for Tx {
 //     fn serialize<'se, W: Write>(
 //         &self,
@@ -416,8 +415,7 @@ impl Tx {
 // }
 
 /// A transaction witness is a vector of input witnesses
-#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
-// #[cfg_attr(feature = "generic-serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct TxWitness(Vec<TxInWitness>);
 
 impl TxWitness {
@@ -450,13 +448,13 @@ impl ::core::ops::DerefMut for TxWitness {
         &mut self.0
     }
 }
-
-// TODO: rewrite with minicbor
+// TODO: cbor
 // impl cbor_event::de::Deserialize for TxWitness {
 //     fn deserialize<R: BufRead>(raw: &mut Deserializer<R>) -> cbor_event::Result<Self> {
 //         Ok(TxWitness(cbor_event::de::Deserialize::deserialize(raw)?))
 //     }
 // }
+//
 // impl cbor_event::se::Serialize for TxWitness {
 //     fn serialize<'se, W: Write>(
 //         &self,
@@ -477,8 +475,7 @@ impl ::core::ops::DerefMut for TxWitness {
 // }
 
 /// A transaction witness is a vector of input witnesses
-#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
-// #[cfg_attr(feature = "generic-serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct TxWitnesses {
     pub in_witnesses: Vec<TxWitness>,
 }
@@ -491,155 +488,19 @@ impl TxWitnesses {
     }
 }
 
-// impl ::core::ops::Deref for TxWitnesses {
-//     type Target = Vec<TxWitness>;
-//     fn deref(&self) -> &Self::Target {
-//         &self.in_witnesses
-//     }
-// }
-
+impl ::core::ops::Deref for TxWitnesses {
+    type Target = Vec<TxWitness>;
+    fn deref(&self) -> &Self::Target {
+        &self.in_witnesses
+    }
+}
+// TODO: cbor
 // impl cbor_event::se::Serialize for TxWitnesses {
 //     fn serialize<'se, W: Write>(
 //         &self,
 //         serializer: &'se mut Serializer<W>,
 //     ) -> cbor_event::Result<&'se mut Serializer<W>> {
 //         cbor_event::se::serialize_indefinite_array(self.iter(), serializer)
-//     }
-// }
-
-/// Tx with the vector of witnesses
-#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
-// #[cfg_attr(feature = "generic-serialization", derive(Serialize, Deserialize))]
-pub struct TxAux {
-    pub tx: Tx,
-    pub witness: TxWitness,
-}
-impl fmt::Display for TxAux {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        writeln!(f, "Tx:\n{}", self.tx)?;
-        writeln!(f, "witnesses: {:?}\n", self.witness)
-    }
-}
-impl TxAux {
-    pub fn new(tx: Tx, witness: TxWitness) -> Self {
-        TxAux {
-            tx: tx,
-            witness: witness,
-        }
-    }
-}
-// TODO: rewrite with minicbor
-// impl cbor_event::de::Deserialize for TxAux {
-//     fn deserialize<R: BufRead>(raw: &mut Deserializer<R>) -> cbor_event::Result<Self> {
-//         raw.tuple(2, "TxAux")?;
-//         let tx = cbor_event::de::Deserialize::deserialize(raw)?;
-//         let witness = cbor_event::de::Deserialize::deserialize(raw)?;
-//         Ok(TxAux::new(tx, witness))
-//     }
-// }
-// impl cbor_event::se::Serialize for TxAux {
-//     fn serialize<'se, W: Write>(
-//         &self,
-//         serializer: &'se mut Serializer<W>,
-//     ) -> cbor_event::Result<&'se mut Serializer<W>> {
-//         txaux_serialize(&self.tx, &self.witness, serializer)
-//     }
-// }
-//
-// pub fn txaux_serialize<'se, W>(
-//     tx: &Tx,
-//     in_witnesses: &Vec<TxInWitness>,
-//     serializer: &'se mut Serializer<W>,
-// ) -> cbor_event::Result<&'se mut Serializer<W>>
-// where
-//     W: Write,
-// {
-//     serializer
-//         .write_array(cbor_event::Len::Len(2))?
-//         .serialize(tx)?;
-//     txwitness_serialize(in_witnesses, serializer)
-// }
-
-// pub fn txaux_serialize_size(tx: &Tx, in_witnesses: &Vec<TxInWitness>) -> usize {
-//     use std::io::Write;
-//
-//     struct Cborsize(usize);
-//     impl Write for Cborsize {
-//         fn write(&mut self, bytes: &[u8]) -> ::std::result::Result<usize, ::std::io::Error> {
-//             self.0 += bytes.len();
-//             Ok(bytes.len())
-//         }
-//         fn flush(&mut self) -> ::std::result::Result<(), ::std::io::Error> {
-//             Ok(())
-//         }
-//     }
-//
-//     let mut ser = cbor_event::se::Serializer::new(Cborsize(0));
-//     txaux_serialize(tx, in_witnesses, &mut ser).unwrap();
-//     let cborsize = ser.finalize();
-//     cborsize.0
-// }
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct TxProof {
-    /// Number of Transactions in this tree
-    pub number: u32,
-    /// Root of the merkle tree of transactions
-    pub root: merkle::Hash,
-    /// Hash of Sequence of TxWitnesses encoded in CBOR
-    pub witnesses_hash: Blake2b256,
-}
-impl TxProof {
-    pub fn new(number: u32, root: merkle::Hash, witnesses_hash: Blake2b256) -> Self {
-        TxProof {
-            number: number,
-            root: root,
-            witnesses_hash: witnesses_hash,
-        }
-    }
-
-    pub fn generate(txaux: &[TxAux]) -> Self {
-        let txs: Vec<&Tx> = txaux.iter().map(|w| &w.tx).collect();
-        let witnesses: Vec<&TxWitness> = txaux.iter().map(|w| &w.witness).collect();
-        let mut ser = cbor_event::se::Serializer::new_vec();
-        cbor_event::se::serialize_indefinite_array(witnesses.iter(), &mut ser).unwrap();
-        let out = ser.finalize();
-        TxProof {
-            number: txs.len() as u32,
-            root: merkle::MerkleTree::new(&txs[..]).get_root_hash(),
-            witnesses_hash: Blake2b256::new(&out[..]),
-        }
-    }
-}
-impl fmt::Display for TxProof {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "number: {}, root: {}, witnesses: {}",
-            self.number, self.root, self.witnesses_hash
-        )
-    }
-}
-// TODO: rewrite with minicbor
-// impl cbor_event::se::Serialize for TxProof {
-//     fn serialize<'se, W: Write>(
-//         &self,
-//         serializer: &'se mut Serializer<W>,
-//     ) -> cbor_event::Result<&'se mut Serializer<W>> {
-//         serializer
-//             .write_array(cbor_event::Len::Len(3))?
-//             .write_unsigned_integer(self.number as u64)?
-//             .serialize(&self.root)?
-//             .serialize(&self.witnesses_hash)
-//     }
-// }
-// impl cbor_event::de::Deserialize for TxProof {
-//     fn deserialize<R: BufRead>(raw: &mut Deserializer<R>) -> cbor_event::Result<Self> {
-//         raw.tuple(3, "TxProof")?;
-//         let number = raw.unsigned_integer()?;
-//         let root = cbor_event::de::Deserialize::deserialize(raw)?;
-//         let witnesses = cbor_event::de::Deserialize::deserialize(raw)?;
-//         Ok(TxProof::new(number as u32, root, witnesses))
 //     }
 // }
 

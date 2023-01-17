@@ -6,15 +6,14 @@
 //!
 //! On the **mainnet** you can use the redeem keys to claim redeem addresses.
 //!
-use cryptoxide::ed25519;
-// #[cfg(feature = "generic-serialization")]
-use serde;
-use util::hex;
 
 use core::{cmp, fmt, result};
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Serialize, Deserialize)]
-// #[cfg_attr(feature = "generic-serialization", derive(Serialize, Deserialize))]
+use crate::util::hex;
+
+use cryptoxide::ed25519;
+
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
 pub enum Error {
     InvalidPublicKeySize(usize),
     InvalidPrivateKeySize(usize),
@@ -49,7 +48,7 @@ impl From<hex::Error> for Error {
     }
 }
 impl ::core::error::Error for Error {
-    fn cause(&self) -> Option<&::core::error::Error> {
+    fn cause(&self) -> Option<&dyn (::core::error::Error)> {
         match self {
             Error::HexadecimalError(ref err) => Some(err),
             _ => None,
@@ -222,7 +221,7 @@ impl Ord for Signature {
 // ---------------------------------------------------------------------------
 //                                      CBOR
 // ---------------------------------------------------------------------------
-// TODO: rewrite with minicbor
+// TODO: cbor
 // impl cbor_event::se::Serialize for PublicKey {
 //     fn serialize<'se, W: Write>(
 //         &self,
@@ -291,211 +290,6 @@ impl Ord for Signature {
 //         }
 //     }
 // }
-
-// ---------------------------------------------------------------------------
-//                                      Serde
-// ---------------------------------------------------------------------------
-
-// #[cfg(feature = "generic-serialization")]
-impl serde::Serialize for PublicKey {
-    #[inline]
-    fn serialize<S>(&self, serializer: S) -> result::Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        if serializer.is_human_readable() {
-            serializer.serialize_str(&hex::encode(self.as_ref()))
-        } else {
-            serializer.serialize_bytes(&self.as_ref())
-        }
-    }
-}
-// #[cfg(feature = "generic-serialization")]
-struct PublicKeyVisitor();
-// #[cfg(feature = "generic-serialization")]
-impl PublicKeyVisitor {
-    fn new() -> Self {
-        PublicKeyVisitor {}
-    }
-}
-// #[cfg(feature = "generic-serialization")]
-impl<'de> serde::de::Visitor<'de> for PublicKeyVisitor {
-    type Value = PublicKey;
-
-    fn expecting(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        write!(fmt, "Expecting a Ed25519 public key (`PublicKey`)")
-    }
-
-    fn visit_str<'a, E>(self, v: &'a str) -> result::Result<Self::Value, E>
-    where
-        E: serde::de::Error,
-    {
-        match Self::Value::from_hex(v) {
-            Err(Error::HexadecimalError(err)) => Err(E::custom(format!("{}", err))),
-            Err(Error::InvalidPublicKeySize(sz)) => Err(E::invalid_length(sz, &"32 bytes")),
-            Err(err) => Err(E::custom(format!("unexpected error: {}", err))),
-            Ok(h) => Ok(h),
-        }
-    }
-
-    fn visit_bytes<'a, E>(self, v: &'a [u8]) -> result::Result<Self::Value, E>
-    where
-        E: serde::de::Error,
-    {
-        match Self::Value::from_slice(v) {
-            Err(Error::InvalidPublicKeySize(sz)) => Err(E::invalid_length(sz, &"32 bytes")),
-            Err(err) => Err(E::custom(format!("unexpected error: {}", err))),
-            Ok(h) => Ok(h),
-        }
-    }
-}
-// #[cfg(feature = "generic-serialization")]
-impl<'de> serde::Deserialize<'de> for PublicKey {
-    fn deserialize<D>(deserializer: D) -> result::Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        if deserializer.is_human_readable() {
-            deserializer.deserialize_str(PublicKeyVisitor::new())
-        } else {
-            deserializer.deserialize_bytes(PublicKeyVisitor::new())
-        }
-    }
-}
-
-// #[cfg(feature = "generic-serialization")]
-impl serde::Serialize for PrivateKey {
-    #[inline]
-    fn serialize<S>(&self, serializer: S) -> result::Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        if serializer.is_human_readable() {
-            serializer.serialize_str(&hex::encode(self.as_ref()))
-        } else {
-            serializer.serialize_bytes(&self.as_ref())
-        }
-    }
-}
-// #[cfg(feature = "generic-serialization")]
-struct PrivateKeyVisitor();
-// #[cfg(feature = "generic-serialization")]
-impl PrivateKeyVisitor {
-    fn new() -> Self {
-        PrivateKeyVisitor {}
-    }
-}
-// #[cfg(feature = "generic-serialization")]
-impl<'de> serde::de::Visitor<'de> for PrivateKeyVisitor {
-    type Value = PrivateKey;
-
-    fn expecting(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        write!(fmt, "Expecting a Ed25519 public key (`PrivateKey`)")
-    }
-
-    fn visit_str<'a, E>(self, v: &'a str) -> result::Result<Self::Value, E>
-    where
-        E: serde::de::Error,
-    {
-        match Self::Value::from_hex(v) {
-            Err(Error::HexadecimalError(err)) => Err(E::custom(format!("{}", err))),
-            Err(Error::InvalidPrivateKeySize(sz)) => Err(E::invalid_length(sz, &"64 bytes")),
-            Err(err) => Err(E::custom(format!("unexpected error: {}", err))),
-            Ok(h) => Ok(h),
-        }
-    }
-
-    fn visit_bytes<'a, E>(self, v: &'a [u8]) -> result::Result<Self::Value, E>
-    where
-        E: serde::de::Error,
-    {
-        match Self::Value::from_slice(v) {
-            Err(Error::InvalidPrivateKeySize(sz)) => Err(E::invalid_length(sz, &"64 bytes")),
-            Err(err) => Err(E::custom(format!("unexpected error: {}", err))),
-            Ok(h) => Ok(h),
-        }
-    }
-}
-// #[cfg(feature = "generic-serialization")]
-impl<'de> serde::Deserialize<'de> for PrivateKey {
-    fn deserialize<D>(deserializer: D) -> result::Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        if deserializer.is_human_readable() {
-            deserializer.deserialize_str(PrivateKeyVisitor::new())
-        } else {
-            deserializer.deserialize_bytes(PrivateKeyVisitor::new())
-        }
-    }
-}
-
-// #[cfg(feature = "generic-serialization")]
-impl serde::Serialize for Signature {
-    #[inline]
-    fn serialize<S>(&self, serializer: S) -> result::Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        if serializer.is_human_readable() {
-            serializer.serialize_str(&hex::encode(self.as_ref()))
-        } else {
-            serializer.serialize_bytes(&self.as_ref())
-        }
-    }
-}
-// #[cfg(feature = "generic-serialization")]
-struct SignatureVisitor();
-// #[cfg(feature = "generic-serialization")]
-impl SignatureVisitor {
-    fn new() -> Self {
-        SignatureVisitor {}
-    }
-}
-// #[cfg(feature = "generic-serialization")]
-impl<'de> serde::de::Visitor<'de> for SignatureVisitor {
-    type Value = Signature;
-
-    fn expecting(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        write!(fmt, "Expecting a Ed25519 public key (`Signature`)")
-    }
-
-    fn visit_str<'a, E>(self, v: &'a str) -> result::Result<Self::Value, E>
-    where
-        E: serde::de::Error,
-    {
-        match Self::Value::from_hex(v) {
-            Err(Error::HexadecimalError(err)) => Err(E::custom(format!("{}", err))),
-            Err(Error::InvalidSignatureSize(sz)) => Err(E::invalid_length(sz, &"64 bytes")),
-            Err(err) => Err(E::custom(format!("unexpected error: {}", err))),
-            Ok(h) => Ok(h),
-        }
-    }
-
-    fn visit_bytes<'a, E>(self, v: &'a [u8]) -> result::Result<Self::Value, E>
-    where
-        E: serde::de::Error,
-    {
-        match Self::Value::from_slice(v) {
-            Err(Error::InvalidSignatureSize(sz)) => Err(E::invalid_length(sz, &"64 bytes")),
-            Err(err) => Err(E::custom(format!("unexpected error: {}", err))),
-            Ok(h) => Ok(h),
-        }
-    }
-}
-// #[cfg(feature = "generic-serialization")]
-impl<'de> serde::Deserialize<'de> for Signature {
-    fn deserialize<D>(deserializer: D) -> result::Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        if deserializer.is_human_readable() {
-            deserializer.deserialize_str(SignatureVisitor::new())
-        } else {
-            deserializer.deserialize_bytes(SignatureVisitor::new())
-        }
-    }
-}
 
 #[cfg(test)]
 mod tests {

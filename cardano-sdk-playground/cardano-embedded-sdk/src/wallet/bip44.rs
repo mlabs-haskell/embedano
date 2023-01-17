@@ -1,4 +1,4 @@
-use alloc::{collections::BTreeMap, string::String, vec, vec::Vec};
+use alloc::{borrow::ToOwned, collections::btree_map::BTreeMap, string::String, vec, vec::Vec};
 use core::ops::Deref;
 
 use crate::address::ExtendedAddr;

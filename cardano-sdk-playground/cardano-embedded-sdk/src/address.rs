@@ -11,9 +11,8 @@
 use alloc::vec::Vec;
 use core::{fmt, str::FromStr};
 
-use crate::cbor;
 use crate::config::NetworkMagic;
-use crate::hash::{Blake2b224, Sha3_256};
+use crate::hash::Blake2b224;
 use crate::hdpayload::HDAddressPayload;
 use crate::hdwallet::XPub;
 use crate::redeem;
@@ -52,57 +51,60 @@ impl AddrType {
         }
     }
 }
-impl cbor_event::se::Serialize for AddrType {
-    fn serialize<'se, W: Write>(
-        &self,
-        serializer: &'se mut Serializer<W>,
-    ) -> cbor_event::Result<&'se mut Serializer<W>> {
-        serializer.write_unsigned_integer(self.to_byte() as u64)
-    }
-}
-impl cbor_event::de::Deserialize for AddrType {
-    fn deserialize<R: BufRead>(reader: &mut Deserializer<R>) -> cbor_event::Result<Self> {
-        match AddrType::from_u64(reader.unsigned_integer()?) {
-            Some(addr_type) => Ok(addr_type),
-            None => Err(cbor_event::Error::CustomError(format!("Invalid AddrType"))),
-        }
-    }
-}
+// TODO: cbor
+// impl cbor_event::se::Serialize for AddrType {
+//     fn serialize<'se, W: Write>(
+//         &self,
+//         serializer: &'se mut Serializer<W>,
+//     ) -> cbor_event::Result<&'se mut Serializer<W>> {
+//         serializer.write_unsigned_integer(self.to_byte() as u64)
+//     }
+// }
+// impl cbor_event::de::Deserialize for AddrType {
+//     fn deserialize<R: BufRead>(reader: &mut Deserializer<R>) -> cbor_event::Result<Self> {
+//         match AddrType::from_u64(reader.unsigned_integer()?) {
+//             Some(addr_type) => Ok(addr_type),
+//             None => Err(cbor_event::Error::CustomError(format!("Invalid AddrType"))),
+//         }
+//     }
+// }
 
 /// StakeholderId is the transaction
 ///
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Copy, Clone)]
-#[cfg_attr(feature = "generic-serialization", derive(Serialize, Deserialize))]
 pub struct StakeholderId(Blake2b224);
 impl StakeholderId {
     pub fn new(pubk: &XPub) -> StakeholderId {
         // the reason for this unwrap is that we have to dynamically allocate 66 bytes
         // to serialize 64 bytes in cbor (2 bytes of cbor overhead).
-        let buf = cbor!(pubk).unwrap();
-
-        let hash = Sha3_256::new(&buf);
-        StakeholderId(Blake2b224::new(hash.as_ref()))
+        // TODO: cbor
+        // let buf = cbor!(pubk).unwrap();
+        //
+        // let hash = Sha3_256::new(&buf);
+        // StakeholderId(Blake2b224::new(hash.as_ref()))
+        todo!()
     }
 
     pub fn as_hash_bytes(&self) -> &[u8; Blake2b224::HASH_SIZE] {
         self.0.as_hash_bytes()
     }
 }
-impl cbor_event::se::Serialize for StakeholderId {
-    fn serialize<'se, W: Write>(
-        &self,
-        serializer: &'se mut Serializer<W>,
-    ) -> cbor_event::Result<&'se mut Serializer<W>> {
-        cbor_event::se::Serialize::serialize(&self.0, serializer)
-    }
-}
-impl cbor_event::de::Deserialize for StakeholderId {
-    fn deserialize<R: BufRead>(reader: &mut Deserializer<R>) -> cbor_event::Result<Self> {
-        Ok(StakeholderId(cbor_event::de::Deserialize::deserialize(
-            reader,
-        )?))
-    }
-}
+// TODO: cbor
+// impl cbor_event::se::Serialize for StakeholderId {
+//     fn serialize<'se, W: Write>(
+//         &self,
+//         serializer: &'se mut Serializer<W>,
+//     ) -> cbor_event::Result<&'se mut Serializer<W>> {
+//         cbor_event::se::Serialize::serialize(&self.0, serializer)
+//     }
+// }
+// impl cbor_event::de::Deserialize for StakeholderId {
+//     fn deserialize<R: BufRead>(reader: &mut Deserializer<R>) -> cbor_event::Result<Self> {
+//         Ok(StakeholderId(cbor_event::de::Deserialize::deserialize(
+//             reader,
+//         )?))
+//     }
+// }
 impl fmt::Display for StakeholderId {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         fmt::Display::fmt(&self.0, f)
@@ -333,11 +335,13 @@ impl HashedSpendingData {
     pub fn new(addr_type: AddrType, spending_data: &SpendingData, attrs: &Attributes) -> Self {
         // the reason for this unwrap is that we have to dynamically allocate 66 bytes
         // to serialize 64 bytes in cbor (2 bytes of cbor overhead).
-        let buf = cbor!(&(&addr_type, spending_data, attrs))
-            .expect("serialize the HashedSpendingData's digest data");
-
-        let hash = Sha3_256::new(&buf);
-        HashedSpendingData(Blake2b224::new(hash.as_ref()))
+        // TODO: cbor
+        // let buf = cbor!(&(&addr_type, spending_data, attrs))
+        //     .expect("serialize the HashedSpendingData's digest data");
+        //
+        // let hash = Sha3_256::new(&buf);
+        // HashedSpendingData(Blake2b224::new(hash.as_ref()))
+        todo!()
     }
 
     pub fn as_hash_bytes(&self) -> &[u8; Blake2b224::HASH_SIZE] {
@@ -457,70 +461,6 @@ impl fmt::Display for Addr {
 //     }
 // }
 
-#[cfg(feature = "generic-serialization")]
-impl serde::Serialize for Addr {
-    #[inline]
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        let vec = cbor!(self).unwrap();
-        if serializer.is_human_readable() {
-            serializer.serialize_str(&base58::encode(&vec))
-        } else {
-            serializer.serialize_bytes(&vec)
-        }
-    }
-}
-#[cfg(feature = "generic-serialization")]
-impl<'de> serde::Deserialize<'de> for Addr {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        struct XAddrVisitor;
-        impl<'de> serde::de::Visitor<'de> for XAddrVisitor {
-            type Value = Addr;
-
-            fn expecting(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-                write!(fmt, "Expecting an Address (`Addr`)")
-            }
-
-            fn visit_str<'a, E>(self, v: &'a str) -> Result<Self::Value, E>
-            where
-                E: serde::de::Error,
-            {
-                let bytes = match base58::decode(v) {
-                    Err(err) => {
-                        return Err(E::custom(format!("invalid base58:{}", err)));
-                    }
-                    Ok(v) => v,
-                };
-
-                match Self::Value::try_from_slice(&bytes) {
-                    Err(err) => Err(E::custom(format!("unable to parse Addr: {:?}", err))),
-                    Ok(v) => Ok(v),
-                }
-            }
-
-            fn visit_bytes<'a, E>(self, v: &'a [u8]) -> Result<Self::Value, E>
-            where
-                E: serde::de::Error,
-            {
-                match Self::Value::try_from_slice(v) {
-                    Err(err) => Err(E::custom(format!("unable to parse Addr: {:?}", err))),
-                    Ok(v) => Ok(v),
-                }
-            }
-        }
-        if deserializer.is_human_readable() {
-            deserializer.deserialize_str(XAddrVisitor)
-        } else {
-            deserializer.deserialize_bytes(XAddrVisitor)
-        }
-    }
-}
-
 /// A valid cardano address deconstructed
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct ExtendedAddr {
@@ -547,30 +487,39 @@ impl ExtendedAddr {
     }
 
     pub fn to_address(&self) -> Addr {
-        Addr(cbor!(self).unwrap()) // unwrap should never fail from strongly typed extended addr to addr
+        // TODO: cbor
+        // Addr(cbor!(self).unwrap()) // unwrap should never fail from strongly typed extended addr to addr
+        todo!()
     }
 }
 #[derive(Debug)]
 pub enum ParseExtendedAddrError {
-    EncodingError(cbor_event::Error),
+    // TODO: cbor
+    // EncodingError(cbor_event::Error),
+    EncodingError,
     Base58Error(base58::Error),
 }
 impl ::core::str::FromStr for ExtendedAddr {
     type Err = ParseExtendedAddrError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let bytes = base58::decode(s).map_err(ParseExtendedAddrError::Base58Error)?;
-
-        Self::try_from_slice(&bytes).map_err(ParseExtendedAddrError::EncodingError)
+        // TODO: cbor
+        // let bytes = base58::decode(s).map_err(ParseExtendedAddrError::Base58Error)?;
+        //
+        // Self::try_from_slice(&bytes).map_err(ParseExtendedAddrError::EncodingError)
+        todo!()
     }
 }
-// TODO: cbor
 // impl TryFromSlice for ExtendedAddr {
-//     type Error = cbor_event::Error;
-//     fn try_from_slice(slice: &[u8]) -> ::std::result::Result<Self, Self::Error> {
-//         let mut raw = Deserializer::from(std::io::Cursor::new(slice));
-//         cbor_event::de::Deserialize::deserialize(&mut raw)
+//     //TODO: cbor
+//     type Error = ParseExtendedAddrError; //cbor_event::Error;
+//     fn try_from_slice(slice: &[u8]) -> ::core::result::Result<Self, Self::Error> {
+//         //TODO: cbor
+//         // let mut raw = Deserializer::from(std::io::Cursor::new(slice));
+//         // cbor_event::de::Deserialize::deserialize(&mut raw)
+//         todo!()
 //     }
 // }
+//TODO: cbor
 // impl cbor_event::se::Serialize for ExtendedAddr {
 //     fn serialize<'se, W: Write>(
 //         &self,
@@ -602,75 +551,6 @@ impl ::core::str::FromStr for ExtendedAddr {
 impl fmt::Display for ExtendedAddr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.to_address())
-    }
-}
-#[cfg(feature = "generic-serialization")]
-impl serde::Serialize for ExtendedAddr {
-    #[inline]
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        let vec = cbor!(self).unwrap();
-        if serializer.is_human_readable() {
-            serializer.serialize_str(&base58::encode(&vec))
-        } else {
-            serializer.serialize_bytes(&vec)
-        }
-    }
-}
-#[cfg(feature = "generic-serialization")]
-impl<'de> serde::Deserialize<'de> for ExtendedAddr {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        struct XAddrVisitor;
-        impl<'de> serde::de::Visitor<'de> for XAddrVisitor {
-            type Value = ExtendedAddr;
-
-            fn expecting(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-                write!(fmt, "Expecting an Extended Address (`ExtendedAddr`)")
-            }
-
-            fn visit_str<'a, E>(self, v: &'a str) -> Result<Self::Value, E>
-            where
-                E: serde::de::Error,
-            {
-                let bytes = match base58::decode(v) {
-                    Err(err) => {
-                        return Err(E::custom(format!("invalid base58:{}", err)));
-                    }
-                    Ok(v) => v,
-                };
-
-                match Self::Value::try_from_slice(&bytes) {
-                    Err(err) => Err(E::custom(format!(
-                        "unable to parse ExtendedAddr: {:?}",
-                        err
-                    ))),
-                    Ok(v) => Ok(v),
-                }
-            }
-
-            fn visit_bytes<'a, E>(self, v: &'a [u8]) -> Result<Self::Value, E>
-            where
-                E: serde::de::Error,
-            {
-                match Self::Value::try_from_slice(v) {
-                    Err(err) => Err(E::custom(format!(
-                        "unable to parse ExtendedAddr: {:?}",
-                        err
-                    ))),
-                    Ok(v) => Ok(v),
-                }
-            }
-        }
-        if deserializer.is_human_readable() {
-            deserializer.deserialize_str(XAddrVisitor)
-        } else {
-            deserializer.deserialize_bytes(XAddrVisitor)
-        }
     }
 }
 

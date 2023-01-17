@@ -5,7 +5,7 @@ use alloc::vec::Vec;
 
 use crate::address::ExtendedAddr;
 use crate::config::{NetworkMagic, ProtocolMagic};
-use crate::tx::{self, TxId, TxInWitness};
+use crate::tx::{TxId, TxInWitness};
 
 /// main wallet scheme, provides all the details to manage a wallet:
 /// from managing wallet [`Account`](./trait.Account.html)s and

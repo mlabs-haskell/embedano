@@ -90,15 +90,18 @@ impl Path {
     pub fn new(v: Vec<u32>) -> Self {
         Path(v)
     }
-    // TODO: cbor
-    // fn from_cbor(bytes: &[u8]) -> Result<Self> {
-    //     let cursor = std::io::Cursor::new(bytes);
-    //     let mut raw = Deserializer::from(cursor);
-    //     Ok(cbor_event::de::Deserialize::deserialize(&mut raw)?)
-    // }
-    // fn cbor(&self) -> Vec<u8> {
-    //     cbor!(self).expect("Serialize the given Path in cbor")
-    // }
+    fn from_cbor(bytes: &[u8]) -> Result<Self> {
+        // TODO: cbor
+        // let cursor = std::io::Cursor::new(bytes);
+        // let mut raw = Deserializer::from(cursor);
+        // Ok(cbor_event::de::Deserialize::deserialize(&mut raw)?)
+        todo!()
+    }
+    fn cbor(&self) -> Vec<u8> {
+        // TODO: cbor
+        // cbor!(self).expect("Serialize the given Path in cbor")
+        todo!()
+    }
 }
 // TODO: cbor
 // impl cbor_event::se::Serialize for Path {
@@ -183,18 +186,19 @@ impl HDKey {
         }
     }
 
-    // TODO: cbor
-    // pub fn encrypt_path(&self, derivation_path: &Path) -> HDAddressPayload {
-    //     let input = derivation_path.cbor();
-    //     let out = self.encrypt(&input);
-    //
-    //     HDAddressPayload::from_vec(out)
-    // }
-    //
-    // pub fn decrypt_path(&self, payload: &HDAddressPayload) -> Result<Path> {
-    //     let out = self.decrypt(payload.as_ref())?;
-    //     Path::from_cbor(&out)
-    // }
+    pub fn encrypt_path(&self, derivation_path: &Path) -> HDAddressPayload {
+        // TODO: cbor
+        // let input = derivation_path.cbor();
+        // let out = self.encrypt(&input);
+        //
+        // HDAddressPayload::from_vec(out)
+        todo!()
+    }
+
+    pub fn decrypt_path(&self, payload: &HDAddressPayload) -> Result<Path> {
+        let out = self.decrypt(payload.as_ref())?;
+        Path::from_cbor(&out)
+    }
 }
 impl Drop for HDKey {
     fn drop(&mut self) {
