@@ -4,7 +4,6 @@
 extern crate alloc;
 
 pub mod address;
-pub mod coin;
 pub mod config;
 pub mod hash;
 pub mod hdpayload;

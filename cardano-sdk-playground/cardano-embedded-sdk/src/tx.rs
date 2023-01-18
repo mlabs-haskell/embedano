@@ -11,7 +11,6 @@ use core::fmt;
 
 use crate::{
     address::{AddrType, Attributes, ExtendedAddr, SpendingData},
-    coin::{self, Coin},
     config::ProtocolMagic,
     hash::Blake2b256,
     hdwallet::{Signature, XPrv, XPub, SIGNATURE_SIZE, XPUB_SIZE},
@@ -38,49 +37,10 @@ pub fn redeem_pubkey_to_txid(
     todo!()
 }
 
-/// Tx Output composed of an address and a coin value
-#[derive(Debug, PartialEq, Eq, Clone)]
-pub struct TxOut {
-    pub address: ExtendedAddr,
-    pub value: Coin,
-}
-impl fmt::Display for TxOut {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} -> {}", self.address, self.value)
-    }
-}
-impl TxOut {
-    pub fn new(addr: ExtendedAddr, value: Coin) -> Self {
-        TxOut {
-            address: addr,
-            value: value,
-        }
-    }
-}
-// TODO: cbor
-// impl cbor_event::de::Deserialize for TxOut {
-//     fn deserialize<R: BufRead>(reader: &mut Deserializer<R>) -> cbor_event::Result<Self> {
-//         reader.tuple(2, "TxOut")?;
-//         let addr = cbor_event::de::Deserialize::deserialize(reader)?;
-//         let val = cbor_event::de::Deserialize::deserialize(reader)?;
-//         Ok(TxOut::new(addr, val))
-//     }
-// }
-// impl cbor_event::se::Serialize for TxOut {
-//     fn serialize<'se, W: Write>(
-//         &self,
-//         serializer: &'se mut Serializer<W>,
-//     ) -> cbor_event::Result<&'se mut Serializer<W>> {
-//         serializer
-//             .write_array(cbor_event::Len::Len(2))?
-//             .serialize(&self.address)?
-//             .serialize(&self.value)
-//     }
-// }
 
-type TODO = u8;
-type ValidatorScript = TODO;
-type RedeemerScript = TODO;
+// type TODO = u8;
+// type ValidatorScript = TODO;
+// type RedeemerScript = TODO;
 
 /// Provide a witness to a specific transaction, generally by revealing
 /// all the hidden information from the tx and cryptographic signatures.
@@ -97,8 +57,9 @@ pub enum TxInWitness {
     /// signature of the `Tx` with the associated `XPub`
     /// the `XPub` is the public key set in the AddrSpendingData
     PkWitness(XPub, Signature<Tx>),
-    ScriptWitness(ValidatorScript, RedeemerScript),
-    RedeemWitness(redeem::PublicKey, redeem::Signature),
+    // TODO: misha: we probably wont need anything but PkWitness
+    // ScriptWitness(ValidatorScript, RedeemerScript),
+    // RedeemWitness(redeem::PublicKey, redeem::Signature),
 }
 impl fmt::Display for TxInWitness {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -124,15 +85,16 @@ impl TxInWitness {
         TxInWitness::PkWitness(key.public(), key.sign(&vec))
     }
 
+    // TODO: misha: we probably wont need anything but PkWitness
     /// create a TxInWitness from a given Redeem key
-    pub fn new_redeem_pk(
-        protocol_magic: ProtocolMagic,
-        key: &redeem::PrivateKey,
-        txid: &TxId,
-    ) -> Self {
-        let vec = Self::prepare_byte_to_sign(protocol_magic, SigningTag::RedeemTx, txid);
-        TxInWitness::RedeemWitness(key.public(), key.sign(&vec))
-    }
+    // pub fn new_redeem_pk(
+    //     protocol_magic: ProtocolMagic,
+    //     key: &redeem::PrivateKey,
+    //     txid: &TxId,
+    // ) -> Self {
+    //     let vec = Self::prepare_byte_to_sign(protocol_magic, SigningTag::RedeemTx, txid);
+    //     TxInWitness::RedeemWitness(key.public(), key.sign(&vec))
+    // }
 
     fn prepare_byte_to_sign(
         protocol_magic: ProtocolMagic,
@@ -160,39 +122,26 @@ impl TxInWitness {
 
                 &ea == address
             }
-            &TxInWitness::ScriptWitness(_, _) => unimplemented!(),
-            &TxInWitness::RedeemWitness(ref pk, _) => {
-                let sd = SpendingData::RedeemASD(pk.clone());
-                let ea = ExtendedAddr::new(address.addr_type, sd, address.attributes.clone());
+            // TODO: misha: we probably wont need anything but PkWitness
+            // &TxInWitness::ScriptWitness(_, _) => unimplemented!(),
+            // &TxInWitness::RedeemWitness(ref pk, _) => {
+            //     let sd = SpendingData::RedeemASD(pk.clone());
+            //     let ea = ExtendedAddr::new(address.addr_type, sd, address.attributes.clone());
 
-                &ea == address
-            }
-        }
-    }
-
-    /// verify the signature against the given transation `Tx`
-    ///
-    pub fn verify_tx(&self, protocol_magic: ProtocolMagic, tx: &Tx) -> bool {
-        let vec = Self::prepare_byte_to_sign(protocol_magic, self.get_sign_tag(), &tx.id());
-        match self {
-            &TxInWitness::PkWitness(ref pk, ref sig) => pk.verify(&vec, sig),
-            &TxInWitness::ScriptWitness(_, _) => unimplemented!(),
-            &TxInWitness::RedeemWitness(ref pk, ref sig) => pk.verify(sig, &vec),
+            //     &ea == address
+            // }
         }
     }
 
     fn get_sign_tag(&self) -> SigningTag {
         match self {
             &TxInWitness::PkWitness(_, _) => SigningTag::Tx,
-            &TxInWitness::ScriptWitness(_, _) => unimplemented!(),
-            &TxInWitness::RedeemWitness(_, _) => SigningTag::RedeemTx,
+            // &TxInWitness::ScriptWitness(_, _) => unimplemented!(),
+            // &TxInWitness::RedeemWitness(_, _) => SigningTag::RedeemTx,
         }
     }
 
-    /// verify the address's public key and the transaction signature
-    pub fn verify(&self, protocol_magic: ProtocolMagic, address: &ExtendedAddr, tx: &Tx) -> bool {
-        self.verify_address(address) && self.verify_tx(protocol_magic, tx)
-    }
+    
 }
 // TODO: cbor
 // impl cbor_event::se::Serialize for TxInWitness {
@@ -336,83 +285,13 @@ impl TxoPointer {
 /// A Transaction containing tx inputs and tx outputs.
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Tx {
-    pub inputs: Vec<TxoPointer>,
-    pub outputs: Vec<TxOut>,
-    // attributes: TxAttributes
-    //
-    // So far, there is no TxAttributes... the structure contains only the unparsed/unknown stuff
 }
+
 impl fmt::Display for Tx {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        for input in self.inputs.iter() {
-            writeln!(f, "-> {}", input)?;
-        }
-        for output in self.outputs.iter() {
-            writeln!(f, "   {} ->", output)?;
-        }
-        write!(f, "")
-    }
-}
-impl Tx {
-    pub fn new() -> Self {
-        Tx::new_with(Vec::new(), Vec::new())
-    }
-    pub fn new_with(ins: Vec<TxoPointer>, outs: Vec<TxOut>) -> Self {
-        Tx {
-            inputs: ins,
-            outputs: outs,
-        }
-    }
-    pub fn id(&self) -> TxId {
-        // TODO: cbor
-        // let buf = cbor!(self).expect("encode Tx");
-        // TxId::new(&buf)
         todo!()
     }
-    pub fn add_input(&mut self, i: TxoPointer) {
-        self.inputs.push(i)
-    }
-    pub fn add_output(&mut self, o: TxOut) {
-        self.outputs.push(o)
-    }
-    pub fn get_output_total(&self) -> coin::Result<Coin> {
-        let mut total = Coin::zero();
-        for ref o in self.outputs.iter() {
-            total = (total + o.value)?;
-        }
-        Ok(total)
-    }
 }
-// TODO: cbor
-// impl cbor_event::se::Serialize for Tx {
-//     fn serialize<'se, W: Write>(
-//         &self,
-//         serializer: &'se mut Serializer<W>,
-//     ) -> cbor_event::Result<&'se mut Serializer<W>> {
-//         serializer.write_array(cbor_event::Len::Len(3))?;
-//         cbor_event::se::serialize_indefinite_array(self.inputs.iter(), serializer)?;
-//         cbor_event::se::serialize_indefinite_array(self.outputs.iter(), serializer)?;
-//         serializer.write_map(cbor_event::Len::Len(0))
-//     }
-// }
-// impl cbor_event::de::Deserialize for Tx {
-//     fn deserialize<R: BufRead>(raw: &mut Deserializer<R>) -> cbor_event::Result<Self> {
-//         raw.tuple(3, "Tx")?;
-//
-//         // Note: these must be indefinite-size arrays.
-//         let inputs = cbor_event::de::Deserialize::deserialize(raw)?;
-//         let outputs = cbor_event::de::Deserialize::deserialize(raw)?;
-//
-//         let map_len = raw.map()?;
-//         if !map_len.is_null() {
-//             return Err(cbor_event::Error::CustomError(format!(
-//                 "Invalid Tx: we do not support Tx extra data... {:?} elements",
-//                 map_len
-//             )));
-//         }
-//         Ok(Tx::new_with(inputs, outputs))
-//     }
-// }
 
 /// A transaction witness is a vector of input witnesses
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -577,39 +456,6 @@ mod tests {
     ];
 
     #[test]
-    fn txout_decode() {
-        // let txout : TxOut = cbor::decode_from_cbor(TX_OUT).unwrap();
-        let mut raw = Deserializer::from(std::io::Cursor::new(TX_OUT));
-        let txout: TxOut = cbor_event::de::Deserialize::deserialize(&mut raw).unwrap();
-
-        let hdap = hdpayload::HDAddressPayload::from_bytes(HDPAYLOAD);
-        assert_eq!(Coin::new(42).unwrap(), txout.value);
-        assert_eq!(address::AddrType::ATPubKey, txout.address.addr_type);
-        assert_eq!(
-            address::StakeDistribution::new_bootstrap_era(),
-            txout.address.attributes.stake_distribution
-        );
-        assert_eq!(txout.address.attributes.derivation_path, Some(hdap));
-    }
-
-    #[test]
-    fn txout_encode_decode() {
-        let seed = hdwallet::Seed::from_bytes(SEED);
-        let sk = hdwallet::XPrv::generate_from_seed(&seed);
-        let pk = sk.public();
-        let hdap = hdpayload::HDAddressPayload::from_bytes(HDPAYLOAD);
-        let addr_type = address::AddrType::ATPubKey;
-        let sd = address::SpendingData::PubKeyASD(pk.clone());
-        let attrs = address::Attributes::new_single_key(&pk, Some(hdap), NetworkMagic::NoMagic);
-
-        let ea = address::ExtendedAddr::new(addr_type, sd, attrs);
-        let value = Coin::new(42).unwrap();
-        let txout = TxOut::new(ea, value);
-
-        assert!(cbor_event::test_encode_decode(&txout).expect("encode/decode TxOut"));
-    }
-
-    #[test]
     fn txin_decode() {
         let mut raw = Deserializer::from(std::io::Cursor::new(TX_IN));
         let txo: TxoPointer = cbor_event::de::Deserialize::deserialize(&mut raw).unwrap();
@@ -621,44 +467,6 @@ mod tests {
     fn txin_encode_decode() {
         let txid = TxId::new(&[0; 32]);
         assert!(cbor_event::test_encode_decode(&TxoPointer::new(txid, 666)).unwrap());
-    }
-
-    #[test]
-    fn tx_decode() {
-        let mut raw = Deserializer::from(std::io::Cursor::new(TX_IN));
-        let txo: TxoPointer = raw.deserialize().unwrap();
-        let mut raw = Deserializer::from(std::io::Cursor::new(TX_OUT));
-        let txout: TxOut = raw.deserialize().unwrap();
-        let mut raw = Deserializer::from(std::io::Cursor::new(TX));
-        let mut tx: Tx = raw.deserialize().unwrap();
-
-        assert!(tx.inputs.len() == 1);
-        assert_eq!(Some(txo), tx.inputs.pop());
-        assert!(tx.outputs.len() == 1);
-        assert_eq!(Some(txout), tx.outputs.pop());
-    }
-
-    #[test]
-    fn tx_encode_decode() {
-        let txid = TxId::new(&[0; 32]);
-        let txo = TxoPointer::new(txid, 666);
-
-        let seed = hdwallet::Seed::from_bytes(SEED);
-        let sk = hdwallet::XPrv::generate_from_seed(&seed);
-        let pk = sk.public();
-        let hdap = hdpayload::HDAddressPayload::from_bytes(HDPAYLOAD);
-        let addr_type = address::AddrType::ATPubKey;
-        let sd = address::SpendingData::PubKeyASD(pk.clone());
-        let attrs = address::Attributes::new_single_key(&pk, Some(hdap), NetworkMagic::NoMagic);
-        let ea = address::ExtendedAddr::new(addr_type, sd, attrs);
-        let value = Coin::new(42).unwrap();
-        let txout = TxOut::new(ea, value);
-
-        let mut tx = Tx::new();
-        tx.add_input(txo);
-        tx.add_output(txout);
-
-        assert!(cbor_event::test_encode_decode(&tx).expect("encode/decode Tx"));
     }
 
     #[test]
