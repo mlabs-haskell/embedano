@@ -1,7 +1,9 @@
-#![no_std]
+// #![no_std]
 #![feature(error_in_core)]
 
 extern crate alloc;
+
+pub use cardano_serialization_lib;
 
 pub mod address;
 pub mod coin;

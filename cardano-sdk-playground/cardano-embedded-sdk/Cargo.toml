@@ -9,6 +9,8 @@ edition = "2021"
 cryptoxide = "0.1"
 ufmt = "0.2.0"
 
+cardano-serialization-lib = { path = "../cardano-serialization-lib", version = "11.2.1" }
+
 [dev-dependencies]
 lazy_static = "1.2"
 rand = "0.6"

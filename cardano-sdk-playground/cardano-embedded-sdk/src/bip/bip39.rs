@@ -424,6 +424,10 @@ impl Seed {
         Seed(buf)
     }
 
+    pub fn to_bytes(&self) -> &[u8] {
+        &self.0
+    }
+
     /// create a Seed by copying the given slice into a new array
     ///
     /// # Example
