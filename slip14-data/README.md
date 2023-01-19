@@ -7,6 +7,7 @@
     - [Extended signing key for address 0](#extended-signing-key-for-address-0)
     - [Verification key for address 0](#verification-key-for-address-0)
       - [Key hash](#key-hash)
+    - [Keys derivation steps](#keys-derivation-steps)
   - [Simple transaction](#simple-transaction)
     - [Transaction id (body hash)](#transaction-id-body-hash)
     - [Transaction body (a.k.a. raw transaction)](#transaction-body-aka-raw-transaction)
@@ -72,6 +73,52 @@ Derived from root key by path `1852'/1815'/0'/0/0`
 
 ```shell
 80f9e2c88e6c817008f3a812ed889b4a4da8e0bd103f86e7335422aa
+```
+
+### Keys derivation steps
+
+Derivations made with `cardano-address`. `cardano-address` only accept paths of 2, 3 or 4 indexes.
+
+[Script](keys_derivation_steps.sh)
+
+```shell
+Mnemonic
+all all all all all all all all all all all all
+
+Root
+{
+    "chain_code": "7c0b5c44c1ddb9049bfcaf4ec5d73236392321c69979bbcff1f7c1b6d74c9c5a",
+    "key_type": "private",
+    "extended_key": "78fe04891cbda885b3ee9b7a60bb5991c3209b07f16324c2d68cb9c7c328ed512a18cdf9b5c0fa98e7d620ae9d851a58aca7e4e0ab46f607c03e78498b345b1b"
+}
+
+Derived for 1852H/1815H
+{
+    "chain_code": "4d42bb8c2498a43c64df25fa2e316ec8a315b3a6f391dfb56475c7db59aec338",
+    "key_type": "private",
+    "extended_key": "3ec88c70025e361df240cbbd919a1cf34231749842fdccbabfdde278dc11ae0282bad54d095c2724445136150f7236157fb8f61e3f0c24151df05f56a55dd7c4"
+}
+
+Derived for 1852H/1815H/0H
+{
+    "chain_code": "b19657ad13ee581b56b0f8d744d66ca356b93d42fe176b3de007d53e9c4c4e7a",
+    "key_type": "private",
+    "extended_key": "1809183f2042b48a70409a99067ba017f8f81967a0e0431dec5157fcd328ed51cc4a7129f432a4b68095036df22fef5b5d10e96583828df0cd44bda8b5a172b0"
+}
+
+Derived for 1852H/1815H/0H/0/0
+{
+    "chain_code": "f123474e140a2c360b01f0fa66f2f22e2e965a5b07a80358cf75f77abbd66088",
+    "key_type": "private",
+    "extended_key": "286821b9f84458fe1644723e9f0bc6ee75d71efff96512168a3f62cbdc28ed519e5976fcff6ac1801e04ca66051584abbcef38f16a411763af8c3dc14a9727d5"
+}
+
+PubKey for 1852H/1815H/0H/0/0
+{
+    "chain_code": "f123474e140a2c360b01f0fa66f2f22e2e965a5b07a80358cf75f77abbd66088",
+    "key_type": "public",
+    "extended_key": "5d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c1"
+}
 ```
 
 ## Simple transaction
