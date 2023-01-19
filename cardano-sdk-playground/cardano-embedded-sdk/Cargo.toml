@@ -7,8 +7,10 @@ edition = "2021"
 
 [dependencies]
 cryptoxide = "0.1"
+hex = "0.4.0"
 ufmt = "0.2.0"
 
+derivation-path = "0.2.0"
 cardano-serialization-lib = { path = "../cardano-serialization-lib", version = "11.2.1" }
 
 [dev-dependencies]
