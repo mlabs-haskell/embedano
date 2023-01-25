@@ -11,7 +11,7 @@ fn main() {
     .unwrap();
 
     let entropy = bip39::Entropy::from_mnemonics(&mnemonics).unwrap();
-    let mut root_key = XPrvKey::from_entropy(entropy.as_ref(), b"");
+    let root_key = XPrvKey::from_entropy(entropy.as_ref(), b"");
     println!("root xprv: {}", root_key.to_hex());
 
     let path: DerivationPath = "m/1852'/1815'/0'/0/0".parse().unwrap();
