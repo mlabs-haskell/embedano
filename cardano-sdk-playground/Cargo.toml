@@ -1,0 +1,6 @@
+[workspace]
+members = [
+	"cardano-origin",
+	"cardano-embedded-sdk",
+	"cardano-serialization-lib",
+]
