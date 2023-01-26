@@ -47,6 +47,9 @@ fn test_slip14_keys() {
         assert_eq!(pub_key_reference_hex, acc_0_pub_key.to_hex());
     })
 }
+
+// this setup is borrowed from Eric Opines from here:
+// https://medium.com/@ericdreichert/test-setup-and-teardown-in-rust-without-a-framework-ba32d97aa5ab
 fn run_test<T>(test: T) -> ()
 where
     T: FnOnce() -> () + panic::UnwindSafe,
