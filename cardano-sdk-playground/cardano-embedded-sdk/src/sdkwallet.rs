@@ -20,18 +20,14 @@ impl XPrvKey {
 
     pub fn derive_for_path(xprv: XPrvKey, path: DerivationPath) -> Self {
         let mut derived = xprv;
-        for index in path.into_iter() {
-            let i = match index {
-                &ChildIndex::Hardened(i) => i + 0x80000000,
-                &ChildIndex::Normal(i) => i,
-            };
-            derived = derived.derive(i);
-            // println!("derived {:x} xprv: {}\n", i, derived.to_hex());
+        for index in path.into_iter().map(|ix| adjust_hardened(ix)) {
+            derived = derived.derive(index);
         }
         derived
     }
 
     pub fn to_public(&self) -> XPubKey {
+        
         let XPrvKey(key) = self;
         XPubKey(key.to_public())
     }
@@ -53,5 +49,12 @@ impl XPubKey {
     pub fn verify(&self, data: &[u8], signature: &Ed25519Signature) -> bool {
         let XPubKey(key) = self;
         key.to_raw_key().verify(data, signature)
+    }
+}
+
+fn adjust_hardened(index: &ChildIndex) -> u32 {
+    match index {
+        &ChildIndex::Hardened(i) => i + 0x80000000,
+        &ChildIndex::Normal(i) => i,
     }
 }

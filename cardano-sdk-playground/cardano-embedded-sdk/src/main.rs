@@ -1,7 +1,7 @@
+use cardano_embedded_sdk::bip::bip39;
 use cardano_embedded_sdk::sdkwallet::XPrvKey;
-use cardano_embedded_sdk::{bip::bip39};
 use cardano_serialization_lib::crypto;
-use derivation_path::{DerivationPath};
+use derivation_path::DerivationPath;
 
 fn main() {
     let mnemonics = bip39::Mnemonics::from_string(
@@ -17,8 +17,12 @@ fn main() {
     let path: DerivationPath = "m/1852'/1815'/0'/0/0".parse().unwrap();
     println!("path: {:#?}", path);
 
+    let path2: DerivationPath = "m".parse().unwrap();
+    println!("path2: {:#?}", path2);
+
     let acc_0_xprv = XPrvKey::derive_for_path(root_key, path);
     println!("Account 0 xprv key: {}", acc_0_xprv.to_hex());
+    // println!("root xprv: {}", root_key.to_hex());
 
     let acc_0_xpub = acc_0_xprv.to_public();
     println!("Account 0 xpub key: {}", acc_0_xpub.to_hex());
