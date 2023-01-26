@@ -27,7 +27,6 @@ impl XPrvKey {
     }
 
     pub fn to_public(&self) -> XPubKey {
-        
         let XPrvKey(key) = self;
         XPubKey(key.to_public())
     }
