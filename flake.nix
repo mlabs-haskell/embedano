@@ -49,18 +49,30 @@
 
         checks = {
           qemu-example-check = pkgs.runCommand "test-command"
-          {
-            buildInputs = [ rust ];
-          }
-          ''
-          echo $(cargo version)
-          cd ${./.}/qemu-example
-          cargo fmt --check
-          touch $out
-    '';
-};
+            {
+              buildInputs = [ rust ];
+            }
+            ''
+              echo $(cargo version)
+              cd ${./.}/qemu-example
+              cargo fmt --check
+              touch $out
+            '';
+
+          sdk-check = pkgs.runCommand "test-command"
+            {
+              buildInputs = [ rust ];
+            }
+            ''
+              echo $(cargo version)
+              cd ${./.}/cardano-sdk-playground
+              cargo fmt -p cardano-embedded-sdk --check
+              touch $out
+            '';
+            
+        };
 
       })) // {
-        herculesCI.ciSystems = [ "x86_64-linux" ];
-      };
+      herculesCI.ciSystems = [ "x86_64-linux" ];
+    };
 }
