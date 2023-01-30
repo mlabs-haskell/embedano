@@ -1,11 +1,25 @@
 use derivation_path::DerivationPath;
 
 use crate::{
-    bip::bip39::{self},
+    bip::bip39::{self, Entropy},
     sdkwallet::{XPrvKey, XPubKey},
 };
 
 const SLIP14_MNEMONICS: &str = "all all all all all all all all all all all all";
+
+pub fn make_entropy() -> Entropy {
+    let mnemonics =
+        bip39::Mnemonics::from_string(&bip39::dictionary::ENGLISH, SLIP14_MNEMONICS).unwrap();
+    bip39::Entropy::from_mnemonics(&mnemonics).unwrap()
+}
+
+pub fn make_root_key() -> XPrvKey {
+    let mnemonics =
+        bip39::Mnemonics::from_string(&bip39::dictionary::ENGLISH, SLIP14_MNEMONICS).unwrap();
+    let entropy = bip39::Entropy::from_mnemonics(&mnemonics).unwrap();
+
+    XPrvKey::from_entropy(&entropy, b"")
+}
 
 pub fn make_keys() -> (XPrvKey, XPubKey) {
     let path: DerivationPath = "m/1852'/1815'/0'/0/0".parse().unwrap();

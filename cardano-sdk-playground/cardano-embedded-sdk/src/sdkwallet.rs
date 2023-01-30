@@ -64,22 +64,97 @@ impl XPubKey {
 
 fn adjust_hardened(index: &ChildIndex) -> u32 {
     match index {
-        &ChildIndex::Hardened(i) => i + 0x80000000,
+        &ChildIndex::Hardened(i) => harden(i),
         &ChildIndex::Normal(i) => i,
     }
 }
 
-// pub fn proof_ownership(entropy: &Entropy, password: &[u8], nonce)
+fn harden(i: u32) -> u32 {
+    i + 0x80000000
+}
+
+pub fn proof_ownership(
+    payment_key: &XPubKey,
+    entropy: &Entropy,
+    password: &[u8],
+    account_gap: u32,
+    address_gap: u32,
+) -> bool {
+    let root_key = XPrvKey::from_entropy(&entropy, password);
+    let level_2_key = root_key.derive(harden(1852)).derive(harden(1815));
+
+    for account_index in 0..account_gap {
+        let account_key = level_2_key.derive(harden(account_index));
+        for address_index in 0..address_gap {
+            let addr_key = account_key.derive(0).derive(address_index);
+            if addr_key.is_pair_of(payment_key) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
 
 #[cfg(test)]
 mod tests {
-    use crate::util::slip14;
+    use crate::{
+        bip::bip39::{dictionary, Mnemonics},
+        util::slip14,
+    };
 
     use super::*;
 
     #[test]
     fn test_pair_check() {
+        // TODO: property test?
         let (account_prv_key, account_pub_key) = slip14::make_keys();
         assert!(account_prv_key.is_pair_of(&account_pub_key))
+    }
+
+    #[test]
+    fn test_ownership() {
+        let entropy = slip14::make_entropy();
+        let (_, account_pub_key) = slip14::make_keys();
+        assert!(proof_ownership(&account_pub_key, &entropy, b"", 20, 20));
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_ownership_wrong_seed() {
+        let (_, account_pub_key) = slip14::make_keys();
+
+        // different seen/entropy
+        let other_mnemonics = "aim wool into nose tell ball arm expand design push elevator multiply glove lonely minimum";
+        let other_mnemonics =
+            Mnemonics::from_string(&dictionary::ENGLISH, other_mnemonics).unwrap();
+        let other_entropy = Entropy::from_mnemonics(&other_mnemonics).unwrap();
+
+        assert!(proof_ownership(
+            &account_pub_key,
+            &other_entropy,
+            b"",
+            20,
+            20
+        ));
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_ownership_out_of_account_gap() {
+        // out of account gap range
+        let entropy = slip14::make_entropy();
+        let path: DerivationPath = "m/1852'/1815'/0'/0/21".parse().unwrap();
+        let (_, diff_address_key) = slip14::make_keys_for(path);
+        assert!(proof_ownership(&diff_address_key, &entropy, b"", 20, 20));
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_ownership_out_of_address_gap() {
+        let entropy = slip14::make_entropy();
+        let path: DerivationPath = "m/1852'/1815'/21'/0/20".parse().unwrap();
+        let (_, diff_address_key) = slip14::make_keys_for(path);
+        assert!(proof_ownership(&diff_address_key, &entropy, b"", 20, 20));
     }
 }
