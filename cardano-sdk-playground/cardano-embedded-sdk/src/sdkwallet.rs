@@ -1,11 +1,13 @@
 use cardano_serialization_lib::crypto::{Bip32PrivateKey, Bip32PublicKey, Ed25519Signature};
 use derivation_path::{ChildIndex, DerivationPath};
 
+use crate::bip::bip39::Entropy;
+
 pub struct XPrvKey(Bip32PrivateKey);
 
 impl XPrvKey {
-    pub fn from_entropy(entropy: &[u8], password: &[u8]) -> Self {
-        XPrvKey(Bip32PrivateKey::from_bip39_entropy(&entropy, &password))
+    pub fn from_entropy(entropy: &Entropy, password: &[u8]) -> Self {
+        XPrvKey(Bip32PrivateKey::from_bip39_entropy(entropy, &password))
     }
 
     pub fn to_hex(&self) -> String {
@@ -57,3 +59,5 @@ fn adjust_hardened(index: &ChildIndex) -> u32 {
         &ChildIndex::Normal(i) => i,
     }
 }
+
+// pub fn proof_ownership()
