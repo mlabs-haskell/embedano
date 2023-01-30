@@ -30,7 +30,7 @@ fn test_slip14_keys() {
         .unwrap();
 
         let entropy = bip39::Entropy::from_mnemonics(&mnemonics).unwrap();
-        let root_key = XPrvKey::from_entropy(entropy.as_ref(), b"");
+        let root_key = XPrvKey::from_entropy(&entropy, b"");
 
         assert_eq!(root_key_reference_hex, root_key.to_hex());
 

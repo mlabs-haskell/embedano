@@ -37,6 +37,10 @@ impl XPrvKey {
         let XPrvKey(key) = self;
         key.to_raw_key().sign(&message.to_vec())
     }
+
+    pub fn is_pair_of(&self, pub_key: &XPubKey) -> bool {
+        self.to_public().as_bytes() == pub_key.as_bytes()
+    }
 }
 
 pub struct XPubKey(Bip32PublicKey);
@@ -51,6 +55,11 @@ impl XPubKey {
         let XPubKey(key) = self;
         key.to_raw_key().verify(data, signature)
     }
+
+    pub fn as_bytes(&self) -> Vec<u8> {
+        let XPubKey(key) = self;
+        key.as_bytes()
+    }
 }
 
 fn adjust_hardened(index: &ChildIndex) -> u32 {
@@ -60,4 +69,17 @@ fn adjust_hardened(index: &ChildIndex) -> u32 {
     }
 }
 
-// pub fn proof_ownership()
+// pub fn proof_ownership(entropy: &Entropy, password: &[u8], nonce)
+
+#[cfg(test)]
+mod tests {
+    use crate::util::slip14;
+
+    use super::*;
+
+    #[test]
+    fn test_pair_check() {
+        let (account_prv_key, account_pub_key) = slip14::make_keys();
+        assert!(account_prv_key.is_pair_of(&account_pub_key))
+    }
+}
