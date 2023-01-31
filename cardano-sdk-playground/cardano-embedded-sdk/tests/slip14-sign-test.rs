@@ -3,7 +3,7 @@ use cardano_embedded_sdk::util::slip14;
 
 #[test]
 fn test_tx_id_signing() {
-    let (account_prv_key, account_pub_key) = slip14::make_keys();
+    let (account_prv_key, account_pub_key) = slip14::make_address_keys();
 
     // known transaction id for slip-14 keys according to slip14-data/README.md
     let tx_id = "bb1eb401cd03b0cd8caa08997df0a2ab226772c4d3a08adfb5a60ba34de12dfb";

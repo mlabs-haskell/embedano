@@ -21,7 +21,7 @@ pub fn make_root_key() -> XPrvKey {
     XPrvKey::from_entropy(&entropy, b"")
 }
 
-pub fn make_keys() -> (XPrvKey, XPubKey) {
+pub fn make_address_keys() -> (XPrvKey, XPubKey) {
     let path: DerivationPath = "m/1852'/1815'/0'/0/0".parse().unwrap();
     make_keys_for(path)
 }
