@@ -1,78 +1,13 @@
-use cardano_serialization_lib::crypto::{self, Bip32PrivateKey, Bip32PublicKey, Ed25519Signature};
+use cardano_serialization_lib::crypto::Ed25519Signature;
 use derivation_path::{ChildIndex, DerivationPath};
 
-use crate::bip::bip39::Entropy;
+use crate::{
+    bip::bip39::Entropy,
+    sdktypes::{TxId, XPrvKey, XPubKey},
+};
 
-pub struct XPrvKey(Bip32PrivateKey);
-
-impl XPrvKey {
-    pub fn from_entropy(entropy: &Entropy, password: &[u8]) -> Self {
-        XPrvKey(Bip32PrivateKey::from_bip39_entropy(entropy, &password))
-    }
-
-    pub fn to_hex(&self) -> String {
-        let XPrvKey(key) = self;
-        hex::encode(key.as_bytes())
-    }
-
-    pub fn derive(&self, index: u32) -> Self {
-        let XPrvKey(key) = self;
-        XPrvKey(key.derive(index))
-    }
-
-    pub fn derive_for_path(xprv: XPrvKey, path: DerivationPath) -> Self {
-        let mut derived = xprv;
-        for index in path.into_iter().map(|ix| adjust_hardened(ix)) {
-            derived = derived.derive(index);
-        }
-        derived
-    }
-
-    pub fn to_public(&self) -> XPubKey {
-        let XPrvKey(key) = self;
-        XPubKey(key.to_public())
-    }
-
-    pub fn sign(&self, message: &[u8]) -> Ed25519Signature {
-        let XPrvKey(key) = self;
-        key.to_raw_key().sign(&message.to_vec())
-    }
-
-    pub fn is_pair_of(&self, pub_key: &XPubKey) -> bool {
-        self.to_public().as_bytes() == pub_key.as_bytes()
-    }
-}
-
-pub struct XPubKey(Bip32PublicKey);
-
-impl XPubKey {
-    pub fn to_hex(&self) -> String {
-        let XPubKey(key) = self;
-        hex::encode(key.as_bytes())
-    }
-
-    pub fn verify(&self, data: &[u8], signature: &Ed25519Signature) -> bool {
-        let XPubKey(key) = self;
-        key.to_raw_key().verify(data, signature)
-    }
-
-    pub fn as_bytes(&self) -> Vec<u8> {
-        let XPubKey(key) = self;
-        key.as_bytes()
-    }
-}
-
-fn adjust_hardened(index: &ChildIndex) -> u32 {
-    match index {
-        &ChildIndex::Hardened(i) => harden(i),
-        &ChildIndex::Normal(i) => i,
-    }
-}
-
-fn harden(i: u32) -> u32 {
-    i + 0x80000000
-}
-
+// todo: do we need check for account key too?
+// check payment key ownership
 pub fn check_ownership(
     payment_key: &XPubKey,
     entropy: &Entropy,
@@ -96,6 +31,8 @@ pub fn check_ownership(
     return false;
 }
 
+// todo: do we need proof for account key too?
+// proof payment key ownership
 pub fn proof_ownership(
     nonce: &[u8],
     payment_key: &XPubKey,
@@ -103,7 +40,7 @@ pub fn proof_ownership(
     password: &[u8],
     account_gap: u32,
     address_gap: u32,
-) -> Option<crypto::Ed25519Signature> {
+) -> Option<Ed25519Signature> {
     let root_key = XPrvKey::from_entropy(&entropy, password);
     let level_2_key = root_key.derive(harden(1852)).derive(harden(1815));
 
@@ -120,6 +57,54 @@ pub fn proof_ownership(
     return None;
 }
 
+pub fn sign_tx_id(
+    tx_id: TxId,
+    entropy: &Entropy,
+    password: &[u8],
+    path: DerivationPath,
+) -> Ed25519Signature {
+    sign_data(tx_id.to_bytes(), entropy, password, path)
+}
+
+pub fn sign_data(
+    data: &[u8],
+    entropy: &Entropy,
+    password: &[u8],
+    path: DerivationPath,
+) -> Ed25519Signature {
+    derive_key(entropy, password, path).sign(data)
+}
+
+pub fn derive_key(entropy: &Entropy, password: &[u8], path: DerivationPath) -> XPrvKey {
+    let mut key = XPrvKey::from_entropy(entropy, password);
+    for index in path.into_iter().map(|ix| adjust_hardened(ix)) {
+        key = key.derive(index);
+    }
+    key
+}
+
+pub fn derive_key_pair(
+    entropy: &Entropy,
+    password: &[u8],
+    path: DerivationPath,
+) -> (XPrvKey, XPubKey) {
+    let private = derive_key(entropy, password, path);
+    let public = private.to_public();
+    (private, public)
+}
+
+fn adjust_hardened(index: &ChildIndex) -> u32 {
+    match index {
+        &ChildIndex::Hardened(i) => harden(i),
+        &ChildIndex::Normal(i) => i,
+    }
+}
+
+fn harden(i: u32) -> u32 {
+    i + 0x80000000
+}
+
+// todo: more tests
 #[cfg(test)]
 mod tests {
     use crate::{
@@ -128,13 +113,6 @@ mod tests {
     };
 
     use super::*;
-
-    #[test]
-    fn test_pair_check() {
-        // TODO: property test?
-        let (account_prv_key, account_pub_key) = slip14::make_address_keys();
-        assert!(account_prv_key.is_pair_of(&account_pub_key))
-    }
 
     #[test]
     fn test_ownership() {
