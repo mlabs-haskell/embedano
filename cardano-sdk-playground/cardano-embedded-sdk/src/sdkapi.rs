@@ -107,7 +107,7 @@ fn adjust_hardened(index: &ChildIndex) -> u32 {
     }
 }
 
-fn harden(i: u32) -> u32 {
+pub fn harden(i: u32) -> u32 {
     i + 0x80000000
 }
 
