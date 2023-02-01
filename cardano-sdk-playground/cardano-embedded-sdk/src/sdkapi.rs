@@ -6,6 +6,8 @@ use crate::{
     sdktypes::{TxId, XPrvKey, XPubKey},
 };
 
+const EXTERNAL_CHAIN_CODE: u32 = 0;
+
 #[derive(Clone)]
 pub enum KeyType {
     AccountKey { account_gap: u32 },
@@ -31,10 +33,10 @@ fn find_matching_private_key(
     key_type: KeyType,
 ) -> Option<XPrvKey> {
     let level_2_key = root_key.derive(harden(1852)).derive(harden(1815));
+    let account_keys = |gap: u32| (0..=gap).map(|i| level_2_key.derive(harden(i)));
     match key_type {
         KeyType::AccountKey { account_gap } => {
-            for account_index in 0..account_gap {
-                let account_key = level_2_key.derive(harden(account_index));
+            for account_key in account_keys(account_gap) {
                 if account_key.is_pair_of(pub_key) {
                     return Some(account_key);
                 }
@@ -46,10 +48,13 @@ fn find_matching_private_key(
             account_gap,
             address_gap,
         } => {
-            for account_index in 0..account_gap {
-                let account_key = level_2_key.derive(harden(account_index));
-                for address_index in 0..address_gap {
-                    let addr_key = account_key.derive(0).derive(address_index);
+            for account_key in account_keys(account_gap) {
+                for address_index in 0..=address_gap {
+                    let addr_key = account_key
+                        // todo: account discovery goes only thorough external chain
+                        // but maybe we should support proofs for staking keys as well with code `2`
+                        .derive(EXTERNAL_CHAIN_CODE)
+                        .derive(address_index);
                     if addr_key.is_pair_of(pub_key) {
                         return Some(addr_key);
                     }
@@ -80,7 +85,7 @@ pub fn sign_data(
     derive_key(entropy, password, path).sign(data)
 }
 
-// get private key for derivation from seed and password
+// get private key for derivation path from seed and password
 pub fn derive_key(entropy: &Entropy, password: &[u8], path: &DerivationPath) -> XPrvKey {
     let mut key = XPrvKey::from_entropy(entropy, password);
     for index in path.into_iter().map(|ix| adjust_hardened(ix)) {
@@ -89,7 +94,7 @@ pub fn derive_key(entropy: &Entropy, password: &[u8], path: &DerivationPath) -> 
     key
 }
 
-// get private and corresponding public key for derivation from seed and password
+// get private and corresponding public key for derivation path from seed and password
 pub fn derive_key_pair(
     entropy: &Entropy,
     password: &[u8],
@@ -240,5 +245,30 @@ mod tests {
 
         let (_, pub_key) = derive_key_pair(&entropy, password, &path);
         assert!(pub_key.verify(tx_id.to_bytes(), &signature))
+    }
+
+    #[test]
+    fn test_key_exploration() {
+        let mnemonics = "aim wool into nose tell ball arm expand design push elevator multiply glove lonely minimum";
+        let mnemonics = Mnemonics::from_string(&dictionary::ENGLISH, mnemonics).unwrap();
+        let entropy = Entropy::from_mnemonics(&mnemonics).unwrap();
+        let password = b"embedano";
+        let nonce = "some nonce".as_bytes();
+
+        // check account level exploration consistency
+        let path: DerivationPath = "m/1852'/1815'/5'".parse().unwrap();
+        let (_, pub_key) = derive_key_pair(&entropy, password, &path);
+        let key_type = AccountKey { account_gap: 5 };
+        let check1 = check_ownership(&pub_key, &entropy, password, nonce, key_type);
+
+        // check address level exploration consistency
+        let path: DerivationPath = "m/1852'/1815'/5'/0/5".parse().unwrap();
+        let (_, pub_key) = derive_key_pair(&entropy, password, &path);
+        let key_type = AddressKey {
+            account_gap: 5,
+            address_gap: 5,
+        };
+        let check2 = check_ownership(&pub_key, &entropy, password, nonce, key_type);
+        assert_eq!((Some(true), Some(true)), (check1, check2))
     }
 }
