@@ -19,7 +19,7 @@ impl TxId {
             Ok(bs) => Ok(TxId(bs)),
             Err(_) => {
                 let error = format!(
-                    "TxId length should be 32 bytes, but data lenght is {}",
+                    "TxId length should be 32 bytes, but data length is {}",
                     bytes.len()
                 );
                 return Err(TxIdParseError { message: error });

@@ -425,7 +425,6 @@ impl fmt::Debug for HDAddressPayload {
 //         }
 //     }
 // }
-
 #[cfg(test)]
 #[cfg(feature = "with-bench")]
 mod bench {

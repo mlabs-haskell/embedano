@@ -291,7 +291,6 @@ impl Ord for Signature {
 //     }
 // }
 
-
 // FIXME: commented to be able to run our tests
 // #[cfg(test)]
 // mod tests {

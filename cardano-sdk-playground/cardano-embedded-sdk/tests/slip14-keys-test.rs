@@ -38,7 +38,7 @@ fn test_slip14_keys() {
         //test account 0 derived private key
         let prv_key_reference_hex = read_file_trimmed(data_path.join("addr_0_xprv_hex"));
         let path: DerivationPath = "m/1852'/1815'/0'/0/0".parse().unwrap();
-        let (acc_0_prv_key, acc_0_pub_key) = derive_key_pair(&entropy, b"", path);
+        let (acc_0_prv_key, acc_0_pub_key) = derive_key_pair(&entropy, b"", &path);
 
         assert_eq!(prv_key_reference_hex, acc_0_prv_key.to_hex());
 
