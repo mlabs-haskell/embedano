@@ -1,4 +1,9 @@
-use cardano_serialization_lib::crypto::{Bip32PrivateKey, Bip32PublicKey, Ed25519Signature};
+use alloc::{
+    format,
+    string::{String, ToString},
+    vec::Vec,
+};
+use cardano_crypto_tmp::crypto::{Bip32PrivateKey, Bip32PublicKey, Ed25519Signature};
 
 use crate::bip::bip39::Entropy;
 
