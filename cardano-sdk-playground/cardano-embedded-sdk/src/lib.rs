@@ -12,6 +12,8 @@ pub mod hash;
 pub mod hdpayload;
 pub mod hdwallet;
 pub mod redeem;
+pub mod sdkapi;
+pub mod sdktypes;
 pub mod tx;
 pub mod util;
 
