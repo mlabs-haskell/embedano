@@ -1,5 +1,6 @@
 use cardano_embedded_sdk::bip::bip39;
-use cardano_embedded_sdk::sdkwallet::XPrvKey;
+use cardano_embedded_sdk::sdkapi::harden;
+use cardano_embedded_sdk::sdktypes::XPrvKey;
 use cardano_serialization_lib::crypto;
 use derivation_path::DerivationPath;
 
@@ -11,7 +12,7 @@ fn main() {
     .unwrap();
 
     let entropy = bip39::Entropy::from_mnemonics(&mnemonics).unwrap();
-    let root_key = XPrvKey::from_entropy(entropy.as_ref(), b"");
+    let root_key = XPrvKey::from_entropy(&entropy, b"");
     println!("root xprv: {}", root_key.to_hex());
 
     let path: DerivationPath = "m/1852'/1815'/0'/0/0".parse().unwrap();
@@ -20,7 +21,12 @@ fn main() {
     let path2: DerivationPath = "m".parse().unwrap();
     println!("path2: {:#?}", path2);
 
-    let acc_0_xprv = XPrvKey::derive_for_path(root_key, path);
+    let acc_0_xprv = root_key
+        .derive(harden(1852))
+        .derive(harden(1815))
+        .derive(harden(0))
+        .derive(0)
+        .derive(0);
     println!("Account 0 xprv key: {}", acc_0_xprv.to_hex());
     // println!("root xprv: {}", root_key.to_hex());
 

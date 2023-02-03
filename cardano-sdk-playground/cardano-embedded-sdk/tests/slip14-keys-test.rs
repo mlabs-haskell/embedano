@@ -1,5 +1,6 @@
 use cardano_embedded_sdk::bip::bip39;
-use cardano_embedded_sdk::sdkwallet::XPrvKey;
+use cardano_embedded_sdk::sdkapi::derive_key_pair;
+use cardano_embedded_sdk::sdktypes::XPrvKey;
 use derivation_path::DerivationPath;
 use std::fs;
 use std::panic;
@@ -30,20 +31,19 @@ fn test_slip14_keys() {
         .unwrap();
 
         let entropy = bip39::Entropy::from_mnemonics(&mnemonics).unwrap();
-        let root_key = XPrvKey::from_entropy(entropy.as_ref(), b"");
+        let root_key = XPrvKey::from_entropy(&entropy, b"");
 
         assert_eq!(root_key_reference_hex, root_key.to_hex());
 
         //test account 0 derived private key
         let prv_key_reference_hex = read_file_trimmed(data_path.join("addr_0_xprv_hex"));
         let path: DerivationPath = "m/1852'/1815'/0'/0/0".parse().unwrap();
-        let acc_0_prv_key = XPrvKey::derive_for_path(root_key, path);
+        let (acc_0_prv_key, acc_0_pub_key) = derive_key_pair(&entropy, b"", &path);
 
         assert_eq!(prv_key_reference_hex, acc_0_prv_key.to_hex());
 
         //test account 0 public key
         let pub_key_reference_hex = read_file_trimmed(data_path.join("addr_0_xpub_hex"));
-        let acc_0_pub_key = acc_0_prv_key.to_public();
         assert_eq!(pub_key_reference_hex, acc_0_pub_key.to_hex());
     })
 }
