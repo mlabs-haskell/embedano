@@ -1,6 +1,6 @@
 [workspace]
 members = [
-	"cardano-origin",
 	"cardano-embedded-sdk",
-	"cardano-serialization-lib",
+	"cardano-crypto-tmp",
+	"rust-ed25519-bip32",
 ]

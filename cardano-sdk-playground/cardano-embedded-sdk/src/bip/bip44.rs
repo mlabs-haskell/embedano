@@ -15,10 +15,8 @@
 //!
 //! assert!(scheme_value == 0);
 //! ```
-use alloc::{vec, vec::Vec};
+use alloc::vec::Vec;
 use core::{error, fmt, result};
-
-use crate::hdpayload::Path;
 
 /// the BIP44 derivation path has a specific length
 pub const BIP44_PATH_LENGTH: usize = 5;
@@ -32,7 +30,6 @@ pub const BIP44_SOFT_UPPER_BOUND: u32 = 0x80000000;
 
 /// Error relating to `bip44`'s `Addressing` operations
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
-#[cfg_attr(feature = "generic-serialization", derive(Serialize, Deserialize))]
 pub enum Error {
     /// this means the given `Path` has an incompatible length
     /// for bip44 derivation. See `BIP44_PATH_LENGTH` and `Addressing::from_path`.
@@ -247,16 +244,17 @@ impl Addressing {
         })
     }
 
+    // TODO: implement?
     /// return a path ready for derivation
-    pub fn to_path(&self) -> Path {
-        Path::new(vec![
-            BIP44_PURPOSE,
-            BIP44_COIN_TYPE,
-            self.account.get_scheme_value(),
-            self.change,
-            self.index.get_scheme_value(),
-        ])
-    }
+    // pub fn to_path(&self) -> Path {
+    //     Path::new(vec![
+    //         BIP44_PURPOSE,
+    //         BIP44_COIN_TYPE,
+    //         self.account.get_scheme_value(),
+    //         self.change,
+    //         self.index.get_scheme_value(),
+    //     ])
+    // }
 
     pub fn address_type(&self) -> AddrType {
         if self.change == 0 {
@@ -266,28 +264,29 @@ impl Addressing {
         }
     }
 
-    pub fn from_path(path: Path) -> Result<Self> {
-        let len = path.as_ref().len();
-        if path.as_ref().len() != BIP44_PATH_LENGTH {
-            return Err(Error::InvalidLength(len));
-        }
-
-        let p = path.as_ref()[0];
-        if p != BIP44_PURPOSE {
-            return Err(Error::InvalidPurpose(p));
-        }
-        let t = path.as_ref()[1];
-        if t != BIP44_COIN_TYPE {
-            return Err(Error::InvalidType(t));
-        }
-        let a = path.as_ref()[2];
-        let c = path.as_ref()[3];
-        let i = path.as_ref()[4];
-
-        Account::new(a)
-            .and_then(|account| Change::new(account, c))
-            .and_then(|change| Addressing::new_from_change(change, i))
-    }
+    // TODO: implement?
+    // pub fn from_path(path: Path) -> Result<Self> {
+    //     let len = path.as_ref().len();
+    //     if path.as_ref().len() != BIP44_PATH_LENGTH {
+    //         return Err(Error::InvalidLength(len));
+    //     }
+    //
+    //     let p = path.as_ref()[0];
+    //     if p != BIP44_PURPOSE {
+    //         return Err(Error::InvalidPurpose(p));
+    //     }
+    //     let t = path.as_ref()[1];
+    //     if t != BIP44_COIN_TYPE {
+    //         return Err(Error::InvalidType(t));
+    //     }
+    //     let a = path.as_ref()[2];
+    //     let c = path.as_ref()[3];
+    //     let i = path.as_ref()[4];
+    //
+    //     Account::new(a)
+    //         .and_then(|account| Change::new(account, c))
+    //         .and_then(|change| Addressing::new_from_change(change, i))
+    // }
 
     /// try to generate a new `Addressing` starting from the given
     /// `Addressing`'s index incremented by the given parameter;

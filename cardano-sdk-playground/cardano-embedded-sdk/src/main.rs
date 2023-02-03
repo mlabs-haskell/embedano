@@ -1,7 +1,5 @@
-use cardano_embedded_sdk::bip::bip39;
-use cardano_embedded_sdk::sdkapi::harden;
-use cardano_embedded_sdk::sdktypes::XPrvKey;
-use cardano_serialization_lib::crypto;
+use cardano_crypto_tmp::crypto;
+use cardano_embedded_sdk::{bip::bip39, sdkapi::harden, sdktypes::XPrvKey};
 use derivation_path::DerivationPath;
 
 fn main() {

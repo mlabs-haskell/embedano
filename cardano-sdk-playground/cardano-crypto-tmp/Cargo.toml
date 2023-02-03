@@ -1,26 +1,18 @@
 [package]
-name = "cardano-embedded-sdk"
+name = "cardano-crypto-tmp"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[lib]
-doctest = false
-
 [dependencies]
-#cryptoxide = "0.1"
+bech32 = { version = "0.7.2", default-features = false }
 cryptoxide = { version = "0.4.2", default-features = false }
+ed25519-bip32 = { version = "0.4.1", path = "../rust-ed25519-bip32" }
 hex = { version = "0.4.0", features = ["alloc"], default-features = false }
-#ufmt = "0.2.0"
 
-derivation-path = "0.2.0"
-cardano-crypto-tmp = { version = "0.1.0", path = "../cardano-crypto-tmp" }
+rand_core = { version = "0.6.4", default-features = false }
 
 [dev-dependencies]
-lazy_static = "1.2"
-rand = "0.6"
-serde_json = "1.0"
-unicode-normalization = "0.1"
-quickcheck = "0.8"
-base64 = "0.9"
+quickcheck = "0.9.2"
+quickcheck_macros = "0.9.1"

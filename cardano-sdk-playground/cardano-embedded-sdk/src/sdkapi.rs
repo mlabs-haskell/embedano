@@ -1,4 +1,4 @@
-use cardano_serialization_lib::crypto::Ed25519Signature;
+use cardano_crypto_tmp::crypto::Ed25519Signature;
 use derivation_path::{ChildIndex, DerivationPath};
 
 use crate::{
