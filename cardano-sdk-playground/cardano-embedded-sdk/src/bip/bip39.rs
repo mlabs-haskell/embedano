@@ -12,10 +12,10 @@
 //! ## To create a new HDWallet
 //!
 //! ```
-//! extern crate cardano;
+//! extern crate cardano_embedded_sdk;
 //! extern crate rand;
 //!
-//! use cardano::bip::bip39::*;
+//! use cardano_embedded_sdk::bip::bip39::*;
 //!
 //! // first, you need to generate the original entropy
 //! let entropy = Entropy::generate(Type::Type18Words, rand::random);
@@ -32,7 +32,7 @@
 //! ## To recover a HDWallet
 //!
 //! ```
-//! use cardano::bip::bip39::*;
+//! use cardano_embedded_sdk::bip::bip39::*;
 //!
 //! let mnemonics = "mimic left ask vacant toast follow bitter join diamond gate attend obey";
 //!
@@ -53,7 +53,7 @@ use alloc::{
 };
 use core::{error, fmt, ops::Deref, result, str};
 
-use crate::util::{securemem};
+use crate::util::securemem;
 
 use cryptoxide::hmac::Hmac;
 use cryptoxide::pbkdf2::pbkdf2;
@@ -165,8 +165,8 @@ impl Entropy {
     ///
     /// ```
     /// extern crate rand;
-    /// # extern crate cardano;
-    /// # use cardano::bip::bip39::*;
+    /// # extern crate cardano_embedded_sdk;
+    /// # use cardano_embedded_sdk::bip::bip39::*;
     ///
     /// let entropy = Entropy::generate(Type::Type15Words, rand::random);
     /// ```
@@ -250,8 +250,8 @@ impl Entropy {
     ///
     /// ```
     /// # extern crate rand;
-    /// # extern crate cardano;
-    /// # use cardano::bip::bip39::*;
+    /// # extern crate cardano_embedded_sdk;
+    /// # use cardano_embedded_sdk::bip::bip39::*;
     ///
     /// let entropy = Entropy::generate(Type::Type15Words, rand::random);
     ///
@@ -275,7 +275,7 @@ impl Entropy {
     /// # Example
     ///
     /// ```
-    /// # use cardano::bip::bip39::*;
+    /// # use cardano_embedded_sdk::bip::bip39::*;
     ///
     /// const MNEMONICS : &'static str = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
     /// let mnemonics = Mnemonics::from_string(&dictionary::ENGLISH, MNEMONICS)
@@ -320,7 +320,7 @@ impl Entropy {
     /// # Example
     ///
     /// ```
-    /// # use cardano::bip::bip39::*;
+    /// # use cardano_embedded_sdk::bip::bip39::*;
     ///
     /// let entropy = Entropy::Entropy12([0;16]);
     ///
@@ -413,7 +413,7 @@ impl Seed {
     /// # Example
     ///
     /// ```
-    /// use cardano::bip::bip39::{Seed, SEED_SIZE};
+    /// use cardano_embedded_sdk::bip::bip39::{Seed, SEED_SIZE};
     ///
     /// let bytes = [0u8;SEED_SIZE];
     /// let seed  = Seed::from_bytes(bytes);
@@ -433,7 +433,7 @@ impl Seed {
     /// # Example
     ///
     /// ```
-    /// use cardano::bip::bip39::{Seed, SEED_SIZE};
+    /// use cardano_embedded_sdk::bip::bip39::{Seed, SEED_SIZE};
     ///
     /// let bytes = [0u8;SEED_SIZE];
     /// let wrong = [0u8;31];
@@ -471,7 +471,7 @@ impl Seed {
     /// # Example
     ///
     /// ```
-    /// # use cardano::bip::bip39::*;
+    /// # use cardano_embedded_sdk::bip::bip39::*;
     ///
     /// const MNEMONICS : &'static str = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
     /// let mnemonics = MnemonicString::new(&dictionary::ENGLISH, MNEMONICS.to_owned())
@@ -538,7 +538,7 @@ impl MnemonicString {
     /// # Example
     ///
     /// ```
-    /// # use cardano::bip::bip39::*;
+    /// # use cardano_embedded_sdk::bip::bip39::*;
     ///
     /// const MNEMONICS : &'static str = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
     /// let mnemonics = MnemonicString::new(&dictionary::ENGLISH, MNEMONICS.to_owned())
@@ -704,7 +704,7 @@ impl MnemonicIndex {
     /// # Example
     ///
     /// ```
-    /// # use cardano::bip::bip39::*;
+    /// # use cardano_embedded_sdk::bip::bip39::*;
     /// #
     /// let index = MnemonicIndex::new(1029);
     /// assert!(index.is_ok());

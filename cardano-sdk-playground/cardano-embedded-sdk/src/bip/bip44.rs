@@ -6,8 +6,8 @@
 //! # Example
 //!
 //! ```
-//! # extern crate cardano;
-//! use cardano::bip::bip44::{Account, Change, Addressing};
+//! # extern crate cardano_embedded_sdk;
+//! use cardano_embedded_sdk::bip::bip44::{Account, Change, Addressing};
 //!
 //! let scheme_value = Account::new(0).unwrap()
 //!     .external().unwrap()
@@ -218,7 +218,7 @@ impl Addressing {
     /// # example
     ///
     /// ```
-    /// use cardano::bip::bip44::{Addressing, AddrType};
+    /// use cardano_embedded_sdk::bip::bip44::{Addressing, AddrType};
     ///
     /// let addr = Addressing::new(0, AddrType::External, 0).unwrap();
     ///
@@ -294,7 +294,7 @@ impl Addressing {
     /// # Example
     ///
     /// ```
-    /// use cardano::bip::bip44::{Addressing, AddrType, Index};
+    /// use cardano_embedded_sdk::bip::bip44::{Addressing, AddrType, Index};
     ///
     /// let addr = Addressing::new(0, AddrType::External, 0).unwrap();
     ///
