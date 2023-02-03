@@ -3,7 +3,7 @@
 //! # Example
 //!
 //! ```
-//! use cardano::util::base58;
+//! use cardano_embedded_sdk::util::base58;
 //!
 //! let encoded = r"TcgsE5dzphUWfjcb9i5";
 //! let decoded = b"Hello World...";
@@ -41,7 +41,7 @@ pub type Result<T> = ::core::result::Result<T, Error>;
 /// # Example
 ///
 /// ```
-/// use cardano::util::base58;
+/// use cardano_embedded_sdk::util::base58;
 ///
 /// let encoded = r"TcgsE5dzphUWfjcb9i5";
 /// let decoded = b"Hello World...";
@@ -59,7 +59,7 @@ pub fn encode(input: &[u8]) -> String {
 /// # Example
 ///
 /// ```
-/// use cardano::util::base58;
+/// use cardano_embedded_sdk::util::base58;
 ///
 /// let encoded = r"TcgsE5dzphUWfjcb9i5";
 /// let decoded = b"Hello World...";
@@ -75,7 +75,7 @@ pub fn decode(input: &str) -> Result<Vec<u8>> {
 /// # Example
 ///
 /// ```
-/// use cardano::util::base58;
+/// use cardano_embedded_sdk::util::base58;
 ///
 /// let encoded = b"TcgsE5dzphUWfjcb9i5";
 /// let decoded = b"Hello World...";

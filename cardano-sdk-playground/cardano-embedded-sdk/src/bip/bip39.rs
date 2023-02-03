@@ -12,10 +12,10 @@
 //! ## To create a new HDWallet
 //!
 //! ```
-//! extern crate cardano;
+//! extern crate cardano_embedded_sdk;
 //! extern crate rand;
 //!
-//! use cardano::bip::bip39::*;
+//! use cardano_embedded_sdk::bip::bip39::*;
 //!
 //! // first, you need to generate the original entropy
 //! let entropy = Entropy::generate(Type::Type18Words, rand::random);
@@ -32,7 +32,7 @@
 //! ## To recover a HDWallet
 //!
 //! ```
-//! use cardano::bip::bip39::*;
+//! use cardano_embedded_sdk::bip::bip39::*;
 //!
 //! let mnemonics = "mimic left ask vacant toast follow bitter join diamond gate attend obey";
 //!
@@ -53,7 +53,7 @@ use alloc::{
 };
 use core::{error, fmt, ops::Deref, result, str};
 
-use crate::util::{hex, securemem};
+use crate::util::securemem;
 
 use cryptoxide::hmac::Hmac;
 use cryptoxide::pbkdf2::pbkdf2;
@@ -165,8 +165,8 @@ impl Entropy {
     ///
     /// ```
     /// extern crate rand;
-    /// # extern crate cardano;
-    /// # use cardano::bip::bip39::*;
+    /// # extern crate cardano_embedded_sdk;
+    /// # use cardano_embedded_sdk::bip::bip39::*;
     ///
     /// let entropy = Entropy::generate(Type::Type15Words, rand::random);
     /// ```
@@ -250,8 +250,8 @@ impl Entropy {
     ///
     /// ```
     /// # extern crate rand;
-    /// # extern crate cardano;
-    /// # use cardano::bip::bip39::*;
+    /// # extern crate cardano_embedded_sdk;
+    /// # use cardano_embedded_sdk::bip::bip39::*;
     ///
     /// let entropy = Entropy::generate(Type::Type15Words, rand::random);
     ///
@@ -275,7 +275,7 @@ impl Entropy {
     /// # Example
     ///
     /// ```
-    /// # use cardano::bip::bip39::*;
+    /// # use cardano_embedded_sdk::bip::bip39::*;
     ///
     /// const MNEMONICS : &'static str = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
     /// let mnemonics = Mnemonics::from_string(&dictionary::ENGLISH, MNEMONICS)
@@ -320,7 +320,7 @@ impl Entropy {
     /// # Example
     ///
     /// ```
-    /// # use cardano::bip::bip39::*;
+    /// # use cardano_embedded_sdk::bip::bip39::*;
     ///
     /// let entropy = Entropy::Entropy12([0;16]);
     ///
@@ -413,7 +413,7 @@ impl Seed {
     /// # Example
     ///
     /// ```
-    /// use cardano::bip::bip39::{Seed, SEED_SIZE};
+    /// use cardano_embedded_sdk::bip::bip39::{Seed, SEED_SIZE};
     ///
     /// let bytes = [0u8;SEED_SIZE];
     /// let seed  = Seed::from_bytes(bytes);
@@ -433,7 +433,7 @@ impl Seed {
     /// # Example
     ///
     /// ```
-    /// use cardano::bip::bip39::{Seed, SEED_SIZE};
+    /// use cardano_embedded_sdk::bip::bip39::{Seed, SEED_SIZE};
     ///
     /// let bytes = [0u8;SEED_SIZE];
     /// let wrong = [0u8;31];
@@ -471,7 +471,7 @@ impl Seed {
     /// # Example
     ///
     /// ```
-    /// # use cardano::bip::bip39::*;
+    /// # use cardano_embedded_sdk::bip::bip39::*;
     ///
     /// const MNEMONICS : &'static str = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
     /// let mnemonics = MnemonicString::new(&dictionary::ENGLISH, MNEMONICS.to_owned())
@@ -538,7 +538,7 @@ impl MnemonicString {
     /// # Example
     ///
     /// ```
-    /// # use cardano::bip::bip39::*;
+    /// # use cardano_embedded_sdk::bip::bip39::*;
     ///
     /// const MNEMONICS : &'static str = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
     /// let mnemonics = MnemonicString::new(&dictionary::ENGLISH, MNEMONICS.to_owned())
@@ -704,7 +704,7 @@ impl MnemonicIndex {
     /// # Example
     ///
     /// ```
-    /// # use cardano::bip::bip39::*;
+    /// # use cardano_embedded_sdk::bip::bip39::*;
     /// #
     /// let index = MnemonicIndex::new(1029);
     /// assert!(index.is_ok());
@@ -996,109 +996,110 @@ pub mod dictionary {
 }
 
 // FIXME: commented to be able to run our tests
-// #[cfg(test)]
-// mod test {
-//     use super::*;
-//     use rand::random;
+#[cfg(test)]
+mod test {
+    use crate::bip::bip39::dictionary::Language;
 
-//     extern crate unicode_normalization;
-//     use self::unicode_normalization::UnicodeNormalization;
+    use super::*;
+    use alloc::string::ToString;
+    use rand::random;
 
-//     use bip::bip39::dictionary::Language;
+    extern crate unicode_normalization;
+    use self::unicode_normalization::UnicodeNormalization;
 
-//     #[test]
-//     fn english_dic() {
-//         let dic = &dictionary::ENGLISH;
+    #[test]
+    fn english_dic() {
+        let dic = &dictionary::ENGLISH;
 
-//         assert_eq!(dic.lookup_mnemonic("abandon"), Ok(MnemonicIndex(0)));
-//         assert_eq!(dic.lookup_mnemonic("crack"), Ok(MnemonicIndex(398)));
-//         assert_eq!(dic.lookup_mnemonic("shell"), Ok(MnemonicIndex(1579)));
-//         assert_eq!(dic.lookup_mnemonic("zoo"), Ok(MnemonicIndex(2047)));
+        assert_eq!(dic.lookup_mnemonic("abandon"), Ok(MnemonicIndex(0)));
+        assert_eq!(dic.lookup_mnemonic("crack"), Ok(MnemonicIndex(398)));
+        assert_eq!(dic.lookup_mnemonic("shell"), Ok(MnemonicIndex(1579)));
+        assert_eq!(dic.lookup_mnemonic("zoo"), Ok(MnemonicIndex(2047)));
 
-//         assert_eq!(dic.lookup_word(MnemonicIndex(0)), Ok("abandon".to_string()));
-//         assert_eq!(dic.lookup_word(MnemonicIndex(398)), Ok("crack".to_string()));
-//         assert_eq!(
-//             dic.lookup_word(MnemonicIndex(1579)),
-//             Ok("shell".to_string())
-//         );
-//         assert_eq!(dic.lookup_word(MnemonicIndex(2047)), Ok("zoo".to_string()));
-//     }
+        assert_eq!(dic.lookup_word(MnemonicIndex(0)), Ok("abandon".to_string()));
+        assert_eq!(dic.lookup_word(MnemonicIndex(398)), Ok("crack".to_string()));
+        assert_eq!(
+            dic.lookup_word(MnemonicIndex(1579)),
+            Ok("shell".to_string())
+        );
+        assert_eq!(dic.lookup_word(MnemonicIndex(2047)), Ok("zoo".to_string()));
+    }
 
-//     #[test]
-//     fn mnemonic_zero() {
-//         let entropy = Entropy::Entropy12([0; 16]);
-//         let mnemonics = entropy.to_mnemonics();
-//         let entropy2 = Entropy::from_mnemonics(&mnemonics).unwrap();
-//         assert_eq!(entropy, entropy2);
-//     }
+    #[test]
+    fn mnemonic_zero() {
+        let entropy = Entropy::Entropy12([0; 16]);
+        let mnemonics = entropy.to_mnemonics();
+        let entropy2 = Entropy::from_mnemonics(&mnemonics).unwrap();
+        assert_eq!(entropy, entropy2);
+    }
 
-//     #[test]
-//     fn mnemonic_7f() {
-//         let entropy = Entropy::Entropy12([0x7f; 16]);
-//         let mnemonics = entropy.to_mnemonics();
-//         let entropy2 = Entropy::from_mnemonics(&mnemonics).unwrap();
-//         assert_eq!(entropy, entropy2);
-//     }
+    #[test]
+    fn mnemonic_7f() {
+        let entropy = Entropy::Entropy12([0x7f; 16]);
+        let mnemonics = entropy.to_mnemonics();
+        let entropy2 = Entropy::from_mnemonics(&mnemonics).unwrap();
+        assert_eq!(entropy, entropy2);
+    }
 
-//     #[test]
-//     fn from_mnemonic_to_mnemonic() {
-//         let entropy = Entropy::generate(Type::Type12Words, random);
-//         let mnemonics = entropy.to_mnemonics();
-//         let entropy2 = Entropy::from_mnemonics(&mnemonics).unwrap();
-//         assert_eq!(entropy, entropy2);
-//     }
+    #[test]
+    fn from_mnemonic_to_mnemonic() {
+        let entropy = Entropy::generate(Type::Type12Words, random);
+        let mnemonics = entropy.to_mnemonics();
+        let entropy2 = Entropy::from_mnemonics(&mnemonics).unwrap();
+        assert_eq!(entropy, entropy2);
+    }
 
-//     #[derive(Debug)]
-//     struct TestVector {
-//         entropy: &'static str,
-//         mnemonics: &'static str,
-//         seed: &'static str,
-//         passphrase: &'static str,
-//     }
+    #[derive(Debug)]
+    struct TestVector {
+        entropy: &'static str,
+        mnemonics: &'static str,
+        seed: &'static str,
+        passphrase: &'static str,
+    }
 
-//     fn mk_test<D: dictionary::Language>(test: &TestVector, dic: &D) {
-//         // decompose the UTF8 inputs before processing:
-//         let mnemonics: String = test.mnemonics.nfkd().collect();
-//         let passphrase: String = test.passphrase.nfkd().collect();
+    fn mk_test<D: dictionary::Language>(test: &TestVector, dic: &D) {
+        // decompose the UTF8 inputs before processing:
+        let mnemonics: String = test.mnemonics.nfkd().collect();
+        let passphrase: String = test.passphrase.nfkd().collect();
 
-//         let mnemonics_ref = Mnemonics::from_string(dic, &mnemonics).expect("valid mnemonics");
-//         let mnemonics_str = MnemonicString::new(dic, mnemonics).expect("valid mnemonics string");
-//         let entropy_ref = Entropy::from_slice(&hex::decode(test.entropy).unwrap())
-//             .expect("decode entropy from hex");
-//         let seed_ref =
-//             Seed::from_slice(&hex::decode(test.seed).unwrap()).expect("decode seed from hex");
+        let mnemonics_ref = Mnemonics::from_string(dic, &mnemonics).expect("valid mnemonics");
+        let mnemonics_str = MnemonicString::new(dic, mnemonics).expect("valid mnemonics string");
+        let entropy_ref = Entropy::from_slice(&hex::decode(test.entropy).unwrap())
+            .expect("decode entropy from hex");
+        let seed_ref =
+            Seed::from_slice(&hex::decode(test.seed).unwrap()).expect("decode seed from hex");
 
-//         assert!(mnemonics_ref.get_type() == entropy_ref.get_type());
+        assert!(mnemonics_ref.get_type() == entropy_ref.get_type());
 
-//         assert!(entropy_ref.to_mnemonics() == mnemonics_ref);
-//         assert!(
-//             entropy_ref
-//                 == Entropy::from_mnemonics(&mnemonics_ref)
-//                     .expect("retrieve entropy from mnemonics")
-//         );
+        assert!(entropy_ref.to_mnemonics() == mnemonics_ref);
+        assert!(
+            entropy_ref
+                == Entropy::from_mnemonics(&mnemonics_ref)
+                    .expect("retrieve entropy from mnemonics")
+        );
 
-//         assert_eq!(
-//             seed_ref,
-//             Seed::from_mnemonic_string(&mnemonics_str, passphrase.as_bytes())
-//         );
-//     }
+        assert_eq!(
+            seed_ref,
+            Seed::from_mnemonic_string(&mnemonics_str, passphrase.as_bytes())
+        );
+    }
 
-//     fn mk_tests<D: dictionary::Language>(tests: &[TestVector], dic: &D) {
-//         for test in tests {
-//             mk_test(test, dic);
-//         }
-//     }
+    fn mk_tests<D: dictionary::Language>(tests: &[TestVector], dic: &D) {
+        for test in tests {
+            mk_test(test, dic);
+        }
+    }
 
-//     #[test]
-//     fn test_vectors_english() {
-//         mk_tests(TEST_VECTORS_ENGLISH, &dictionary::ENGLISH)
-//     }
-//     #[test]
-//     fn test_vectors_japanese() {
-//         mk_tests(TEST_VECTORS_JAPANESE, &dictionary::JAPANESE)
-//     }
+    #[test]
+    fn test_vectors_english() {
+        mk_tests(TEST_VECTORS_ENGLISH, &dictionary::ENGLISH)
+    }
+    #[test]
+    fn test_vectors_japanese() {
+        mk_tests(TEST_VECTORS_JAPANESE, &dictionary::JAPANESE)
+    }
 
-//     const TEST_VECTORS_ENGLISH: &'static [TestVector] = &include!("test_vectors/bip39_english.txt");
-//     const TEST_VECTORS_JAPANESE: &'static [TestVector] =
-//         &include!("test_vectors/bip39_japanese.txt");
-// }
+    const TEST_VECTORS_ENGLISH: &'static [TestVector] = &include!("test_vectors/bip39_english.txt");
+    const TEST_VECTORS_JAPANESE: &'static [TestVector] =
+        &include!("test_vectors/bip39_japanese.txt");
+}
