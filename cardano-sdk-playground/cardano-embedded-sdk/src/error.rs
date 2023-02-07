@@ -28,7 +28,7 @@ impl core::error::Error for FromHexErrorWrapper {
 
 impl From<&FromHexError> for FromHexErrorWrapper {
     fn from(err: &FromHexError) -> Self {
-        Self(err.clone())
+        Self(*err)
     }
 }
 
@@ -41,8 +41,8 @@ pub enum Key {
 impl core::fmt::Display for Key {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
-            Key::Str(x) => write!(f, "\"{}\"", x),
-            Key::Uint(x) => write!(f, "{}", x),
+            Key::Str(x) => write!(f, "\"{x}\""),
+            Key::Uint(x) => write!(f, "{x}"),
         }
     }
 }
@@ -105,12 +105,12 @@ impl DeserializeError {
 impl core::fmt::Display for DeserializeError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match &self.location {
-            Some(loc) => write!(f, "Deserialization failed in {} because: ", loc),
+            Some(loc) => write!(f, "Deserialization failed in {loc} because: "),
             None => write!(f, "Deserialization: "),
         }?;
         match &self.failure {
             DeserializeFailure::BadAddressType(header) => {
-                write!(f, "Encountered unknown address header {:#08b}", header)
+                write!(f, "Encountered unknown address header {header:#08b}")
             }
             DeserializeFailure::BreakInDefiniteLen => write!(
                 f,
@@ -118,35 +118,33 @@ impl core::fmt::Display for DeserializeError {
             ),
             // DeserializeFailure::CBOR(e) => e.fmt(f), // TODO: cbor
             DeserializeFailure::DefiniteLenMismatch(found, expected) => {
-                write!(f, "Definite length mismatch: found {}", found)?;
+                write!(f, "Definite length mismatch: found {found}")?;
                 if let Some(expected_elems) = expected {
-                    write!(f, ", expected: {}", expected_elems)?;
+                    write!(f, ", expected: {expected_elems}")?;
                 }
                 Ok(())
             }
-            DeserializeFailure::DuplicateKey(key) => write!(f, "Duplicate key: {}", key),
+            DeserializeFailure::DuplicateKey(key) => write!(f, "Duplicate key: {key}"),
             DeserializeFailure::EndingBreakMissing => write!(f, "Missing ending CBOR Break"),
             DeserializeFailure::ExpectedNull => write!(f, "Expected null, found other type"),
             DeserializeFailure::ExpectedBool => write!(f, "Expected bool, found other type"),
             DeserializeFailure::FixedValueMismatch { found, expected } => {
-                write!(f, "Expected fixed value {} found {}", expected, found)
+                write!(f, "Expected fixed value {expected} found {found}")
             }
             DeserializeFailure::MandatoryFieldMissing(key) => {
-                write!(f, "Mandatory field {} not found", key)
+                write!(f, "Mandatory field {key} not found")
             }
-            DeserializeFailure::Metadata(e) => write!(f, "Metadata error: {:?}", e),
+            DeserializeFailure::Metadata(e) => write!(f, "Metadata error: {e:?}"),
             DeserializeFailure::NoVariantMatched => write!(f, "No variant matched"),
-            DeserializeFailure::OutOfRange { min, max, found } => write!(
-                f,
-                "Out of range: {} - must be in range {} - {}",
-                found, min, max
-            ),
-            DeserializeFailure::PublicKeyError(e) => write!(f, "PublicKeyError error: {}", e),
-            DeserializeFailure::SignatureError(e) => write!(f, "Signature error: {}", e),
-            DeserializeFailure::TagMismatch { found, expected } => {
-                write!(f, "Expected tag {}, found {}", expected, found)
+            DeserializeFailure::OutOfRange { min, max, found } => {
+                write!(f, "Out of range: {found} - must be in range {min} - {max}",)
             }
-            DeserializeFailure::UnknownKey(key) => write!(f, "Found unexpected key {}", key),
+            DeserializeFailure::PublicKeyError(e) => write!(f, "PublicKeyError error: {e}"),
+            DeserializeFailure::SignatureError(e) => write!(f, "Signature error: {e}"),
+            DeserializeFailure::TagMismatch { found, expected } => {
+                write!(f, "Expected tag {expected}, found {found}")
+            }
+            DeserializeFailure::UnknownKey(key) => write!(f, "Found unexpected key {key}"),
             // TODO: cbor
             // DeserializeFailure::UnexpectedKeyType(ty) => {
             //     write!(f, "Found unexpected key of CBOR type {:?}", ty)

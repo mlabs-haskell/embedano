@@ -1,9 +1,9 @@
 use derivation_path::DerivationPath;
 
 use crate::{
+    api,
     bip::bip39::{self, Entropy},
-    sdkapi,
-    sdktypes::{XPrvKey, XPubKey},
+    types::{XPrvKey, XPubKey},
 };
 
 const SLIP14_MNEMONICS: &str = "all all all all all all all all all all all all";
@@ -32,5 +32,5 @@ pub fn make_keys_for(path: &DerivationPath) -> (XPrvKey, XPubKey) {
         bip39::Mnemonics::from_string(&bip39::dictionary::ENGLISH, SLIP14_MNEMONICS).unwrap();
     let entropy = bip39::Entropy::from_mnemonics(&mnemonics).unwrap();
 
-    sdkapi::derive_key_pair(&entropy, b"", path)
+    api::derive_key_pair(&entropy, b"", path)
 }

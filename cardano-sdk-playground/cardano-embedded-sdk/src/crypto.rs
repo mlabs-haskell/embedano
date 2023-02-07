@@ -97,12 +97,12 @@ impl Bip32PrivateKey {
     }
 
     pub fn to_public(&self) -> Bip32PublicKey {
-        Bip32PublicKey(self.0.to_public().into())
+        Bip32PublicKey(self.0.to_public())
     }
 
     pub fn from_bytes(bytes: &[u8]) -> Result<Bip32PrivateKey, JsError> {
         crypto::SecretKey::<crypto::Ed25519Bip32>::from_binary(bytes)
-            .map_err(|e| JsError::from_str(&format!("{}", e)))
+            .map_err(|e| JsError::from_str(&format!("{e}")))
             .map(Bip32PrivateKey)
     }
 
@@ -111,7 +111,7 @@ impl Bip32PrivateKey {
     }
 
     pub fn from_bech32(bech32_str: &str) -> Result<Bip32PrivateKey, JsError> {
-        crypto::SecretKey::try_from_bech32_str(&bech32_str)
+        crypto::SecretKey::try_from_bech32_str(bech32_str)
             .map(Bip32PrivateKey)
             .map_err(|_| JsError::from_str("Invalid secret key"))
     }
@@ -121,7 +121,7 @@ impl Bip32PrivateKey {
     }
 
     pub fn from_bip39_entropy(entropy: &[u8], password: &[u8]) -> Bip32PrivateKey {
-        Bip32PrivateKey(crypto::derive::from_bip39_entropy(&entropy, &password))
+        Bip32PrivateKey(crypto::derive::from_bip39_entropy(entropy, password))
     }
 
     pub fn chaincode(&self) -> Vec<u8> {
@@ -172,7 +172,7 @@ impl Bip32PublicKey {
     pub fn derive(&self, index: u32) -> Result<Bip32PublicKey, JsError> {
         crypto::derive::derive_pk_ed25519(&self.0, index)
             .map(Bip32PublicKey)
-            .map_err(|e| JsError::from_str(&format! {"{:?}", e}))
+            .map_err(|e| JsError::from_str(&format! {"{e:?}"}))
     }
 
     pub fn to_raw_key(&self) -> PublicKey {
@@ -181,7 +181,7 @@ impl Bip32PublicKey {
 
     pub fn from_bytes(bytes: &[u8]) -> Result<Bip32PublicKey, JsError> {
         crypto::PublicKey::<crypto::Ed25519Bip32>::from_binary(bytes)
-            .map_err(|e| JsError::from_str(&format!("{}", e)))
+            .map_err(|e| JsError::from_str(&format!("{e}")))
             .map(Bip32PublicKey)
     }
 
@@ -190,9 +190,9 @@ impl Bip32PublicKey {
     }
 
     pub fn from_bech32(bech32_str: &str) -> Result<Bip32PublicKey, JsError> {
-        crypto::PublicKey::try_from_bech32_str(&bech32_str)
+        crypto::PublicKey::try_from_bech32_str(bech32_str)
             .map(Bip32PublicKey)
-            .map_err(|e| JsError::from_str(&format!("{}", e)))
+            .map_err(|e| JsError::from_str(&format!("{e}")))
     }
 
     pub fn to_bech32(&self) -> String {
@@ -253,10 +253,10 @@ impl PrivateKey {
     /// PrivateKey.from_bech32(&#39;ed25519e_sk1gqwl4szuwwh6d0yk3nsqcc6xxc3fpvjlevgwvt60df59v8zd8f8prazt8ln3lmz096ux3xvhhvm3ca9wj2yctdh3pnw0szrma07rt5gl748fp&#39;);
     /// ```
     pub fn from_bech32(bech32_str: &str) -> Result<PrivateKey, JsError> {
-        crypto::SecretKey::try_from_bech32_str(&bech32_str)
+        crypto::SecretKey::try_from_bech32_str(bech32_str)
             .map(key::EitherEd25519SecretKey::Extended)
             .or_else(|_| {
-                crypto::SecretKey::try_from_bech32_str(&bech32_str)
+                crypto::SecretKey::try_from_bech32_str(bech32_str)
                     .map(key::EitherEd25519SecretKey::Normal)
             })
             .map(PrivateKey)
@@ -333,7 +333,7 @@ impl PublicKey {
     /// const pkey = PublicKey.from_bech32(&#39;ed25519_pk1dgaagyh470y66p899txcl3r0jaeaxu6yd7z2dxyk55qcycdml8gszkxze2&#39;);
     /// ```
     pub fn from_bech32(bech32_str: &str) -> Result<PublicKey, JsError> {
-        crypto::PublicKey::try_from_bech32_str(&bech32_str)
+        crypto::PublicKey::try_from_bech32_str(bech32_str)
             .map(PublicKey)
             .map_err(|_| JsError::from_str("Malformed public key"))
     }
@@ -348,7 +348,7 @@ impl PublicKey {
 
     pub fn from_bytes(bytes: &[u8]) -> Result<PublicKey, JsError> {
         crypto::PublicKey::from_binary(bytes)
-            .map_err(|e| JsError::from_str(&format!("{}", e)))
+            .map_err(|e| JsError::from_str(&format!("{e}")))
             .map(PublicKey)
     }
 

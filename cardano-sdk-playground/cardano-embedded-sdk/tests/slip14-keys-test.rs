@@ -1,6 +1,6 @@
+use cardano_embedded_sdk::api::derive_key_pair;
 use cardano_embedded_sdk::bip::bip39;
-use cardano_embedded_sdk::sdkapi::derive_key_pair;
-use cardano_embedded_sdk::sdktypes::XPrvKey;
+use cardano_embedded_sdk::types::XPrvKey;
 use derivation_path::DerivationPath;
 use std::fs;
 use std::panic;
