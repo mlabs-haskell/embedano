@@ -1,10 +1,10 @@
-use cardano_crypto_tmp::crypto::Ed25519Signature;
-use derivation_path::{ChildIndex, DerivationPath};
-
 use crate::{
     bip::bip39::Entropy,
-    sdktypes::{TxId, XPrvKey, XPubKey},
+    crypto::Ed25519Signature,
+    types::{TxId, XPrvKey, XPubKey},
 };
+
+use derivation_path::{ChildIndex, DerivationPath};
 
 const EXTERNAL_CHAIN_CODE: u32 = 0;
 
@@ -22,7 +22,7 @@ pub fn proof_ownership(
     password: &[u8],
     key_type: KeyType,
 ) -> Option<Ed25519Signature> {
-    let root_key = XPrvKey::from_entropy(&entropy, password);
+    let root_key = XPrvKey::from_entropy(entropy, password);
     find_matching_private_key(payment_key, &root_key, key_type).map(|key| key.sign(nonce))
 }
 
@@ -41,7 +41,7 @@ fn find_matching_private_key(
                     return Some(account_key);
                 }
             }
-            return None;
+            None
         }
 
         KeyType::AddressKey {
@@ -60,7 +60,7 @@ fn find_matching_private_key(
                     }
                 }
             }
-            return None;
+            None
         }
     }
 }
@@ -88,7 +88,7 @@ pub fn sign_data(
 // get private key for derivation path from seed and password
 pub fn derive_key(entropy: &Entropy, password: &[u8], path: &DerivationPath) -> XPrvKey {
     let mut key = XPrvKey::from_entropy(entropy, password);
-    for index in path.into_iter().map(|ix| adjust_hardened(ix)) {
+    for index in path.into_iter().map(adjust_hardened) {
         key = key.derive(index);
     }
     key
@@ -100,15 +100,15 @@ pub fn derive_key_pair(
     password: &[u8],
     path: &DerivationPath,
 ) -> (XPrvKey, XPubKey) {
-    let private = derive_key(entropy, password, &path);
+    let private = derive_key(entropy, password, path);
     let public = private.to_public();
     (private, public)
 }
 
 fn adjust_hardened(index: &ChildIndex) -> u32 {
-    match index {
-        &ChildIndex::Hardened(i) => harden(i),
-        &ChildIndex::Normal(i) => i,
+    match *index {
+        ChildIndex::Hardened(i) => harden(i),
+        ChildIndex::Normal(i) => i,
     }
 }
 
@@ -120,8 +120,8 @@ pub fn harden(i: u32) -> u32 {
 #[cfg(test)]
 mod tests {
     use crate::{
+        api::KeyType::*,
         bip::bip39::{dictionary, Mnemonics},
-        sdkapi::KeyType::*,
         util::slip14,
     };
 

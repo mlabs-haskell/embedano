@@ -27,8 +27,7 @@ impl fmt::Display for Error {
         match self {
             Error::InvalidDigestSize { got: sz, expected } => write!(
                 f,
-                "invalid digest size, expected {} but received {} bytes.",
-                expected, sz
+                "invalid digest size, expected {expected} but received {sz} bytes.",
             ),
             Error::InvalidHexEncoding(_) => write!(f, "invalid hex encoding for digest value"),
         }
@@ -302,7 +301,7 @@ impl<H: DigestAlg, T> Clone for DigestOf<H, T> {
     fn clone(&self) -> Self {
         DigestOf {
             inner: self.inner.clone(),
-            marker: self.marker.clone(),
+            marker: self.marker,
         }
     }
 }
@@ -324,7 +323,7 @@ impl<H: DigestAlg, T> From<Digest<H>> for DigestOf<H, T> {
 
 impl<H: DigestAlg, T> PartialEq for DigestOf<H, T> {
     fn eq(&self, other: &Self) -> bool {
-        &self.inner == &other.inner
+        self.inner == other.inner
     }
 }
 
@@ -388,7 +387,7 @@ impl<H: DigestAlg, T> DigestOf<H, T> {
         }
     }
 
-    pub fn digest_byteslice<'a>(byteslice: &ByteSlice<'a, T>) -> Self {
+    pub fn digest_byteslice(byteslice: &ByteSlice<T>) -> Self {
         let mut ctx = Context::new();
         ctx.append_data(byteslice.as_slice());
         DigestOf {

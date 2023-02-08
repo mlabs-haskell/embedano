@@ -1,12 +1,15 @@
+use crate::{
+    bip::bip39::Entropy,
+    crypto::{Bip32PrivateKey, Bip32PublicKey, Ed25519Signature},
+};
+
 use alloc::{
     format,
     string::{String, ToString},
     vec::Vec,
 };
-use cardano_crypto_tmp::crypto::{Bip32PrivateKey, Bip32PublicKey, Ed25519Signature};
 
-use crate::bip::bip39::Entropy;
-
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct TxIdParseError {
     message: String,
@@ -27,7 +30,7 @@ impl TxId {
                     "TxId length should be 32 bytes, but data length is {}",
                     bytes.len()
                 );
-                return Err(TxIdParseError { message: error });
+                Err(TxIdParseError { message: error })
             }
         }
     }
@@ -45,7 +48,7 @@ pub struct XPrvKey(Bip32PrivateKey);
 
 impl XPrvKey {
     pub fn from_entropy(entropy: &Entropy, password: &[u8]) -> Self {
-        XPrvKey(Bip32PrivateKey::from_bip39_entropy(entropy, &password))
+        XPrvKey(Bip32PrivateKey::from_bip39_entropy(entropy, password))
     }
 
     pub fn to_hex(&self) -> String {
@@ -63,7 +66,7 @@ impl XPrvKey {
     }
 
     pub fn sign(&self, message: &[u8]) -> Ed25519Signature {
-        self.0.to_raw_key().sign(&message.to_vec())
+        self.0.to_raw_key().sign(message)
     }
 
     pub fn is_pair_of(&self, pub_key: &XPubKey) -> bool {

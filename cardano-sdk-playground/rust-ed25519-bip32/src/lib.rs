@@ -10,6 +10,7 @@
 //! In soft derivation, the important property is that given the parent public key,
 //! one can derive all softly derived children public key.
 //!
+#![allow(clippy::all)]
 #![no_std]
 #![feature(error_in_core)]
 #![cfg_attr(feature = "with-bench", feature(test))]

@@ -2,8 +2,9 @@ use alloc::vec::Vec;
 
 const NUM_BITS_PER_BLOCK: usize = 11;
 
-#[derive(Debug, PartialEq, Eq, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone, Default)]
 enum State {
+    #[default]
     S0,
     S1,
     S2,
@@ -28,6 +29,7 @@ impl State {
     }
 }
 
+#[derive(Default)]
 pub struct BitWriterBy11 {
     buffer: Vec<u8>,
     state: State,

@@ -91,24 +91,22 @@ pub enum Error {
 }
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            &Error::InvalidSeedSize(sz) => write!(
+        match *self {
+            Error::InvalidSeedSize(sz) => write!(
                 f,
-                "Invalid Seed Size, expected {} bytes, but received {} bytes.",
-                SEED_SIZE, sz
+                "Invalid Seed Size, expected {SEED_SIZE} bytes, but received {sz} bytes.",
             ),
-            &Error::WrongNumberOfWords(sz) => {
-                write!(f, "Unsupported number of mnemonic words: {}", sz)
+            Error::WrongNumberOfWords(sz) => {
+                write!(f, "Unsupported number of mnemonic words: {sz}")
             }
-            &Error::WrongKeySize(sz) => write!(f, "Unsupported mnemonic entropy size: {}", sz),
-            &Error::MnemonicOutOfBound(val) => {
-                write!(f, "The given mnemonic is out of bound, {}", val)
+            Error::WrongKeySize(sz) => write!(f, "Unsupported mnemonic entropy size: {sz}"),
+            Error::MnemonicOutOfBound(val) => {
+                write!(f, "The given mnemonic is out of bound, {val}")
             }
-            &Error::LanguageError(_) => write!(f, "Unknown mnemonic word"),
-            &Error::InvalidChecksum(cs1, cs2) => write!(
+            Error::LanguageError(_) => write!(f, "Unknown mnemonic word"),
+            Error::InvalidChecksum(cs1, cs2) => write!(
                 f,
-                "Invalid Entropy's Checksum, expected {:08b} but found {:08b}",
-                cs1, cs2
+                "Invalid Entropy's Checksum, expected {cs1:08b} but found {cs2:08b}",
             ),
         }
     }
@@ -192,9 +190,11 @@ impl Entropy {
             Type::Type21Words => Entropy::Entropy21([0u8; 28]),
             Type::Type24Words => Entropy::Entropy24([0u8; 32]),
         };
-        for i in 0..e.as_ref().len() {
-            e.as_mut()[i] = bytes[i]
-        }
+        // for i in 0..e.as_ref().len() {
+        //     e.as_mut()[i] = bytes[i]
+        // }
+        let l = e.len();
+        e.as_mut().copy_from_slice(&bytes[..l]);
         e
     }
 
@@ -202,24 +202,24 @@ impl Entropy {
     /// from the `Entropy`.
     #[inline]
     pub fn get_type(&self) -> Type {
-        match self {
-            &Entropy::Entropy9(_) => Type::Type9Words,
-            &Entropy::Entropy12(_) => Type::Type12Words,
-            &Entropy::Entropy15(_) => Type::Type15Words,
-            &Entropy::Entropy18(_) => Type::Type18Words,
-            &Entropy::Entropy21(_) => Type::Type21Words,
-            &Entropy::Entropy24(_) => Type::Type24Words,
+        match *self {
+            Entropy::Entropy9(_) => Type::Type9Words,
+            Entropy::Entropy12(_) => Type::Type12Words,
+            Entropy::Entropy15(_) => Type::Type15Words,
+            Entropy::Entropy18(_) => Type::Type18Words,
+            Entropy::Entropy21(_) => Type::Type21Words,
+            Entropy::Entropy24(_) => Type::Type24Words,
         }
     }
 
     fn as_mut(&mut self) -> &mut [u8] {
-        match self {
-            &mut Entropy::Entropy9(ref mut b) => b.as_mut(),
-            &mut Entropy::Entropy12(ref mut b) => b.as_mut(),
-            &mut Entropy::Entropy15(ref mut b) => b.as_mut(),
-            &mut Entropy::Entropy18(ref mut b) => b.as_mut(),
-            &mut Entropy::Entropy21(ref mut b) => b.as_mut(),
-            &mut Entropy::Entropy24(ref mut b) => b.as_mut(),
+        match *self {
+            Entropy::Entropy9(ref mut b) => b.as_mut(),
+            Entropy::Entropy12(ref mut b) => b.as_mut(),
+            Entropy::Entropy15(ref mut b) => b.as_mut(),
+            Entropy::Entropy18(ref mut b) => b.as_mut(),
+            Entropy::Entropy21(ref mut b) => b.as_mut(),
+            Entropy::Entropy24(ref mut b) => b.as_mut(),
         }
     }
 
@@ -345,8 +345,7 @@ impl Entropy {
             // assert only in non optimized builds, Since we read 11bits
             // by 11 bits we should not allow values beyond 2047.
             debug_assert!( n <= MAX_MNEMONIC_VALUE
-                         , "Something went wrong, the BitReaderBy11 did return an impossible value: {} (0b{:016b})"
-                         , n, n
+                         , "Something went wrong, the BitReaderBy11 did return an impossible value: {n} (0b{n:016b})"
                          );
             // here we can unwrap safely as 11bits can
             // only store up to the value 2047
@@ -369,13 +368,13 @@ impl fmt::Debug for Entropy {
 }
 impl AsRef<[u8]> for Entropy {
     fn as_ref(&self) -> &[u8] {
-        match self {
-            &Entropy::Entropy9(ref b) => b.as_ref(),
-            &Entropy::Entropy12(ref b) => b.as_ref(),
-            &Entropy::Entropy15(ref b) => b.as_ref(),
-            &Entropy::Entropy18(ref b) => b.as_ref(),
-            &Entropy::Entropy21(ref b) => b.as_ref(),
-            &Entropy::Entropy24(ref b) => b.as_ref(),
+        match *self {
+            Entropy::Entropy9(ref b) => b.as_ref(),
+            Entropy::Entropy12(ref b) => b.as_ref(),
+            Entropy::Entropy15(ref b) => b.as_ref(),
+            Entropy::Entropy18(ref b) => b.as_ref(),
+            Entropy::Entropy21(ref b) => b.as_ref(),
+            Entropy::Entropy24(ref b) => b.as_ref(),
         }
     }
 }
@@ -585,12 +584,12 @@ impl fmt::Display for MnemonicString {
 /// | 21              | 224                 | 7                     |
 /// | 24              | 256                 | 8                     |
 ///
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
-#[cfg_attr(feature = "generic-serialization", derive(Serialize, Deserialize))]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Default)]
 pub enum Type {
     Type9Words,
     Type12Words,
     Type15Words,
+    #[default]
     Type18Words,
     Type21Words,
     Type24Words,
@@ -622,51 +621,46 @@ impl Type {
 
     pub fn to_key_size(&self) -> usize {
         match self {
-            &Type::Type9Words => 96,
-            &Type::Type12Words => 128,
-            &Type::Type15Words => 160,
-            &Type::Type18Words => 192,
-            &Type::Type21Words => 224,
-            &Type::Type24Words => 256,
+            Type::Type9Words => 96,
+            Type::Type12Words => 128,
+            Type::Type15Words => 160,
+            Type::Type18Words => 192,
+            Type::Type21Words => 224,
+            Type::Type24Words => 256,
         }
     }
 
-    pub fn checksum_size_bits(&self) -> usize {
+    pub fn checksum_size_bits(self) -> usize {
         match self {
-            &Type::Type9Words => 3,
-            &Type::Type12Words => 4,
-            &Type::Type15Words => 5,
-            &Type::Type18Words => 6,
-            &Type::Type21Words => 7,
-            &Type::Type24Words => 8,
+            Type::Type9Words => 3,
+            Type::Type12Words => 4,
+            Type::Type15Words => 5,
+            Type::Type18Words => 6,
+            Type::Type21Words => 7,
+            Type::Type24Words => 8,
         }
     }
 
-    pub fn mnemonic_count(&self) -> usize {
+    pub fn mnemonic_count(self) -> usize {
         match self {
-            &Type::Type9Words => 9,
-            &Type::Type12Words => 12,
-            &Type::Type15Words => 15,
-            &Type::Type18Words => 18,
-            &Type::Type21Words => 21,
-            &Type::Type24Words => 24,
+            Type::Type9Words => 9,
+            Type::Type12Words => 12,
+            Type::Type15Words => 15,
+            Type::Type18Words => 18,
+            Type::Type21Words => 21,
+            Type::Type24Words => 24,
         }
-    }
-}
-impl Default for Type {
-    fn default() -> Type {
-        Type::Type18Words
     }
 }
 impl fmt::Display for Type {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            &Type::Type9Words => write!(f, "9"),
-            &Type::Type12Words => write!(f, "12"),
-            &Type::Type15Words => write!(f, "15"),
-            &Type::Type18Words => write!(f, "18"),
-            &Type::Type21Words => write!(f, "21"),
-            &Type::Type24Words => write!(f, "24"),
+        match *self {
+            Type::Type9Words => write!(f, "9"),
+            Type::Type12Words => write!(f, "12"),
+            Type::Type15Words => write!(f, "15"),
+            Type::Type18Words => write!(f, "18"),
+            Type::Type21Words => write!(f, "21"),
+            Type::Type24Words => write!(f, "24"),
         }
     }
 }
@@ -865,7 +859,6 @@ pub mod dictionary {
 
     /// Errors associated to a given language/dictionary
     #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
-    #[cfg_attr(feature = "generic-serialization", derive(Serialize, Deserialize))]
     pub enum Error {
         /// this means the given word is not in the Dictionary of the Language.
         MnemonicWordNotFoundInDictionary(String),
@@ -873,8 +866,8 @@ pub mod dictionary {
     impl fmt::Display for Error {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
             match self {
-                &Error::MnemonicWordNotFoundInDictionary(ref s) => {
-                    write!(f, "Mnemonic word not found in dictionary \"{}\"", s)
+                Error::MnemonicWordNotFoundInDictionary(s) => {
+                    write!(f, "Mnemonic word not found in dictionary \"{s}\"")
                 }
             }
         }

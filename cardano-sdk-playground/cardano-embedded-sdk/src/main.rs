@@ -1,5 +1,5 @@
-use cardano_crypto_tmp::crypto;
-use cardano_embedded_sdk::{bip::bip39, sdkapi::harden, sdktypes::XPrvKey};
+use cardano_embedded_sdk::crypto;
+use cardano_embedded_sdk::{api::harden, bip::bip39, types::XPrvKey};
 use derivation_path::DerivationPath;
 
 fn main() {
@@ -14,10 +14,10 @@ fn main() {
     println!("root xprv: {}", root_key.to_hex());
 
     let path: DerivationPath = "m/1852'/1815'/0'/0/0".parse().unwrap();
-    println!("path: {:#?}", path);
+    println!("path: {path:#?}");
 
     let path2: DerivationPath = "m".parse().unwrap();
-    println!("path2: {:#?}", path2);
+    println!("path2: {path2:#?}");
 
     let acc_0_xprv = root_key
         .derive(harden(1852))
@@ -36,7 +36,7 @@ fn main() {
     // println!("data len: {}\n", data.len());
 
     let signature = acc_0_xprv.sign(&data);
-    println!("signature: {:#?}", signature);
+    println!("signature: {signature:#?}");
 
     println!("verify: {}", acc_0_xpub.verify(&data, &signature));
 

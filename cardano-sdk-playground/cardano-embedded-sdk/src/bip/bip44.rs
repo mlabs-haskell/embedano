@@ -60,36 +60,30 @@ pub enum Error {
 }
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            &Error::InvalidLength(given) => write!(
+        match *self {
+            Error::InvalidLength(given) => write!(
                 f,
-                "Invalid length, expecting {} but received {}",
-                BIP44_PATH_LENGTH, given
+                "Invalid length, expecting {BIP44_PATH_LENGTH} but received {given}",
             ),
-            &Error::InvalidPurpose(given) => write!(
+            Error::InvalidPurpose(given) => write!(
                 f,
-                "Invalid purpose, expecting 0x{:x} but received 0x{:x}",
-                BIP44_PURPOSE, given
+                "Invalid purpose, expecting 0x{BIP44_PURPOSE:x} but received 0x{given:x}",
             ),
-            &Error::InvalidType(given) => write!(
+            Error::InvalidType(given) => write!(
                 f,
-                "Invalid type, expecting 0x{:x} but received 0x{:x}",
-                BIP44_COIN_TYPE, given
+                "Invalid type, expecting 0x{BIP44_COIN_TYPE:x} but received 0x{given:x}",
             ),
-            &Error::AccountOutOfBound(given) => write!(
+            Error::AccountOutOfBound(given) => write!(
                 f,
-                "Account out of bound, should have a hard derivation but received 0x{:x}",
-                given
+                "Account out of bound, should have a hard derivation but received 0x{given:x}",
             ),
-            &Error::ChangeOutOfBound(given) => write!(
+            Error::ChangeOutOfBound(given) => write!(
                 f,
-                "Change out of bound, should have a soft derivation but received 0x{:x}",
-                given
+                "Change out of bound, should have a soft derivation but received 0x{given:x}",
             ),
-            &Error::IndexOutOfBound(given) => write!(
+            Error::IndexOutOfBound(given) => write!(
                 f,
-                "Index out of bound, should have a soft derivation but received 0x{:x}",
-                given
+                "Index out of bound, should have a soft derivation but received 0x{given:x}",
             ),
         }
     }
@@ -177,10 +171,7 @@ impl Change {
         if change >= 0x80000000 {
             return Err(Error::ChangeOutOfBound(change));
         }
-        Ok(Change {
-            account: account,
-            change: change,
-        })
+        Ok(Change { account, change })
     }
     pub fn get_scheme_value(&self) -> u32 {
         self.change
@@ -231,8 +222,8 @@ impl Addressing {
         };
         Ok(Addressing {
             account: Account::new(account)?,
-            change: change,
             index: Index::new(index)?,
+            change,
         })
     }
 
@@ -304,7 +295,7 @@ impl Addressing {
     /// assert!(next.incr(0x80000000).is_err());
     /// ```
     pub fn incr(&self, incr: u32) -> Result<Self> {
-        let mut addr = self.clone();
+        let mut addr = *self;
         addr.index = addr.index.incr(incr)?;
         Ok(addr)
     }
