@@ -220,6 +220,8 @@ impl<T, A: VerificationAlgorithm> Bech32 for Signature<T, A> {
 #[cfg(test)]
 pub(crate) mod test {
     use super::*;
+    use alloc::vec::Vec;
+
     use crate::chain_crypto::key::{AsymmetricKey, KeyPair};
 
     pub(crate) fn keypair_signing_ok<A: AsymmetricKey + SigningAlgorithm>(

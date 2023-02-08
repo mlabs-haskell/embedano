@@ -75,6 +75,7 @@ impl SigningAlgorithm for Ed25519Extended {
 #[cfg(test)]
 mod test {
     use super::*;
+    use alloc::vec::Vec;
 
     use crate::chain_crypto::key::KeyPair;
     use crate::chain_crypto::sign::test::{keypair_signing_ko, keypair_signing_ok};
