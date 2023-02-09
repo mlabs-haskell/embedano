@@ -21,7 +21,7 @@ fn main() {
     let signature = embedano::sign_tx_id(&tx_id, &entropy, password, &path);
 
     // Derive key pair using same path ant try to verify signature from `sign_tx_id`
-    let (prv_key, pub_key) = embedano::derive_key_pair(&entropy, password, &path);
+    let (_prv_key, pub_key) = embedano::derive_key_pair(&entropy, password, &path);
     assert!(pub_key.verify(tx_id.to_bytes(), &signature));
 
     // Check if public key can be derived from given entropy by signing nonce

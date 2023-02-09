@@ -100,11 +100,8 @@ pub fn harden(i: u32) -> u32 {
 mod tests {
     use crate::util::slip14;
 
-    // use super::*;
-
     #[test]
     fn test_pair_check() {
-        // TODO: property test?
         let (account_prv_key, account_pub_key) = slip14::make_address_keys();
         assert!(account_prv_key.is_pair_of(&account_pub_key))
     }
