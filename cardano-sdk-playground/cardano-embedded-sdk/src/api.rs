@@ -13,7 +13,7 @@
 use crate::{
     bip::bip39::Entropy,
     crypto::Ed25519Signature,
-    types::{TxId, XPrvKey, XPubKey},
+    types::{harden, TxId, XPrvKey, XPubKey},
 };
 
 use derivation_path::{ChildIndex, DerivationPath};
@@ -55,7 +55,7 @@ pub fn derive_key(entropy: &Entropy, password: &[u8], path: &DerivationPath) -> 
 /// let entropy = Entropy::from_mnemonics(&mnemonics).unwrap();
 /// let password = b"embedano";
 /// let path: DerivationPath = "m/1852'/1815'/0'/0/0".parse().unwrap();
-/// let (pub_key, prv_key) = embedano::derive_key_pair(&entropy, password, &path);
+/// let (prv_key, pub_key) = embedano::derive_key_pair(&entropy, password, &path);
 /// ```
 pub fn derive_key_pair(
     entropy: &Entropy,
@@ -206,11 +206,6 @@ pub enum KeyType {
     /// Use together with `prove_ownership` to limit the number of account and address
     /// indexes to search.
     AddressKey { account_gap: u32, address_gap: u32 },
-}
-
-/// Harden derivation index.
-pub fn harden(i: u32) -> u32 {
-    i + 0x80000000
 }
 
 fn adjust_hardened(index: &ChildIndex) -> u32 {

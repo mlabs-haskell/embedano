@@ -91,6 +91,11 @@ impl XPubKey {
     }
 }
 
+/// Harden derivation index.
+pub fn harden(i: u32) -> u32 {
+    i + 0x80000000
+}
+
 #[cfg(test)]
 mod tests {
     use crate::util::slip14;
