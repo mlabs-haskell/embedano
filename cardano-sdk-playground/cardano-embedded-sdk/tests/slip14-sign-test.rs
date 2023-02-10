@@ -1,4 +1,3 @@
-use cardano_embedded_sdk::types::{XPrvKey, XPubKey};
 use cardano_embedded_sdk::util::slip14;
 
 #[test]

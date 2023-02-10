@@ -16,6 +16,10 @@
 #![cfg_attr(feature = "with-bench", feature(test))]
 
 #[cfg(test)]
+#[macro_use]
+extern crate std;
+
+#[cfg(test)]
 #[cfg(feature = "with-bench")]
 extern crate test;
 

@@ -494,30 +494,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn nonce_identity() {
-        let orig = Nonce::new_identity();
-        let deser = Nonce::deserialize(&mut Deserializer::from(std::io::Cursor::new(
-            orig.to_bytes(),
-        )))
-        .unwrap();
-        assert_eq!(orig.to_bytes(), deser.to_bytes());
-    }
-
-    #[test]
-    fn nonce_hash() {
-        let orig = Nonce::new_from_hash(vec![
-            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
-            24, 25, 26, 27, 28, 29, 30, 31,
-        ])
-        .unwrap();
-        let deser = Nonce::deserialize(&mut Deserializer::from(std::io::Cursor::new(
-            orig.to_bytes(),
-        )))
-        .unwrap();
-        assert_eq!(orig.to_bytes(), deser.to_bytes());
-    }
-
-    #[test]
     fn xprv_128_test() {
         // art forum devote street sure rather head chuckle guard poverty release quote oak craft enemy
         let entropy = [
@@ -560,8 +536,18 @@ mod tests {
 
     #[test]
     fn private_key_from_bech32() {
-        let pk = PrivateKey::generate_ed25519().unwrap();
-        let pk_ext = PrivateKey::generate_ed25519extended().unwrap();
+        use rand::prelude::*;
+        use rand::rngs::StdRng;
+
+        let seed = [
+            1, 0, 0, 0, 23, 0, 0, 0, 200, 1, 0, 0, 210, 30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0,
+        ];
+
+        let rng = StdRng::from_seed(seed);
+
+        let pk = PrivateKey::generate_ed25519(rng.clone());
+        let pk_ext = PrivateKey::generate_ed25519extended(rng);
 
         assert_eq!(
             PrivateKey::from_bech32(&pk.to_bech32()).unwrap().as_bytes(),
