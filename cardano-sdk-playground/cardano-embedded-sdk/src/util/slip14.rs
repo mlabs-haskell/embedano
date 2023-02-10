@@ -1,3 +1,8 @@
+//! This module built on top of `api.rs` and contains helper functions
+//! to generate keys according to SLIP-14
+//! for mnemonics "all all all all all all all all all all all all".
+//!
+//! Used in tests.
 use derivation_path::DerivationPath;
 
 use crate::{

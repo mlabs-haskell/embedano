@@ -1,9 +1,21 @@
-use cardano_embedded_sdk::api as embedano;
-use cardano_embedded_sdk::bip::bip39::{dictionary, Entropy, Mnemonics};
-use cardano_embedded_sdk::types::{harden, TxId, XPrvKey};
-use derivation_path::DerivationPath;
+# Embedano SDK API
 
-fn main() {
+Main SDK functions are grouped in `api.rs` module and designed for easy integration with embedded firmware. They require basic pieces:
+
+- entropy or seed of the wallet, that usually stored in device memory
+- password, that usually provided by the user
+- derivation path to determine which keys of HD wallet to use (see [HD Sequential wallets (à la BIP-44)](https://input-output-hk.github.io/cardano-wallet/concepts/address-derivation))
+
+Main functions allow to:
+
+- sign transaction id (hash of transaction body)
+- sing arbitrary data
+- derive private and public keys from known seed
+- check that particular public key belongs to HD wallet (that it can be derived from current seed, to be precise)
+
+Here is a tour of available functionality:
+
+```rust
     // Preparations: define some mnemonic and make entropy.
     // (in real setup entropy or seed will be loaded from device memory)
     let mnemonics = "aim wool into nose tell ball arm expand design push elevator multiply glove lonely minimum";
@@ -21,7 +33,7 @@ fn main() {
     let signature = embedano::sign_tx_id(&tx_id, &entropy, password, &path);
 
     // Derive key pair using same path ant try to verify signature from `sign_tx_id`
-    let (_prv_key, pub_key) = embedano::derive_key_pair(&entropy, password, &path);
+    let (prv_key, pub_key) = embedano::derive_key_pair(&entropy, password, &path);
     assert!(pub_key.verify(tx_id.to_bytes(), &signature));
 
     // Check if public key can be derived from given entropy by signing nonce
@@ -63,4 +75,4 @@ fn main() {
     let some_data = b"some data";
     let signature = prv_key.sign(some_data);
     println!("Verify: {}", pub_key.verify(some_data, &signature))
-}
+```
