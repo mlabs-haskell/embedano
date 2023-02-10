@@ -99,6 +99,7 @@ impl<'a, T> ByteSlice<'a, T> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use alloc::vec;
 
     pub struct Big;
     pub struct Little;

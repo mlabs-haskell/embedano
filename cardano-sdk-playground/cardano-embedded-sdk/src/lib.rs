@@ -1,5 +1,18 @@
-#![no_std]
 #![feature(error_in_core)]
+#![feature(test)]
+#![no_std]
+
+#[macro_use]
+extern crate cfg_if;
+
+#[cfg(test)]
+extern crate test;
+
+#[cfg(test)]
+extern crate quickcheck;
+#[cfg(test)]
+#[macro_use(quickcheck)]
+extern crate quickcheck_macros;
 
 extern crate alloc;
 extern crate hex;

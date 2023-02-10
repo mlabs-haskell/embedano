@@ -1,3 +1,11 @@
+cfg_if! {
+    if #[cfg(test)] {
+        mod testing;
+    } else if #[cfg(feature = "property-test-api")] {
+        pub mod testing;
+    }
+}
+
 pub mod algorithms;
 pub mod bech32;
 pub mod derive;
