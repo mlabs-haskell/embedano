@@ -65,8 +65,8 @@
             }
             ''
               echo $(cargo version)
-              cd ${./.}/cardano-sdk-playground
-              cargo fmt -p cardano-embedded-sdk --check
+              cd ${./.}/cardano-embedded-sdk
+              cargo fmt --check
               touch $out
             '';
             

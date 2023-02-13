@@ -10,7 +10,7 @@ use crate::impl_mockchain as chain;
 use chain::key;
 use crypto::bech32::Bech32 as _;
 
-use bech32::ToBase32;
+use bech32::{ToBase32, Variant};
 use cryptoxide::blake2b::Blake2b;
 use rand_core::{CryptoRng, RngCore};
 
@@ -449,7 +449,7 @@ macro_rules! impl_hash_type {
             }
 
             pub fn to_bech32(&self, prefix: &str) -> Result<String, JsError> {
-                bech32::encode(&prefix, self.to_bytes().to_base32())
+                bech32::encode(&prefix, self.to_bytes().to_base32(), Variant::Bech32)
                     .map_err(|e| JsError::from_str(&format! {"{:?}", e}))
             }
 

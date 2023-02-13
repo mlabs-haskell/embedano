@@ -4,12 +4,12 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-bech32 = { version = "0.7.2", default-features = false }
+bech32 = { version = "0.9.1", default-features = false }
 cryptoxide = { version = "0.4.2", default-features = false }
 ed25519-bip32 = { version = "0.4.1", path = "../rust-ed25519-bip32" }
 hex = { version = "0.4.0", features = ["alloc"], default-features = false }
 rand_core = { version = "0.6.4", default-features = false }
-derivation-path = "0.2.0"
+derivation-path = { version = "0.2.0", default-features = false }
 
 cfg-if = "1.0.0"
 
