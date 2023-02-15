@@ -2,7 +2,7 @@
 authors = ["MLabs"]
 edition = "2018"
 readme = "README.md"
-name = "embedano"
+name = "qemu-example"
 version = "0.1.0"
 
 [dependencies]
@@ -13,7 +13,7 @@ panic-halt = "0.2.0"
 # bip32-ed25519 = { git = "https://github.com/digitalbitbox/rust-bip32-ed25519", tag = "v0.1.0", optional = true }
 bip32-ed25519 = { git = "https://github.com/digitalbitbox/rust-bip32-ed25519", tag = "v0.1.0" }
 
-cardano-embedded-sdk = { vestion = "0.1.0", path = "../cardano-embedded-sdk" }
+cardano-embedded-sdk = { version = "0.1.0", path = "../cardano-embedded-sdk" }
 derivation-path = { version = "0.2.0", default-features = false }
 
 # Uncomment for the panic example.
@@ -31,7 +31,7 @@ alloc-cortex-m = "0.4.0"
 
 # this lets you use `cargo fix`!
 [[bin]]
-name = "embedano"
+name = "qemu-example"
 test = false
 bench = false
 
