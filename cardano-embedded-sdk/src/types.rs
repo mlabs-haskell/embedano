@@ -79,7 +79,12 @@ pub struct XPubKey(Bip32PublicKey);
 // TODO: add `from_` methods (`from_hex`, `from_bytes`, etc)
 impl XPubKey {
     pub fn to_hex(&self) -> String {
-        hex::encode(self.0.as_bytes())
+       self.0.to_hex()
+    }
+
+    /// Get hex of key without chain code
+    pub fn raw_key_hex(&self) -> String {
+        self.0.to_raw_key().to_hex()
     }
 
     pub fn verify(&self, data: &[u8], signature: &Ed25519Signature) -> bool {
