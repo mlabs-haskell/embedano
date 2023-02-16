@@ -3,4 +3,5 @@ members = [
 	"cardano-embedded-sdk",
 	"rust-ed25519-bip32",
   "qemu-example",
+	"demo-client",
 ]
