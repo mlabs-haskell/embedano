@@ -42,6 +42,10 @@ impl TxId {
 
         Self::from_bytes(&tx_id[..])
     }
+
+    pub fn to_hex(&self) -> String {
+        hex::encode(self.0)
+    }
 }
 
 pub struct XPrvKey(Bip32PrivateKey);

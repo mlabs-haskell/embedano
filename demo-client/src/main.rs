@@ -15,20 +15,26 @@ use cardano_serialization_lib::{
 };
 
 use derivation_path::DerivationPath;
-use serde::{Deserialize, Serialize};
-use serde_json;
-use std::fs::File;
-use std::io::Write;
+use node_client::NodeClient;
 
+mod node_client;
+mod tx_tools;
+
+
+// todo balancing
+// todo abstraction for embedded device client
 fn main() {
-    let input_hash = "fb03abe73ddca76bc2f4a4fd18fde3b8e7844d7d1e3049042b4ed0875e7a6e04";
-    let input_hash = TransactionHash::from_hex(input_hash).unwrap();
-    let input_ix = 1;
-
-    // setting inputs
-    let mut inputs = TransactionInputs::new();
-    inputs.add(&TransactionInput::new(&input_hash, input_ix));
-    println!("Inputs:\n{:?}", inputs);
+    let node_client = node_client::CliNodeClient::new(
+        "/home/mike/dev/mlabs/embedano-project/plutip-made-keys/pool-1/node.socket".to_string(),
+        "--mainnet".to_string(),
+    );
+    let user_address = //slip-14 address
+        Address::from_bech32("addr1vxq0nckg3ekgzuqg7w5p9mvgnd9ym28qh5grlph8xd2z92su77c6m").unwrap();
+    
+    // current local test setup creates wallet with 1 UTXO only with known Value
+    // so it safe to use TransactionInputs for now w/o balancing
+    // for single run from scratch
+    let inputs = node_client.query_utxos(&user_address).unwrap();
 
     //setting outputs
     let recevier = TransactionOutput::new(
@@ -60,16 +66,14 @@ fn main() {
     tx_body.set_network_id(&NetworkId::mainnet());
 
     //building transaction
-    let tx_id =
-        TxId::from_hex("1c1823f5c839bda816f2b887fa5d87b20194988ad5852146ceb814dceada96a6").unwrap();
-    let (pub_key, signature) = sign_with_slip14(&tx_id);
 
     // building transaction: unsigned
-    let tx = Transaction::new(&tx_body, &TransactionWitnessSet::new(), None);
-    println!("{}", tx.to_json().unwrap());
-    let envelope = Envelope::from_tx(&tx);
-    write_envelope("./demo-client/demo_empty_wit.tx", &envelope);
+    let unsigned_tx = Transaction::new(&tx_body, &TransactionWitnessSet::new(), None);
 
+    let tx_id = tx_tools::get_tx_id(&unsigned_tx);
+
+    // building transaction: SIGNED
+    let (pub_key, signature) = sign_with_slip14(&tx_id);
     let p_key = PublicKey::from_hex(&pub_key.raw_key_hex()).unwrap();
     let v_key = Vkey::new(&p_key);
     let sig = Ed25519Signature::from_bytes(signature.to_bytes()).unwrap();
@@ -79,10 +83,11 @@ fn main() {
     keys_ws.add(&witness);
     let mut wit_set = TransactionWitnessSet::new();
     wit_set.set_vkeys(&keys_ws);
-    let tx = Transaction::new(&tx_body, &wit_set, None);
-    println!("{}", tx.to_json().unwrap());
-    let envelope = Envelope::from_tx(&tx);
-    write_envelope("./demo-client/demo.tx", &envelope);
+    let signed_tx = Transaction::new(&tx_body, &wit_set, None);
+
+    let submit_result = node_client.submit_tx(&signed_tx);
+    println!("Submission result: {:?}", submit_result)
+
 }
 
 fn coin(amt: u32) -> Coin {
@@ -105,29 +110,4 @@ fn sign_with_slip14(tx_id: &TxId) -> (XPubKey, sdk_crypto::Ed25519Signature) {
     let (_, pub_key) = embedano::derive_key_pair(&entropy, password, &path);
     let signature = embedano::sign_tx_id(tx_id, &entropy, password, &path);
     (pub_key, signature)
-}
-
-#[derive(Serialize, Deserialize)]
-struct Envelope {
-    #[serde(rename = "type")]
-    env_type: String,
-    description: String,
-    #[serde(rename = "cborHex")]
-    cbor_hex: String,
-}
-
-impl Envelope {
-    fn from_tx(tx: &Transaction) -> Envelope {
-        Envelope {
-            env_type: String::from("Tx BabbageEra"),
-            description: String::from(""),
-            cbor_hex: tx.to_hex(),
-        }
-    }
-}
-
-fn write_envelope(name: &str, envelope: &Envelope) -> () {
-    let json = serde_json::to_string(&envelope).expect("Unable to serialise envelope");
-    let mut f = File::create(name).expect("Unable to create file {name}");
-    f.write_all(json.as_bytes()).expect("Unable to write data");
 }
