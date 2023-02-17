@@ -5,6 +5,7 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/release-22.05";
     utils.url = "github:numtide/flake-utils";
+    cardano-node.url = "github:input-output-hk/cardano-node/1.35.1";
 
     rust-overlay = {
       url = "github:oxalica/rust-overlay";
@@ -15,7 +16,7 @@
     };
   };
 
-  outputs = inputs@{ self, nixpkgs, utils, rust-overlay, ... }:
+  outputs = inputs@{ self, nixpkgs, utils, rust-overlay, cardano-node, ... }:
     (utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; overlays = [ rust-overlay.overlays.default ]; };
@@ -23,6 +24,8 @@
         rust = pkgs.rust-bin.nightly.latest.default;
         rustDevShell = pkgs.mkShell {
           buildInputs = [
+            cardano-node.packages.${system}.cardano-cli
+            cardano-node.packages.${system}.bech32
             pkgs.nixpkgs-fmt
 
             (rust.override {
