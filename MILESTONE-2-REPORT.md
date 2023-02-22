@@ -2,7 +2,12 @@
 
 ## Documentation
 
-- [Embedano SDK API tour](./docs/embedano-api-tour.md)
+- [Embedano SDK API tour](./docs/embedano-api-tour.md). It is possible to run code of tour (see [main.rs](./cardano-embedded-sdk/src/main.rs))
+  
+    ```shell
+    cargo run -p cardano-embedded-sdk
+    ```
+
 - Rust docs are also available for SDK API and can be generated via standard tools: `cargo doc -p cardano-embedded-sdk`
 
 ## Test cases
@@ -26,3 +31,21 @@ Tests for reference data:
 - [slip14-sign-test](./cardano-sdk-playground/cardano-embedded-sdk/tests/slip14-sign-test.rs)
 
 Full details on the reference data can be found [here](./slip14-data/README.md).
+
+## QEMU test
+
+It is also possible to run code of [Embedano SDK API tour](./docs/embedano-api-tour.md) using QEMU emulator on emulated LM3S6965 microcontroller. Nix setup for the project has an option to start development shell with QEMU (be aware, that it will require nix flake feature and download ~1.5 Gb for emulator)
+
+To start dev shell with QEMU:
+
+```shell
+ nix develop .#withQemu
+```
+
+To test example:
+
+```shell
+cd qemu-example && cargo run --release
+```
+
+Source can be found [here](./qemu-example/src/main.rs).
