@@ -24,6 +24,10 @@ mod tx_tools;
 // todo balancing
 // todo abstraction for embedded device client
 fn main() {
+
+    let minAda = 2_000_000;
+    let fee = 150000;
+
     let node_client = node_client::CliNodeClient::new(
         "/home/mike/dev/mlabs/embedano-project/plutip-made-keys/pool-1/node.socket".to_string(),
         "--mainnet".to_string(),
@@ -34,26 +38,27 @@ fn main() {
     // current local test setup creates wallet with 1 UTXO only with known Value
     // so it safe to use TransactionInputs for now w/o balancing
     // for single run from scratch
-    let inputs = node_client.query_utxos(&user_address).unwrap();
+    let (inputs, ins_value) = node_client.query_utxos(&user_address).unwrap();
+    print!("{:?}", inputs);
 
     //setting outputs
     let recevier = TransactionOutput::new(
         &Address::from_bech32("addr1vx4aur6jt8h6etqgez9a3j23a2khk9wcnz32fqhshgah79swzdsp9")
             .unwrap(),
-        &lovalace(111000000),
+        &lovalace(minAda),
     );
 
     let change = TransactionOutput::new(
         &Address::from_bech32("addr1vxq0nckg3ekgzuqg7w5p9mvgnd9ym28qh5grlph8xd2z92su77c6m")
             .unwrap(),
-        &lovalace(888853600),
+        &lovalace(ins_value - minAda - fee),
     );
 
     let mut outputs = TransactionOutputs::new();
     outputs.add(&recevier);
     outputs.add(&change);
 
-    let fee: Coin = coin(146400);
+    let fee: Coin = coin(fee);
 
     //making body
     let mut tx_body = TransactionBody::new_tx_body(&inputs, &outputs, &fee);
@@ -90,11 +95,11 @@ fn main() {
 
 }
 
-fn coin(amt: u32) -> Coin {
+fn coin(amt: u64) -> Coin {
     BigNum::from_str(&amt.to_string()).unwrap()
 }
 
-fn lovalace(amt: u32) -> Value {
+fn lovalace(amt: u64) -> Value {
     Value::new(&coin(amt))
 }
 
