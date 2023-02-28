@@ -1,5 +1,6 @@
 use std::{collections::HashMap, fmt::Display, process::Command};
 
+use cardano_embedded_sdk::types::TxId;
 use cardano_serialization_lib::{
     address::Address, crypto::TransactionHash, Transaction, TransactionInput, TransactionInputs,
 };
@@ -10,12 +11,14 @@ pub struct NodeClientError {
     message: String,
 }
 
-use crate::tx_tools;
+use crate::tx_envelope::{self, write_as_envelope};
 
 pub trait NodeClient {
     fn query_utxos(&self, address: &Address) -> Result<(TransactionInputs, u64), NodeClientError>;
 
     fn submit_tx(&self, tx: &Transaction) -> Result<String, NodeClientError>;
+
+    fn get_tx_id(&self, tx: &Transaction) -> TxId;
 }
 
 pub struct CliNodeClient {
@@ -36,6 +39,8 @@ impl NodeClient for CliNodeClient {
     fn query_utxos(&self, address: &Address) -> Result<(TransactionInputs, u64), NodeClientError> {
         // run cardano-cli to get utxos
         let addr = address.to_bech32(None).map_err(to_err)?;
+
+        //grabs utxos as JSON (as cardano-cli writes them as JSON with --out-file)
         let result = Command::new("cardano-cli")
             .env("CARDANO_NODE_SOCKET_PATH", &self.socket_path)
             .args([
@@ -66,12 +71,12 @@ impl NodeClient for CliNodeClient {
             );
             tx_inputs.add(&res)
         }
-        Ok((tx_inputs,total_inputs_value))
+        Ok((tx_inputs, total_inputs_value))
     }
 
     fn submit_tx(&self, tx: &Transaction) -> Result<String, NodeClientError> {
         let tx_file = "./demo-client/to_submit.tx";
-        tx_tools::write_as_envelope(tx_file, tx);
+        tx_envelope::write_as_envelope(tx_file, tx);
 
         let result = Command::new("cardano-cli")
             .env("CARDANO_NODE_SOCKET_PATH", &self.socket_path)
@@ -88,6 +93,19 @@ impl NodeClient for CliNodeClient {
         let result = String::from_utf8_lossy(&result.stdout);
         Ok(result.to_string())
     }
+
+    fn get_tx_id(&self, tx: &Transaction) -> TxId {
+        let tmp_tx_path = "./demo-client/empty_wit_for_id.tx";
+        write_as_envelope(tmp_tx_path, tx);
+
+        let result = Command::new("cardano-cli")
+            .args(["transaction", "txid", "--tx-file", tmp_tx_path])
+            .output()
+            .expect("Should get Tx id with cardano-cli");
+        let result = String::from_utf8_lossy(&result.stdout);
+        let result = result.strip_suffix("\n").unwrap();
+        TxId::from_hex(result).expect("Should parse Tx id from hex")
+    }
 }
 
 fn to_err<T: Display>(e: T) -> NodeClientError {
@@ -101,7 +119,6 @@ fn get_total_value(inputs: &HashMap<String, Value>) -> u64 {
     for v in inputs.values() {
         let input_lovelace = v["value"]["lovelace"].as_u64().expect("Should be number");
         total_lovelace = total_lovelace + input_lovelace;
-        // print!("VAL {:?}", );
     }
     total_lovelace
 }

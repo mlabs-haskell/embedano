@@ -1,6 +1,6 @@
 use crate::{
     bip::bip39::Entropy,
-    crypto::{Bip32PrivateKey, Bip32PublicKey, Ed25519Signature},
+    crypto::{Bip32PrivateKey, Bip32PublicKey, Ed25519Signature, Ed25519KeyHash},
 };
 
 use alloc::{
@@ -97,6 +97,14 @@ impl XPubKey {
 
     pub fn as_bytes(&self) -> Vec<u8> {
         self.0.as_bytes()
+    }
+
+    pub fn hash(&self) -> Ed25519KeyHash {
+        self.0.to_raw_key().hash()
+    }
+
+    pub fn hash_hex(&self) -> String {
+        self.0.to_raw_key().hash().to_hex()
     }
 }
 
