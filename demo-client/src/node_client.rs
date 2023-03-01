@@ -14,7 +14,7 @@ pub struct NodeClientError {
 use crate::tx_envelope::{self, write_as_envelope};
 
 pub trait NodeClient {
-    fn query_utxos(&self, address: &Address) -> Result<(TransactionInputs, u64), NodeClientError>;
+    fn query_inputs(&self, address: &Address) -> Result<(TransactionInputs, u64), NodeClientError>;
 
     fn submit_tx(&self, tx: &Transaction) -> Result<String, NodeClientError>;
 
@@ -36,7 +36,7 @@ impl CliNodeClient {
 }
 
 impl NodeClient for CliNodeClient {
-    fn query_utxos(&self, address: &Address) -> Result<(TransactionInputs, u64), NodeClientError> {
+    fn query_inputs(&self, address: &Address) -> Result<(TransactionInputs, u64), NodeClientError> {
         // run cardano-cli to get utxos
         let addr = address.to_bech32(None).map_err(to_err)?;
 
