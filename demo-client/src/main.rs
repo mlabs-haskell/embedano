@@ -24,9 +24,9 @@ struct Args {
     /// HD wallet password
     #[arg(long)]
     password: String,
-    /// address of script that will store sensor data
+    /// Address of script that will store sensor data (address should correspond to network type!)
     #[arg(long)]
-    /// Derivation path for keys (should correspond to wallet_address atm)
+    /// Derivation path for keys
     derivation_path: String,
     #[arg(long)]
     script_address: String,
@@ -46,7 +46,7 @@ fn main() {
         .parse()
         .expect("Should parse derivation path");
 
-    // mainnet address of always succeeds script
+    // address of always succeeds script
     let script_address =
         &Address::from_bech32(args.script_address.as_str()).expect("Should parse script address");
 
