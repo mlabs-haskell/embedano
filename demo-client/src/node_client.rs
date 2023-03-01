@@ -75,7 +75,7 @@ impl NodeClient for CliNodeClient {
     }
 
     fn submit_tx(&self, tx: &Transaction) -> Result<String, NodeClientError> {
-        let tx_file = "./demo-client/to_submit.tx";
+        let tx_file = "./to_submit.tx";
         tx_envelope::write_as_envelope(tx_file, tx);
 
         let result = Command::new("cardano-cli")
@@ -88,14 +88,13 @@ impl NodeClient for CliNodeClient {
                 tx_file,
             ])
             .output()
-            .map_err(to_err)?;
-        println!("CMD SUBM res: {:?}", result); //todo: throw error if stderr not empty
+            .map_err(to_err)?; //todo: throw error if stderr not empty
         let result = String::from_utf8_lossy(&result.stdout);
         Ok(result.to_string())
     }
 
     fn get_tx_id(&self, tx: &Transaction) -> TxId {
-        let tmp_tx_path = "./demo-client/empty_wit_for_id.tx";
+        let tmp_tx_path = "./empty_wit_for_id.tx";
         write_as_envelope(tmp_tx_path, tx);
 
         let result = Command::new("cardano-cli")
