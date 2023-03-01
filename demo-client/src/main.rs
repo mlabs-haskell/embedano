@@ -1,11 +1,14 @@
 use std::{thread, time};
 
-use cardano_serialization_lib::{address::Address, NetworkId};
+use cardano_serialization_lib::{
+    address::{Address, EnterpriseAddress, StakeCredential},
+    crypto::Ed25519KeyHash,
+};
 
 use clap::{command, Parser};
 use derivation_path::DerivationPath;
 use device_dummy::DeviceDummy;
-use node_client::NodeClient;
+use node_client::{Network, NodeClient};
 
 mod device_dummy;
 mod node_client;
@@ -21,18 +24,15 @@ struct Args {
     /// HD wallet password
     #[arg(long)]
     password: String,
-    #[arg(long)]
-    /// Address that corresponds to mnemonics (used to provide inputs)
-    wallet_address: String,
     /// address of script that will store sensor data
-    #[arg(long)]
-    script_address: String,
     #[arg(long)]
     /// Derivation path for keys (should correspond to wallet_address atm)
     derivation_path: String,
-    /// Network id (0 for mainnet)
     #[arg(long)]
-    network_id: u32,
+    script_address: String,
+    /// Network type
+    #[arg(long)]
+    network: Network,
     /// Path to node socket
     #[arg(long)]
     node_socket: String,
@@ -45,15 +45,12 @@ fn main() {
         .derivation_path
         .parse()
         .expect("Should parse derivation path");
-    //slip-14 address
-    let user_wallet_address = Address::from_bech32(args.wallet_address.as_str())
-        .expect("Should parse user wallet address");
 
     // mainnet address of always succeeds script
     let script_address =
         &Address::from_bech32(args.script_address.as_str()).expect("Should parse script address");
 
-    let node_client = node_client::CliNodeClient::new(args.node_socket, args.network_id);
+    let node_client = node_client::CliNodeClient::new(args.node_socket, args.network);
 
     let device = device_dummy::DeviceDummy::init(args.mnemonics.as_str());
 
@@ -61,7 +58,7 @@ fn main() {
         submit_data_to_blockchain(
             &node_client,
             &device,
-            &user_wallet_address,
+            args.network,
             &script_address,
             args.password.as_str(),
             &derivation_path,
@@ -73,18 +70,28 @@ fn main() {
 fn submit_data_to_blockchain(
     node_client: &impl NodeClient,
     device: &DeviceDummy,
-    user_wallet_address: &Address,
+    network: Network,
     script_address: &Address,
     password: &str,
     derivation_path: &DerivationPath,
 ) {
+    let pub_key = device.get_pub_key(password, derivation_path);
+    // build users wallet address from public key
+    let user_wallet_address = EnterpriseAddress::new(
+        translate_network(network),
+        &StakeCredential::from_keyhash(
+            &Ed25519KeyHash::from_hex(pub_key.hash_hex().as_str())
+                .expect("Should be able to parse public key hash from hex"),
+        ),
+    )
+    .to_address();
+
+    // todo: throw error if inputs empty
     let (inputs, ins_total_value) = node_client
-        .query_inputs(user_wallet_address)
+        .query_inputs(&user_wallet_address)
         .expect("Should return inputs from user address. Is node running and available?");
 
     let device_data = device.get_signed_sensor_data(password, derivation_path);
-
-    let pub_key = device.get_pub_key(password, derivation_path);
 
     // make unsigned Tx (with empty witness set) to get id
     let unsigned_tx = tx_build::make_unsigned_tx(
@@ -104,4 +111,11 @@ fn submit_data_to_blockchain(
 
     let submit_result = node_client.submit_tx(&signed_tx);
     println!("Submission result: {:?}", submit_result)
+}
+
+fn translate_network(net: Network) -> u8 {
+    match net {
+        Network::Mainnet => 1,
+        Network::Preprod => 0,
+    }
 }

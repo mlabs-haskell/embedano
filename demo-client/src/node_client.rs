@@ -4,6 +4,7 @@ use cardano_embedded_sdk::types::TxId;
 use cardano_serialization_lib::{
     address::Address, crypto::TransactionHash, Transaction, TransactionInput, TransactionInputs,
 };
+use clap::ValueEnum;
 use serde_json::Value;
 
 #[derive(Debug)]
@@ -21,16 +22,22 @@ pub trait NodeClient {
     fn get_tx_id(&self, tx: &Transaction) -> TxId;
 }
 
+#[derive(ValueEnum, Debug, Clone, Copy)]
+pub enum Network {
+    Mainnet,
+    Preprod,
+}
+
 pub struct CliNodeClient {
     socket_path: String,
-    network_id: u32
+    network: Network,
 }
 
 impl CliNodeClient {
-    pub fn new(socket_path: String, network_id: u32) -> Self {
+    pub fn new(socket_path: String, network: Network) -> Self {
         Self {
             socket_path,
-            network_id,
+            network,
         }
     }
 }
@@ -49,7 +56,7 @@ impl NodeClient for CliNodeClient {
                 "--address",
                 addr.as_str(),
                 "--out-file=/dev/stdout",
-                get_network_id(self.network_id),
+                translate_network(self.network),
             ])
             .output()
             .map_err(to_err)?;
@@ -85,7 +92,7 @@ impl NodeClient for CliNodeClient {
                 "submit",
                 "--tx-file",
                 tx_file,
-                get_network_id(self.network_id),
+                translate_network(self.network),
             ])
             .output()
             .map_err(to_err)?; //todo: throw error if stderr not empty
@@ -122,9 +129,9 @@ fn get_total_value(inputs: &HashMap<String, Value>) -> u64 {
     total_lovelace
 }
 
-fn get_network_id(net_id: u32) -> &'static str {
-     match net_id {
-        0 => "--mainnet",
-        _ => panic!("No support for network id {} for cardano-node client", net_id)
+fn translate_network(net: Network) -> &'static str {
+    match net {
+        Network::Mainnet => "--mainnet",
+        x => panic!("No support for network id {:?} for cardano-node client", x),
     }
 }

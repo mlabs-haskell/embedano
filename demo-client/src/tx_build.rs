@@ -4,15 +4,15 @@ use cardano_serialization_lib::{
     crypto::{Ed25519KeyHash, Ed25519Signature, PublicKey, Vkey, Vkeywitness, Vkeywitnesses},
     plutus::{PlutusData, PlutusList},
     utils::{BigInt, BigNum, Coin, Value},
-    NetworkId, RequiredSigners, Transaction, TransactionBody, TransactionInputs, TransactionOutput,
+    RequiredSigners, Transaction, TransactionBody, TransactionInputs, TransactionOutput,
     TransactionOutputs, TransactionWitnessSet,
 };
 
-use crate::{device_dummy::DeviceData, node_client::NodeClient};
+use crate::{device_dummy::DeviceData};
 
 // some constants for balancing
-const fee: u64 = 150000;
-const minAda: u64 = 2_000_000;
+const FEE: u64 = 150000;
+const MIN_ADA: u64 = 2_000_000;
 
 pub fn make_unsigned_tx(
     from_address: &Address,
@@ -22,7 +22,7 @@ pub fn make_unsigned_tx(
     ins_value: u64,
     signer_pub_key: &XPubKey,
 ) -> Transaction {
-    let mut receiver = TransactionOutput::new(to_address, &lovalace(minAda));
+    let mut receiver = TransactionOutput::new(to_address, &lovalace(MIN_ADA));
 
     let mut to_send_data = PlutusList::new();
     // adding raw data
@@ -35,16 +35,16 @@ pub fn make_unsigned_tx(
 
     receiver.set_plutus_data(&PlutusData::new_list(&to_send_data));
 
-    let change = TransactionOutput::new(&from_address, &lovalace(ins_value - minAda - fee));
+    let change = TransactionOutput::new(&from_address, &lovalace(ins_value - MIN_ADA - FEE));
 
     let mut outputs = TransactionOutputs::new();
     outputs.add(&receiver);
     outputs.add(&change);
 
-    let txFee: Coin = coin(fee);
+    let tx_fee: Coin = coin(FEE);
 
     //making body
-    let mut tx_body = TransactionBody::new_tx_body(&inputs, &outputs, &txFee);
+    let mut tx_body = TransactionBody::new_tx_body(&inputs, &outputs, &tx_fee);
     let mut required_signers = RequiredSigners::new();
     required_signers.add(
         &Ed25519KeyHash::from_hex(signer_pub_key.hash_hex().as_str())
@@ -53,9 +53,6 @@ pub fn make_unsigned_tx(
     tx_body.set_required_signers(&required_signers);
     // tx_body.set_network_id(&NetworkId::mainnet()); // not sure if it needed
 
-    //building transaction
-
-    // building transaction: unsigned
     Transaction::new(&tx_body, &TransactionWitnessSet::new(), None)
 }
 
