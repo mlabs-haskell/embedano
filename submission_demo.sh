@@ -6,9 +6,9 @@
 set -euo pipefail
 
  cargo run -p demo-client -- \
-  --mnemonics "all all all all all all all all all all all all" \
+  --mnemonics "initial label sand movie check train leaf escape hurt sort remove risk" \
   --password "" \
-  --wallet-address "addr1vxq0nckg3ekgzuqg7w5p9mvgnd9ym28qh5grlph8xd2z92su77c6m" \
+  --wallet-address "addr1v88mveycz7jftzq7ljql066ygpqh4arrq0j7kkwyx95guvq9vqyz7" \
   --script-address "addr1w9nlxv2xv9a9ucvnvzqakwepzl9ltx7jzgm53av2e9ncv4slcd85z" \
   --derivation-path "m/1852'/1815'/0'/0/0" \
   --network-id 0 \
