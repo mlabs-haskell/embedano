@@ -3,6 +3,7 @@ use std::{thread, time};
 use cardano_serialization_lib::{address::Address, NetworkId};
 
 use derivation_path::DerivationPath;
+use device_dummy::DeviceDummy;
 use node_client::NodeClient;
 
 mod device_dummy;
@@ -13,7 +14,7 @@ mod tx_envelope;
 fn main() {
     let user_mnemonics = "all all all all all all all all all all all all";
     let password = "";
-    // address of account 0 address 0, should be aligned wiht mnemonics
+    // address of key for account 0 address 0, should be aligned with mnemonics
     // ideally, we could build address from PubKey derived from mnemonics and network_id
     let user_wallet_address = "addr1vxq0nckg3ekgzuqg7w5p9mvgnd9ym28qh5grlph8xd2z92su77c6m";
     // address of script that will hold sensor readings
@@ -37,12 +38,14 @@ fn main() {
     let node_client =
         node_client::CliNodeClient::new(node_socket.to_string(), network_id.to_string());
 
+    let device = device_dummy::DeviceDummy::init(user_mnemonics);
+
     for _ in 0..5 {
         submit_data_to_blockchain(
             &node_client,
+            &device,
             &user_wallet_address,
             &script_address,
-            user_mnemonics,
             password,
             &derivation_path,
         );
@@ -52,9 +55,9 @@ fn main() {
 
 fn submit_data_to_blockchain(
     node_client: &impl NodeClient,
+    device: &DeviceDummy,
     user_wallet_address: &Address,
     script_address: &Address,
-    user_mnemonics: &str,
     password: &str,
     derivation_path: &DerivationPath,
 ) {
@@ -62,10 +65,9 @@ fn submit_data_to_blockchain(
         .query_inputs(user_wallet_address)
         .expect("Should return inputs from user address. Is node running and available?");
 
-    let device_data =
-        device_dummy::get_signed_sensor_data(user_mnemonics, password, derivation_path);
+    let device_data = device.get_signed_sensor_data(password, derivation_path);
 
-    let pub_key = device_dummy::get_pub_key(user_mnemonics, password, &derivation_path);
+    let pub_key = device.get_pub_key(password, derivation_path);
 
     // make unsigned Tx (with empty witness set) to get id
     let unsigned_tx = tx_build::make_unsigned_tx(
@@ -73,15 +75,14 @@ fn submit_data_to_blockchain(
         &script_address,
         device_data,
         &inputs,
-        ins_total_value, //for balancing
+        ins_total_value,       //for balancing
         &NetworkId::mainnet(), //todo: detect network id
         &pub_key,
     );
 
     let tx_id = node_client.get_tx_id(&unsigned_tx);
 
-    let signature =
-        device_dummy::sign_tx_id(&tx_id, user_mnemonics, password, &derivation_path);
+    let signature = device.sign_tx_id(&tx_id, password, derivation_path);
 
     let signed_tx = tx_build::make_signed_tx(&unsigned_tx, &pub_key, signature.to_bytes());
 
