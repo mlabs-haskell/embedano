@@ -23,14 +23,14 @@ pub trait NodeClient {
 
 pub struct CliNodeClient {
     socket_path: String,
-    network: String, //todo: will need better design
+    network_id: u32
 }
 
 impl CliNodeClient {
-    pub fn new(socket_path: String, network: String) -> Self {
+    pub fn new(socket_path: String, network_id: u32) -> Self {
         Self {
             socket_path,
-            network,
+            network_id,
         }
     }
 }
@@ -46,10 +46,10 @@ impl NodeClient for CliNodeClient {
             .args([
                 "query",
                 "utxo",
-                self.network.as_str(),
                 "--address",
                 addr.as_str(),
                 "--out-file=/dev/stdout",
+                get_network_id(self.network_id),
             ])
             .output()
             .map_err(to_err)?;
@@ -83,9 +83,9 @@ impl NodeClient for CliNodeClient {
             .args([
                 "transaction",
                 "submit",
-                self.network.as_str(),
                 "--tx-file",
                 tx_file,
+                get_network_id(self.network_id),
             ])
             .output()
             .map_err(to_err)?; //todo: throw error if stderr not empty
@@ -120,4 +120,11 @@ fn get_total_value(inputs: &HashMap<String, Value>) -> u64 {
         total_lovelace = total_lovelace + input_lovelace;
     }
     total_lovelace
+}
+
+fn get_network_id(net_id: u32) -> &'static str {
+     match net_id {
+        0 => "--mainnet",
+        _ => panic!("No support for network id {} for cardano-node client", net_id)
+    }
 }

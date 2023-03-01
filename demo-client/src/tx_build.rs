@@ -20,7 +20,6 @@ pub fn make_unsigned_tx(
     device_data: DeviceData,
     inputs: &TransactionInputs,
     ins_value: u64,
-    network_id: &NetworkId,
     signer_pub_key: &XPubKey,
 ) -> Transaction {
     let mut receiver = TransactionOutput::new(to_address, &lovalace(minAda));
@@ -52,8 +51,7 @@ pub fn make_unsigned_tx(
             .expect("Should be able to parse public key hash from hex"),
     );
     tx_body.set_required_signers(&required_signers);
-    tx_body.set_network_id(network_id);
-    // tx_body.set_network_id(&NetworkId::mainnet());
+    // tx_body.set_network_id(&NetworkId::mainnet()); // not sure if it needed
 
     //building transaction
 

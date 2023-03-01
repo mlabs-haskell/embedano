@@ -2,6 +2,7 @@ use std::{thread, time};
 
 use cardano_serialization_lib::{address::Address, NetworkId};
 
+use clap::{command, Parser};
 use derivation_path::DerivationPath;
 use device_dummy::DeviceDummy;
 use node_client::NodeClient;
@@ -11,34 +12,50 @@ mod node_client;
 mod tx_build;
 mod tx_envelope;
 
+#[derive(Parser, Debug)]
+#[command(about, long_about = None)]
+struct Args {
+    /// Mnemonics for HD wallet
+    #[arg(long)]
+    mnemonics: String,
+    /// HD wallet password
+    #[arg(long)]
+    password: String,
+    #[arg(long)]
+    /// Address that corresponds to mnemonics (used to provide inputs)
+    wallet_address: String,
+    /// address of script that will store sensor data
+    #[arg(long)]
+    script_address: String,
+    #[arg(long)]
+    /// Derivation path for keys (should correspond to wallet_address atm)
+    derivation_path: String,
+    /// Network id (0 for mainnet)
+    #[arg(long)]
+    network_id: u32,
+    /// Path to node socket
+    #[arg(long)]
+    node_socket: String,
+}
+
 fn main() {
-    let user_mnemonics = "all all all all all all all all all all all all";
-    let password = "";
-    // address of key for account 0 address 0, should be aligned with mnemonics
-    // ideally, we could build address from PubKey derived from mnemonics and network_id
-    let user_wallet_address = "addr1vxq0nckg3ekgzuqg7w5p9mvgnd9ym28qh5grlph8xd2z92su77c6m";
-    // address of script that will hold sensor readings
-    let script_address = "addr1w9nlxv2xv9a9ucvnvzqakwepzl9ltx7jzgm53av2e9ncv4slcd85z";
+    let args = Args::parse();
 
-    let derivation_path = "m/1852'/1815'/0'/0/0";
-    let network_id = "--mainnet";
-    let node_socket = "/home/mike/dev/mlabs/embedano-project/plutip-made-keys/pool-1/node.socket";
-
-    let derivation_path: DerivationPath = derivation_path
+    let derivation_path: DerivationPath = args
+        .derivation_path
         .parse()
         .expect("Should parse derivation path");
     //slip-14 address
-    let user_wallet_address =
-        Address::from_bech32(user_wallet_address).expect("Should parse user wallet address");
+    let user_wallet_address = Address::from_bech32(args.wallet_address.as_str())
+        .expect("Should parse user wallet address");
 
     // mainnet address of always succeeds script
     let script_address =
-        &Address::from_bech32(script_address).expect("Should parse script address");
+        &Address::from_bech32(args.script_address.as_str()).expect("Should parse script address");
 
-    let node_client =
-        node_client::CliNodeClient::new(node_socket.to_string(), network_id.to_string());
+    let node_client = node_client::CliNodeClient::new(args.node_socket, args.network_id);
 
-    let device = device_dummy::DeviceDummy::init(user_mnemonics);
+    let device = device_dummy::DeviceDummy::init(args.mnemonics.as_str());
 
     for _ in 0..5 {
         submit_data_to_blockchain(
@@ -46,7 +63,7 @@ fn main() {
             &device,
             &user_wallet_address,
             &script_address,
-            password,
+            args.password.as_str(),
             &derivation_path,
         );
         thread::sleep(time::Duration::from_secs(2))
@@ -75,8 +92,7 @@ fn submit_data_to_blockchain(
         &script_address,
         device_data,
         &inputs,
-        ins_total_value,       //for balancing
-        &NetworkId::mainnet(), //todo: detect network id
+        ins_total_value, //for balancing
         &pub_key,
     );
 
