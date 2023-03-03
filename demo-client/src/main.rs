@@ -54,7 +54,7 @@ fn main() {
 
     let device = device_dummy::DeviceDummy::init(args.mnemonics.as_str());
 
-    for _ in 0..5 {
+    // for _ in 0..5 {
         submit_data_to_blockchain(
             &node_client,
             &device,
@@ -64,7 +64,7 @@ fn main() {
             &derivation_path,
         );
         thread::sleep(time::Duration::from_secs(2))
-    }
+    // }
 }
 
 fn submit_data_to_blockchain(
@@ -77,7 +77,6 @@ fn submit_data_to_blockchain(
 ) {
 
     let pub_key = device.get_pub_key(password, derivation_path);
-    panic!("PKH: {}", pub_key.hash_hex());
     // build users wallet address from public key
     let user_wallet_address = EnterpriseAddress::new(
         translate_network(network),
@@ -106,6 +105,8 @@ fn submit_data_to_blockchain(
     );
 
     let tx_id = node_client.get_tx_id(&unsigned_tx);
+
+    println!("Tx ID: {}", tx_id.to_hex());
 
     let signature = device.sign_tx_id(&tx_id, password, derivation_path);
 

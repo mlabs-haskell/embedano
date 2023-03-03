@@ -47,17 +47,21 @@ impl NodeClient for CliNodeClient {
         // run cardano-cli to get utxos
         let addr = address.to_bech32(None).map_err(to_err)?;
 
+        let mut args: Vec<&str> = vec![
+            "query",
+            "utxo",
+            "--address",
+            addr.as_str(),
+            "--out-file=/dev/stdout",
+        ];
+        args.append(&mut translate_network(self.network));
+
+        println!("Args: {:?}", args);
+
         //grabs utxos as JSON (as cardano-cli writes them as JSON with --out-file)
         let result = Command::new("cardano-cli")
             .env("CARDANO_NODE_SOCKET_PATH", &self.socket_path)
-            .args([
-                "query",
-                "utxo",
-                "--address",
-                addr.as_str(),
-                "--out-file=/dev/stdout",
-                translate_network(self.network),
-            ])
+            .args(args)
             .output()
             .map_err(to_err)?;
 
@@ -84,18 +88,15 @@ impl NodeClient for CliNodeClient {
     fn submit_tx(&self, tx: &Transaction) -> Result<String, NodeClientError> {
         let tx_file = "./to_submit.tx";
         tx_envelope::write_as_envelope(tx_file, tx);
+        let mut args: Vec<&str> = vec!["transaction", "submit", "--tx-file", tx_file];
+        args.append(&mut translate_network(self.network));
 
         let result = Command::new("cardano-cli")
             .env("CARDANO_NODE_SOCKET_PATH", &self.socket_path)
-            .args([
-                "transaction",
-                "submit",
-                "--tx-file",
-                tx_file,
-                translate_network(self.network),
-            ])
+            .args(args)
             .output()
             .map_err(to_err)?; //todo: throw error if stderr not empty
+        // panic!("RESULT: {:?}", result);
         let result = String::from_utf8_lossy(&result.stdout);
         Ok(result.to_string())
     }
@@ -129,9 +130,9 @@ fn get_total_value(inputs: &HashMap<String, Value>) -> u64 {
     total_lovelace
 }
 
-fn translate_network(net: Network) -> &'static str {
+fn translate_network(net: Network) -> Vec<&'static str> {
     match net {
-        Network::Mainnet => "--mainnet",
-        x => panic!("No support for network id {:?} for cardano-node client", x),
+        Network::Mainnet => vec!["--mainnet"],
+        Network::Preprod => vec!["--testnet-magic", "1"],
     }
 }

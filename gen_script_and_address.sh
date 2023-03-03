@@ -2,9 +2,9 @@
 
 # Generate script for Embedano demo
 # Different nonce will lead to different script -> different address
-# E.g.: preprod:  `./gen_script_and_address.sh "--testnet-magic 1"`  
-#        preview: `./gen_script_and_address.sh "--testnet-magic 2"`  
-#        mainnet: `./gen_script_and_address.sh "--mainnet"`  
+# E.g.: preprod: `./gen_script_and_address.sh "--testnet-magic 1"`  
+#       preview: `./gen_script_and_address.sh "--testnet-magic 2"`  
+#       mainnet: `./gen_script_and_address.sh "--mainnet"`  
 
 set -euox pipefail
 

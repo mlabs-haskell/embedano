@@ -11,7 +11,7 @@ use cardano_serialization_lib::{
 use crate::{device_dummy::DeviceData};
 
 // some constants for balancing
-const FEE: u64 = 150000;
+const FEE: u64 = 200000;
 const MIN_ADA: u64 = 2_000_000;
 
 pub fn make_unsigned_tx(
