@@ -44,24 +44,18 @@ impl DeviceDummy {
         derivation_path: &DerivationPath,
     ) -> DeviceData {
         let mut rng = rand::thread_rng();
-        let sensor_data: u64 = rng.gen();
-        let sensor_data_b = sensor_data.to_ne_bytes();
-        let signed_data = embedano::sign_data(
-            &sensor_data_b,
-            &self.entropy,
-            password.as_bytes(),
-            &derivation_path,
-        );
+        let sensor_a: i16 = rng.gen();
+        let sensor_b: u16 = rng.gen();
         DeviceData {
-            sensor_readings: sensor_data,
-            signed_readings: signed_data.to_bytes(),
+            sensor_a,
+            sensor_b,
         }
     }
 }
 
 pub struct DeviceData {
-    pub sensor_readings: u64,
-    pub signed_readings: Vec<u8>,
+    pub sensor_a: i16,
+    pub sensor_b: u16,
 }
 
 // pub

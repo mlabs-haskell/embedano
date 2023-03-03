@@ -15,6 +15,7 @@ pub struct NodeClientError {
 use crate::tx_envelope::{self, write_as_envelope};
 
 pub trait NodeClient {
+    fn query_raw_inputs(&self, address: &Address) -> Result<String, NodeClientError>;
     fn query_inputs(&self, address: &Address) -> Result<(TransactionInputs, u64), NodeClientError>;
 
     fn submit_tx(&self, tx: &Transaction) -> Result<String, NodeClientError>;
@@ -43,20 +44,18 @@ impl CliNodeClient {
 }
 
 impl NodeClient for CliNodeClient {
-    fn query_inputs(&self, address: &Address) -> Result<(TransactionInputs, u64), NodeClientError> {
+    fn query_raw_inputs(&self, address: &Address) -> Result<String, NodeClientError> {
         // run cardano-cli to get utxos
         let addr = address.to_bech32(None).map_err(to_err)?;
 
-        let mut args: Vec<&str> = vec![
+        let args: Vec<&str> = vec![
             "query",
             "utxo",
             "--address",
             addr.as_str(),
             "--out-file=/dev/stdout",
+            translate_network(self.network),
         ];
-        args.append(&mut translate_network(self.network));
-
-        println!("Args: {:?}", args);
 
         //grabs utxos as JSON (as cardano-cli writes them as JSON with --out-file)
         let result = Command::new("cardano-cli")
@@ -67,8 +66,14 @@ impl NodeClient for CliNodeClient {
 
         //todo: throw error if stderr not empty
         // parse cardano-cli response to inputs
-        let inputs = String::from_utf8_lossy(&result.stdout);
-        // print!("{:?}", result);
+        let inputs = String::from_utf8_lossy(&result.stdout).into_owned();
+        Ok(inputs)
+    }
+
+    fn query_inputs(&self, address: &Address) -> Result<(TransactionInputs, u64), NodeClientError> {
+        // run cardano-cli to get utxos
+
+        let inputs = self.query_raw_inputs(address)?;
         let inputs: HashMap<String, Value> = serde_json::from_str(&inputs).map_err(to_err)?;
 
         let total_inputs_value = get_total_value(&inputs);
@@ -88,15 +93,19 @@ impl NodeClient for CliNodeClient {
     fn submit_tx(&self, tx: &Transaction) -> Result<String, NodeClientError> {
         let tx_file = "./to_submit.tx";
         tx_envelope::write_as_envelope(tx_file, tx);
-        let mut args: Vec<&str> = vec!["transaction", "submit", "--tx-file", tx_file];
-        args.append(&mut translate_network(self.network));
-
+        let args: Vec<&str> = vec![
+            "transaction",
+            "submit",
+            "--tx-file",
+            tx_file,
+            translate_network(self.network),
+        ];
         let result = Command::new("cardano-cli")
             .env("CARDANO_NODE_SOCKET_PATH", &self.socket_path)
             .args(args)
             .output()
             .map_err(to_err)?; //todo: throw error if stderr not empty
-        // panic!("RESULT: {:?}", result);
+                               // panic!("RESULT: {:?}", result);
         let result = String::from_utf8_lossy(&result.stdout);
         Ok(result.to_string())
     }
@@ -130,9 +139,9 @@ fn get_total_value(inputs: &HashMap<String, Value>) -> u64 {
     total_lovelace
 }
 
-fn translate_network(net: Network) -> Vec<&'static str> {
+fn translate_network(net: Network) -> &'static str {
     match net {
-        Network::Mainnet => vec!["--mainnet"],
-        Network::Preprod => vec!["--testnet-magic", "1"],
+        Network::Mainnet => "--mainnet",
+        Network::Preprod => "--testnet-magic=1",
     }
 }
