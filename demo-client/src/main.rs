@@ -55,15 +55,15 @@ fn main() {
     let device = device_dummy::DeviceDummy::init(args.mnemonics.as_str());
 
     // for _ in 0..5 {
-        submit_data_to_blockchain(
-            &node_client,
-            &device,
-            args.network,
-            &script_address,
-            args.password.as_str(),
-            &derivation_path,
-        );
-        thread::sleep(time::Duration::from_secs(2))
+    submit_data_to_blockchain(
+        &node_client,
+        &device,
+        args.network,
+        &script_address,
+        args.password.as_str(),
+        &derivation_path,
+    );
+    thread::sleep(time::Duration::from_secs(2))
     // }
 }
 
@@ -75,7 +75,6 @@ fn submit_data_to_blockchain(
     password: &str,
     derivation_path: &DerivationPath,
 ) {
-
     let pub_key = device.get_pub_key(password, derivation_path);
     // build users wallet address from public key
     let user_wallet_address = EnterpriseAddress::new(

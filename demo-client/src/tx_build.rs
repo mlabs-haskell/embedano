@@ -8,7 +8,7 @@ use cardano_serialization_lib::{
     TransactionOutputs, TransactionWitnessSet,
 };
 
-use crate::{device_dummy::DeviceData};
+use crate::device_dummy::DeviceData;
 
 // some constants for balancing
 const FEE: u64 = 200000;
@@ -25,14 +25,13 @@ pub fn make_unsigned_tx(
     let mut receiver = TransactionOutput::new(to_address, &lovalace(MIN_ADA));
 
     let mut to_send_data = PlutusList::new();
-    // adding a
-    let sensor_a = format!("\"{}\"", device_data.sensor_a);
-    let sensor_a = &BigInt::from_json(sensor_a.as_str()).unwrap();
-    to_send_data.add(&PlutusData::new_integer(sensor_a));
-    // adding b
-    let sensor_b = format!("\"{}\"", device_data.sensor_b);
-    let sensor_b = &BigInt::from_json(sensor_b.as_str()).unwrap();
-    to_send_data.add(&PlutusData::new_integer(sensor_b));
+    // adding raw data
+    let sensor_data = format!("\"{}\"", device_data.sensor_readings);
+    let sensor_data = &BigInt::from_json(sensor_data.as_str()).unwrap();
+    to_send_data.add(&PlutusData::new_integer(sensor_data));
+    // adding signed bytes
+    let signed_data = PlutusData::new_bytes(device_data.signed_readings);
+    to_send_data.add(&signed_data);
 
     receiver.set_plutus_data(&PlutusData::new_list(&to_send_data));
 
