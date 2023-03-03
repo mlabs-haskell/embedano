@@ -6,11 +6,42 @@ use cardano_embedded_sdk::crypto::Ed25519Signature;
 use cardano_embedded_sdk::types::TxId;
 use derivation_path::DerivationPath;
 
+use minicbor::{Decode, Encode};
+
+#[derive(Debug, Encode, Decode)]
+pub enum In {
+    #[n(0)]
+    Init(#[n(0)] String),
+    #[n(1)]
+    Sign(#[n(0)] Vec<u8>, #[n(1)] Vec<u8>, #[n(2)] String),
+    #[n(2)]
+    Verifiy(
+            #[n(0)] Vec<u8>,
+        #[n(1)] Vec<u8>,
+        #[n(2)] Vec<u8>,
+        #[n(3)] String,
+    ),
+}
+
+#[derive(Debug, Encode, Decode)]
+pub enum Out {
+    #[n(0)]
+    Init,
+    #[n(1)]
+    Sign(#[n(0)] Vec<u8>),
+    #[n(2)]
+    Verifiy(#[n(0)] bool),
+    #[n(3)]
+    Error(#[n(0)] String),
+}
+
+
 fn main() {
     let mnemonics = "aim wool into nose tell ball arm expand design push elevator multiply glove lonely minimum";
-    let mnemonics = Mnemonics::from_string(&dictionary::ENGLISH, mnemonics).unwrap();
     let password = b"embedano";
-    let entropy = Entropy::from_mnemonics(&mnemonics).unwrap();
+    let entropy =
+        Entropy::from_mnemonics(&Mnemonics::from_string(&dictionary::ENGLISH, mnemonics).unwrap())
+            .unwrap();
     let path: DerivationPath = "m/1852'/1815'/0'/0/0".parse().unwrap();
     let (_prv_key, pub_key) = embedano::derive_key_pair(&entropy, password, &path);
 
@@ -27,16 +58,49 @@ fn main() {
         .open()
         .expect("Failed to open port");
 
-    port.write(tx_id.to_bytes()).expect("Write failed!");
+    let mut buf: Vec<u8> = vec![0; 2048];
 
-    let mut buf: Vec<u8> = vec![0; 64];
+    port.write(&minicbor::to_vec(In::Init(mnemonics.to_string())).unwrap())
+        .expect("Write failed!");
     port.read(buf.as_mut_slice()).expect("Found no data!");
+    let result: Out = minicbor::decode(&buf).unwrap();
+    println!("{result:#?}");
+    buf = vec![0; 2048];
 
-    let signature = Ed25519Signature::from_bytes(buf).expect("Decode signature failed!");
+    port.write(
+        &minicbor::to_vec(In::Sign(
+            tx_id.to_bytes().to_vec(),
+            password.to_vec(),
+            path.to_string(),
+        ))
+        .unwrap(),
+    )
+    .expect("Write failed!");
+    let result: Out = minicbor::decode(&buf).unwrap();
+    println!("{result:#?}");
+    buf = vec![0; 2048];
 
-    println!(
-        "Signature: {}, verified: {}",
-        signature.to_hex(),
-        pub_key.verify(tx_id.to_bytes(), &signature)
-    );
+    if let Out::Sign(signature) = result {
+        let signature = Ed25519Signature::from_bytes(signature).expect("Decode signature failed!");
+        println!(
+            "Signature: {}, verified: {}",
+            signature.to_hex(),
+            pub_key.verify(tx_id.to_bytes(), &signature)
+        );
+
+        port.write(
+            &minicbor::to_vec(In::Verifiy(
+                tx_id.to_bytes().to_vec(),
+                signature.to_bytes(),
+                password.to_vec(),
+                path.to_string(),
+            ))
+            .unwrap(),
+        )
+        .expect("Write failed!");
+        let result: Out = minicbor::decode(&buf).unwrap();
+        println!("{result:#?}");
+    } else {
+        println!("Signing failed!")
+    }
 }

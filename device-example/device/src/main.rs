@@ -1,5 +1,6 @@
 #![no_std]
 #![no_main]
+#![feature(result_flattening)]
 
 // pick a panicking behavior
 use panic_halt as _; // you can put a breakpoint on `rust_begin_unwind` to catch panics
@@ -20,10 +21,11 @@ use hal::usb::{Peripheral, UsbBus};
 use usb_device::prelude::*;
 use usbd_serial::{SerialPort, USB_CLASS_CDC};
 
-use cardano_embedded_sdk::api as embedano;
 use cardano_embedded_sdk::bip::bip39::{dictionary, Entropy, Mnemonics};
-use cardano_embedded_sdk::types::TxId;
-use derivation_path::DerivationPath;
+
+extern crate alloc;
+use alloc::format;
+use device::*;
 
 #[global_allocator]
 static ALLOCATOR: CortexMHeap = CortexMHeap::empty();
@@ -33,12 +35,6 @@ const HEAP_SIZE: usize = 1024; // in bytes
 #[entry]
 fn main() -> ! {
     unsafe { ALLOCATOR.init(cortex_m_rt::heap_start() as usize, HEAP_SIZE) }
-
-    let mnemonics = "aim wool into nose tell ball arm expand design push elevator multiply glove lonely minimum";
-    let mnemonics = Mnemonics::from_string(&dictionary::ENGLISH, mnemonics).unwrap();
-    let password = b"embedano";
-    let entropy = Entropy::from_mnemonics(&mnemonics).unwrap();
-    let path: DerivationPath = "m/1852'/1815'/0'/0/0".parse().unwrap();
 
     let dp = pac::Peripherals::take().unwrap();
     let mut flash = dp.FLASH.constrain();
@@ -93,24 +89,51 @@ fn main() -> ! {
         .device_class(USB_CLASS_CDC)
         .build();
 
+    let mut entropy: Option<Entropy> = None;
+
     loop {
         if !usb_dev.poll(&mut [&mut serial]) {
             continue;
         }
 
-        let mut buf = [0u8; 32];
+        let mut buf = [0u8; 4096];
 
-        match serial.read(&mut buf) {
-            Ok(count) if count == 32 => {
+        let out: Out = match serial.read(&mut buf) {
+            Ok(_count) => {
                 led.set_high().ok(); // Turn on
-
-                let tx_id = TxId::from_bytes(&buf).unwrap();
-                let signature = embedano::sign_tx_id(&tx_id, &entropy, password, &path);
-
-                serial.write(&signature.to_bytes()).unwrap();
+                match minicbor::decode::<'_, In>(&buf) {
+                    Ok(In::Init(mnemonics)) => {
+                        let result = Mnemonics::from_string(&dictionary::ENGLISH, &mnemonics)
+                            .map(|v| Entropy::from_mnemonics(&v))
+                            .flatten()
+                            .map(|v| entropy = Some(v));
+                        if let Err(e) = result {
+                            Out::Error(format!("{e:#?}"))
+                        } else {
+                            Out::Init
+                        }
+                    }
+                    Ok(In::Sign(tx_id, password, path)) => {
+                        if let Some(entropy) = &entropy {
+                            sign(&tx_id, entropy, &password, &path)
+                        } else {
+                            Out::Error(format!("No entropy"))
+                        }
+                    }
+                    Ok(In::Verifiy(tx_id, signature, password, path)) => {
+                        if let Some(entropy) = &entropy {
+                            verify(&tx_id, signature, entropy, &password, &path)
+                        } else {
+                            Out::Error(format!("No entropy"))
+                        }
+                    }
+                    Err(e) => Out::Error(format!("{e:#?}")),
+                }
             }
-            _ => {}
-        }
+            Err(e) => Out::Error(format!("{e:#?}")),
+        };
+
+        serial.write(&minicbor::to_vec(&out).unwrap()).unwrap();
 
         led.set_low().ok(); // Turn off
     }
