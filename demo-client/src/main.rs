@@ -75,7 +75,9 @@ fn submit_data_to_blockchain(
     password: &str,
     derivation_path: &DerivationPath,
 ) {
+
     let pub_key = device.get_pub_key(password, derivation_path);
+    panic!("PKH: {}", pub_key.hash_hex());
     // build users wallet address from public key
     let user_wallet_address = EnterpriseAddress::new(
         translate_network(network),
