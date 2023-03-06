@@ -111,8 +111,11 @@ fn send(port: &mut Box<dyn SerialPort>, value: In) {
     let data = minicbor::to_vec(&value).unwrap();
     let len = data.len();
     port.write(&(len as u64).to_be_bytes()).unwrap();
-    port.write_all(&data).unwrap();
-    port.flush().unwrap();
+    thread::sleep(Duration::from_millis(10));
+    for chunk in data.chunks(64) {
+        port.write(&chunk).unwrap();
+    }
+//    port.flush().unwrap();
     println!("{value:#?}\nSent: {len}");
 }
 
