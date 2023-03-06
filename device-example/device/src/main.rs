@@ -21,8 +21,8 @@ use hal::usb::{Peripheral, UsbBus};
 use usb_device::bus;
 use usb_device::class::UsbClass;
 use usb_device::prelude::*;
-use usbd_serial::{DefaultBufferStore, SerialPort, USB_CLASS_CDC};
 use usbd_serial::*;
+use usbd_serial::{DefaultBufferStore, SerialPort, USB_CLASS_CDC};
 
 use cardano_embedded_sdk::bip::bip39::{dictionary, Entropy, Mnemonics};
 
@@ -159,11 +159,11 @@ fn main() -> ! {
                         }
                         Err(UsbError::WouldBlock) => {
                             state = State::Read(Data::Head(data));
-                        },
+                        }
                         Err(e) => {
                             let out = Out::Error(format!("Decode mnemonics failed: {e:?}"));
                             state = State::Write(Data::Head(minicbor::to_vec(&out).unwrap()));
-                        },
+                        }
                     }
 
                     led_s.set_low().ok();
@@ -178,7 +178,7 @@ fn main() -> ! {
                         Err(e) => {
                             let out = Out::Error(format!("Decode mnemonics failed: {e}"));
                             state = State::Write(Data::Head(minicbor::to_vec(&out).unwrap()));
-                        },
+                        }
                     }
 
                     led_sw.set_low().ok();
@@ -194,11 +194,11 @@ fn main() -> ! {
                         }
                         Err(UsbError::WouldBlock) => {
                             state = State::Read(Data::Body(data, rest));
-                        },
+                        }
                         Err(e) => {
                             let out = Out::Error(format!("Decode mnemonics failed: {e:?}"));
                             state = State::Write(Data::Head(minicbor::to_vec(&out).unwrap()));
-                        },
+                        }
                     }
 
                     led_w.set_low().ok();
@@ -231,11 +231,11 @@ fn main() -> ! {
                         }
                         Err(UsbError::WouldBlock) => {
                             state = State::Write(Data::Body(data, rest));
-                        },
+                        }
                         Err(e) => {
                             let out = Out::Error(format!("Decode mnemonics failed: {e:?}"));
                             state = State::Write(Data::Head(minicbor::to_vec(&out).unwrap()));
-                        },
+                        }
                     }
 
                     led_ne.set_low().ok();
@@ -244,9 +244,9 @@ fn main() -> ! {
                     led_e.set_high().ok();
 
                     let result = Mnemonics::from_string(&dictionary::ENGLISH, &mnemonics)
-                    .map(|v| Entropy::from_mnemonics(&v))
-                    .flatten()
-                    .map(|v| entropy = Some(v));
+                        .map(|v| Entropy::from_mnemonics(&v))
+                        .flatten()
+                        .map(|v| entropy = Some(v));
                     let out = if let Err(e) = result {
                         Out::Error(format!("Decode mnemonics failed: {e}"))
                     } else {

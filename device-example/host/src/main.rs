@@ -18,7 +18,7 @@ pub enum In {
     #[n(1)]
     Sign(#[n(0)] Vec<u8>, #[n(1)] Vec<u8>, #[n(2)] String),
     #[n(2)]
-    Verifiy(
+    Verify(
         #[n(0)] Vec<u8>,
         #[n(1)] Vec<u8>,
         #[n(2)] Vec<u8>,
@@ -67,46 +67,44 @@ fn main() {
     println!("sending init");
     send(&mut port, In::Init(mnemonics.to_string()));
     println!("recieving init");
-    recieve(&mut port);
-//    recieve(&mut port);
-    println!("recieved init");
+    println!("recieved init {:#?}", recieve(&mut port));
 
     println!("sending sign");
-    send(&mut port, In::Sign(
+    send(
+        &mut port,
+        In::Sign(
             tx_id.to_bytes().to_vec(),
-        password.to_vec(),
-        path.to_string(),
-    ));
+            password.to_vec(),
+            path.to_string(),
+        ),
+    );
     println!("recieving sign");
-    recieve(&mut port);
-    println!("recieved sign");
+    let result = recieve(&mut port);
+    println!("recieved sign {:#?}", &result);
 
-//    if let Out::Sign(signature) = result {
-//        let signature = Ed25519Signature::from_bytes(signature).expect("Decode signature failed!");
-//        println!(
-//            "Signature: {}, verified: {}",
-//            signature.to_hex(),
-//            pub_key.verify(tx_id.to_bytes(), &signature)
-//        );
-//
-//        let data = minicbor::to_vec(In::Verifiy(
-//            tx_id.to_bytes().to_vec(),
-//            signature.to_bytes(),
-//            password.to_vec(),
-//            path.to_string(),
-//        ))
-//        .unwrap();
-//        println!("In::Verifiy: {}", data.len());
-//        let write = minicbor::to_vec(In::Write(data.len())).unwrap();
-//        port.write_all(&write).expect("Write In::Write failed!");
-//        port.write_all(&data).expect("Write In::Verifiy failed!");
-//        port.read(buf.as_mut_slice())
-//            .expect("Found no In::Verifiy data!");
-//        let result: Out = minicbor::decode(&buf).unwrap();
-//        println!("{result:#?}");
-//    } else {
-//        println!("Signing failed!")
-//    }
+    if let Ok(Some(Out::Sign(signature))) = result {
+        let signature = Ed25519Signature::from_bytes(signature).expect("Decode signature failed!");
+        println!(
+            "signature: {}, verified: {}",
+            signature.to_hex(),
+            pub_key.verify(tx_id.to_bytes(), &signature)
+        );
+
+        println!("sending verify");
+        send(
+            &mut port,
+            In::Verify(
+                tx_id.to_bytes().to_vec(),
+                signature.to_bytes(),
+                password.to_vec(),
+                path.to_string(),
+            ),
+        );
+        println!("recieving verify");
+        println!("recieved verify {:#?}", recieve(&mut port));
+    } else {
+        println!("signing failed!")
+    }
 }
 
 fn send(port: &mut Box<dyn SerialPort>, value: In) {
@@ -118,7 +116,7 @@ fn send(port: &mut Box<dyn SerialPort>, value: In) {
     println!("{value:#?}\nSent: {len}");
 }
 
-fn recieve(port: &mut Box<dyn SerialPort>) {
+fn recieve(port: &mut Box<dyn SerialPort>) -> Result<Option<Out>, String> {
     let mut length = [0u8; 8];
     if port.read_exact(&mut length).is_ok() {
         let length = u64::from_be_bytes(length);
@@ -134,12 +132,11 @@ fn recieve(port: &mut Box<dyn SerialPort>) {
             if (read as u64) == length {
                 break;
             }
-            match minicbor::decode::<'_, Out>(&data[..read]) {
-                Ok(v) => println!("Recieved {v:#?}"),
-                e => println!("Recieved err: {e:#?}"),
-            }
         }
-        let result: Out = minicbor::decode(&data[..read]).unwrap();
-        println!("Recieved {result:#?}");
+        match minicbor::decode::<'_, Out>(&data[..read]) {
+            Ok(v) => return Ok(Some(v)),
+            e => return Err(format!("minicbor decode error: {e:#?}")),
+        }
     }
+    Ok(None)
 }
