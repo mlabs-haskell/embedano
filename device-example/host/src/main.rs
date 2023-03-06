@@ -68,6 +68,7 @@ fn main() {
     send(&mut port, In::Init(mnemonics.to_string()));
     println!("recieving init");
     recieve(&mut port);
+//    recieve(&mut port);
     println!("recieved init");
 
     println!("sending sign");
@@ -113,39 +114,23 @@ fn send(port: &mut Box<dyn SerialPort>, value: In) {
     let len = data.len();
     port.write(&(len as u64).to_be_bytes()).unwrap();
     port.write_all(&data).unwrap();
-//    let mut offset = 0;
-//    while offset < len {
-//        while let Ok(count) = port.write(&data[offset..len]) {
-//            if count == 0 {
-//                break;
-//            }
-//            offset += count;
-//            thread::sleep(Duration::from_millis(10));
-//        }
-//    }
     port.flush().unwrap();
     println!("{value:#?}\nSent: {len}");
 }
 
 fn recieve(port: &mut Box<dyn SerialPort>) {
-    println!("recieve a");
-
-
     let mut length = [0u8; 8];
     if port.read_exact(&mut length).is_ok() {
         let length = u64::from_be_bytes(length);
         let mut buf = [0u8; 4096];
         let mut data = vec![];
         let mut read = 0;
-        println!("length :{length:#?}");
         while let Ok(count) = port.read(&mut buf) {
-            println!("recieve :{count:#?}");
             if count == 0 {
                 break;
             }
             data.extend_from_slice(&buf[..count]);
             read += count;
-            println!("read: {read}");
             if (read as u64) == length {
                 break;
             }
@@ -158,30 +143,3 @@ fn recieve(port: &mut Box<dyn SerialPort>) {
         println!("Recieved {result:#?}");
     }
 }
-
-//fn send(port: &mut Box<dyn SerialPort>, value: In) {
-//    let data = minicbor::to_vec(&value).unwrap();
-//    let len = data.len() as u64;
-//    port.write(&len.to_be_bytes()).unwrap();
-////    port.flush().unwrap();
-//    port.write(&data).expect(&format!("Write failed!\n{value:#?}"));
-////    port.flush().unwrap();
-//    println!("{value:#?}\nSent: {len}");
-//}
-
-//fn recieve(port: &mut Box<dyn SerialPort>) {
-//    let mut buf: Vec<u8> = vec![0; 1024];
-//    let mut message: Vec<u8> = vec![];
-//
-//    let mut buf: Vec<u8> = vec![0; 4096];
-//    port.read(buf.as_mut_slice()).unwrap();
-////    while let Ok(count) = port.read(buf.as_mut_slice()) {
-////        message.extend_from_slice(&buf[..count]);
-////        buf = vec![0; 1024];
-////    }
-//
-//    if !message.is_empty() {
-//        let result: Out = minicbor::decode(&message).unwrap();
-//        println!("Recieved {result:#?}");
-//    }
-//}

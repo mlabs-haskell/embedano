@@ -19,13 +19,16 @@ use hal::prelude::*;
 use hal::usb::{Peripheral, UsbBus};
 
 use usb_device::bus;
+use usb_device::class::UsbClass;
 use usb_device::prelude::*;
 use usbd_serial::{DefaultBufferStore, SerialPort, USB_CLASS_CDC};
+use usbd_serial::*;
 
 use cardano_embedded_sdk::bip::bip39::{dictionary, Entropy, Mnemonics};
 
 extern crate alloc;
 use alloc::{format, vec, vec::Vec};
+
 use device::*;
 
 #[global_allocator]
@@ -88,6 +91,11 @@ fn main() -> ! {
         .into_push_pull_output(&mut gpioe.moder, &mut gpioe.otyper);
     led_e.set_low().ok();
 
+    let mut led_se = gpioe
+        .pe12
+        .into_push_pull_output(&mut gpioe.moder, &mut gpioe.otyper);
+    led_se.set_low().ok();
+
     let mut gpioa = dp.GPIOA.split(&mut rcc.ahb);
 
     // F3 Discovery board has a pull-up resistor on the D+ line.
@@ -123,169 +131,159 @@ fn main() -> ! {
 
     let mut entropy: Option<Entropy> = None;
 
+    let mut state = State::Read(Data::Head(vec![]));
+
     loop {
         if !usb_dev.poll(&mut [&mut serial]) || !serial.dtr() {
             continue;
         }
-        led_s.set_high().ok();
 
-        led_sw.set_high().ok();
-        let message = recieve(&mut serial);
-        led_sw.set_low().ok();
+        'main: loop {
+            match state {
+                State::Read(Data::Head(mut data)) => {
+                    led_s.set_high().ok();
 
-        led_w.set_high().ok();
-        let message = minicbor::decode::<'_, In>(&message);
-        delay(10_000_000);
-        let _ = usb_dev.poll(&mut [&mut serial]);
-        led_w.set_low().ok();
+                    let mut buf = [0u8; 64];
+                    match serial.read(&mut buf) {
+                        Ok(count) => {
+                            data.extend_from_slice(&buf[..count]);
+                            if data.len() >= 8 {
+                                let mut rest = [0u8; 8];
+                                rest.copy_from_slice(&data[..8]);
+                                let rest = u64::from_be_bytes(rest);
+                                let data = data.into_iter().skip(8).collect();
+                                state = State::Read(Data::Body(data, rest as usize));
+                            } else {
+                                state = State::Read(Data::Head(data));
+                            }
+                        }
+                        Err(UsbError::WouldBlock) => {
+                            state = State::Read(Data::Head(data));
+                        },
+                        Err(e) => {
+                            let out = Out::Error(format!("Decode mnemonics failed: {e:?}"));
+                            state = State::Write(Data::Head(minicbor::to_vec(&out).unwrap()));
+                        },
+                    }
 
-//        let _ = usb_dev.poll(&mut [&mut serial]);
+                    led_s.set_low().ok();
+                }
+                State::Read(Data::Body(data, 0)) => {
+                    led_sw.set_high().ok();
 
-        led_nw.set_high().ok();
-        let out: Out = match message {
-            Ok(In::Init(mnemonics)) => {
-                let result = Mnemonics::from_string(&dictionary::ENGLISH, &mnemonics)
+                    match minicbor::decode::<'_, In>(&data) {
+                        Ok(exec) => {
+                            state = State::Exec(exec);
+                        }
+                        Err(e) => {
+                            let out = Out::Error(format!("Decode mnemonics failed: {e}"));
+                            state = State::Write(Data::Head(minicbor::to_vec(&out).unwrap()));
+                        },
+                    }
+
+                    led_sw.set_low().ok();
+                }
+                State::Read(Data::Body(mut data, rest)) => {
+                    led_w.set_high().ok();
+
+                    let mut buf = [0u8; 64];
+                    match serial.read(&mut buf) {
+                        Ok(count) => {
+                            data.extend_from_slice(&buf[..count]);
+                            state = State::Read(Data::Body(data, rest - count));
+                        }
+                        Err(UsbError::WouldBlock) => {
+                            state = State::Read(Data::Body(data, rest));
+                        },
+                        Err(e) => {
+                            let out = Out::Error(format!("Decode mnemonics failed: {e:?}"));
+                            state = State::Write(Data::Head(minicbor::to_vec(&out).unwrap()));
+                        },
+                    }
+
+                    led_w.set_low().ok();
+                }
+                State::Write(Data::Head(data)) => {
+                    led_nw.set_high().ok();
+
+                    let len = data.len();
+                    serial.write(&(len as u64).to_be_bytes()).unwrap();
+                    state = State::Write(Data::Body(data, len));
+
+                    led_nw.set_low().ok();
+                }
+                State::Write(Data::Body(data, 0)) => {
+                    led_n.set_high().ok();
+
+                    state = State::Read(Data::Head(vec![]));
+
+                    led_n.set_low().ok();
+
+                    break 'main;
+                }
+                State::Write(Data::Body(data, rest)) => {
+                    led_ne.set_high().ok();
+
+                    match serial.write(&data) {
+                        Ok(count) => {
+                            let data = data.into_iter().skip(count).collect();
+                            state = State::Write(Data::Body(data, rest - count));
+                        }
+                        Err(UsbError::WouldBlock) => {
+                            state = State::Write(Data::Body(data, rest));
+                        },
+                        Err(e) => {
+                            let out = Out::Error(format!("Decode mnemonics failed: {e:?}"));
+                            state = State::Write(Data::Head(minicbor::to_vec(&out).unwrap()));
+                        },
+                    }
+
+                    led_ne.set_low().ok();
+                }
+                State::Exec(In::Init(mnemonics)) => {
+                    led_e.set_high().ok();
+
+                    let result = Mnemonics::from_string(&dictionary::ENGLISH, &mnemonics)
                     .map(|v| Entropy::from_mnemonics(&v))
                     .flatten()
                     .map(|v| entropy = Some(v));
-                if let Err(e) = result {
-                    Out::Error(format!("Decode mnemonics failed: {e}"))
-                } else {
-                    Out::Init
+                    let out = if let Err(e) = result {
+                        Out::Error(format!("Decode mnemonics failed: {e}"))
+                    } else {
+                        Out::Init
+                    };
+                    state = State::Write(Data::Head(minicbor::to_vec(&out).unwrap()));
+
+                    led_e.set_low().ok();
+                }
+                State::Exec(In::Sign(tx_id, password, path)) => {
+                    led_se.set_high().ok();
+
+                    let out = if let Some(entropy) = &entropy {
+                        sign(&tx_id, entropy, &password, &path)
+                    } else {
+                        Out::Error(format!("Sign failed: no entropy"))
+                    };
+                    state = State::Write(Data::Head(minicbor::to_vec(&out).unwrap()));
+
+                    led_se.set_low().ok();
+                }
+                State::Exec(In::Verify(tx_id, signature, password, path)) => {
+                    led_n.set_high().ok();
+                    led_s.set_high().ok();
+
+                    let out = if let Some(entropy) = &entropy {
+                        verify(&tx_id, signature, entropy, &password, &path)
+                    } else {
+                        Out::Error(format!("Verifiy failed: no entropy"))
+                    };
+                    state = State::Write(Data::Head(minicbor::to_vec(&out).unwrap()));
+
+                    led_n.set_low().ok();
+                    led_s.set_low().ok();
                 }
             }
-            Ok(In::Sign(tx_id, password, path)) => {
-                if let Some(entropy) = &entropy {
-                    sign(&tx_id, entropy, &password, &path)
-                } else {
-                    Out::Error(format!("Sign failed: no entropy"))
-                }
-            }
-            Ok(In::Verifiy(tx_id, signature, password, path)) => {
-                if let Some(entropy) = &entropy {
-                    verify(&tx_id, signature, entropy, &password, &path)
-                } else {
-                    Out::Error(format!("Verifiy failed: no entropy"))
-                }
-            }
-            Err(e) => Out::Error(format!("Decode message failed: {e:#?}")),
-        };
-        delay(10_000_000);
-        let _ = usb_dev.poll(&mut [&mut serial]);
-        led_nw.set_low().ok();
-
-//        let _ = usb_dev.poll(&mut [&mut serial]);
-
-        led_n.set_high().ok();
-        let data = minicbor::to_vec(&out).unwrap();
-        delay(10_000_000);
-        let _ = usb_dev.poll(&mut [&mut serial]);
-        led_n.set_low().ok();
-
-//        let _ = usb_dev.poll(&mut [&mut serial]);
-
-        led_ne.set_high().ok();
-        let len = data.len();
-        serial.write(&(len as u64).to_be_bytes()).unwrap();
-        delay(10_000_000);
-        let _ = usb_dev.poll(&mut [&mut serial]);
-        led_ne.set_low().ok();
-
-//        let _ = usb_dev.poll(&mut [&mut serial]);
-
-        let mut offset = 0;
-        while offset < len {
-            match serial.write(&data[offset..len]) {
-                Ok(0) => break,
-                Ok(count) => {
-                    offset += count;
-                },
-                Err(UsbError::WouldBlock) => {
-                    delay(10)
-                },
-                _ => break,
-            }
-            led_sw.set_high().ok();
-            delay(10_000_000);
-            let _ = usb_dev.poll(&mut [&mut serial]);
-            led_sw.set_low().ok();
-        }
-
-//        let _ = usb_dev.poll(&mut [&mut serial]);
-
-        led_e.set_high().ok();
-        let _ = usb_dev.poll(&mut [&mut serial]);
-        serial.flush().unwrap();
-        delay(10_000_000);
-
-        led_e.set_low().ok();
-
-//        let _ = usb_dev.poll(&mut [&mut serial]);
-
-        led_s.set_low().ok();
-    }
-}
-
-fn send<B: bus::UsbBus>(
-    serial: &mut SerialPort<'_, B, DefaultBufferStore, DefaultBufferStore>,
-    value: Out,
-) {
-    let data = minicbor::to_vec(&value).unwrap();
-    let len = data.len();
-
-    serial.write(&(len as u64).to_be_bytes()).unwrap();
-
-    let mut offset = 0;
-    while offset < len {
-        match serial.write(&data[offset..len]) {
-            Ok(0) => break,
-            Ok(count) => offset += count,
-            Err(UsbError::WouldBlock) => delay(10),
-            _ => break,
+            usb_dev.poll(&mut [&mut serial]);
         }
     }
-    serial.flush().unwrap();
-}
-
-fn recieve<B: bus::UsbBus>(
-    serial: &mut SerialPort<'_, B, DefaultBufferStore, DefaultBufferStore>,
-) -> Vec<u8> {
-let mut buf = [0u8; 64];
-    let mut data = vec![];
-    let mut read = 0;
-
-    while read < 8 {
-        match serial.read(&mut buf) {
-            Ok(0) => break,
-            Ok(count) => {
-                data.extend_from_slice(&buf[..count]);
-                read += count;
-            }
-            Err(UsbError::WouldBlock) => delay(10),
-            _ => break,
-        }
-    }
-
-    let mut length = [0u8; 8];
-    length.copy_from_slice(&data[..8]);
-    let length = u64::from_be_bytes(length);
-
-    let mut message = vec![];
-    if read > 8 {
-        message.extend_from_slice(&data[8..read]);
-        read = read - 8;
-        while (read as u64) < length {
-            match serial.read(&mut buf) {
-                Ok(0) => break,
-                Ok(count) => {
-                    message.extend_from_slice(&buf[..count]);
-                    read += count;
-                }
-                Err(UsbError::WouldBlock) => delay(1),
-                _ => break,
-            }
-        }
-    }
-
-    message
 }
