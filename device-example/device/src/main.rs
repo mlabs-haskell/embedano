@@ -28,7 +28,7 @@ use usbd_serial::{SerialPort, USB_CLASS_CDC};
 use cardano_embedded_sdk::bip::bip39::{dictionary, Entropy, Mnemonics};
 
 extern crate alloc;
-use alloc::{format, vec};
+use alloc::{format, vec, vec::Vec};
 
 use device::*;
 
@@ -102,14 +102,12 @@ fn main() -> ! {
         .into_push_pull_output(&mut gpioe.moder, &mut gpioe.otyper);
     nss.set_high().unwrap();
     let mut gpiob = dp.GPIOB.split(&mut rcc.ahb);
-    let scl =
-        gpiob
-            .pb6
-            .into_af_open_drain(&mut gpiob.moder, &mut gpiob.otyper, &mut gpiob.afrl);
-    let sda =
-        gpiob
-            .pb7
-            .into_af_open_drain(&mut gpiob.moder, &mut gpiob.otyper, &mut gpiob.afrl);
+    let scl = gpiob
+        .pb6
+        .into_af_open_drain(&mut gpiob.moder, &mut gpiob.otyper, &mut gpiob.afrl);
+    let sda = gpiob
+        .pb7
+        .into_af_open_drain(&mut gpiob.moder, &mut gpiob.otyper, &mut gpiob.afrl);
     let i2c = I2c::new(
         dp.I2C1,
         (scl, sda),
@@ -226,6 +224,7 @@ fn main() -> ! {
 
                     led_w.set_low().ok();
                 }
+
                 State::Write(Data::Head(data)) => {
                     led_nw.set_high().ok();
 
@@ -263,6 +262,7 @@ fn main() -> ! {
 
                     led_ne.set_low().ok();
                 }
+
                 State::Exec(In::Init(mnemonics)) => {
                     led_e.set_high().ok();
 
@@ -298,17 +298,29 @@ fn main() -> ! {
                     let out = if let Some(entropy) = &entropy {
                         verify(&tx_id, signature, entropy, &password, &path)
                     } else {
-                        Out::Error(format!("Verifiy failed: no entropy"))
+                        Out::Error(format!("Verify failed: no entropy"))
                     };
                     state = State::Write(Data::Head(minicbor::to_vec(&out).unwrap()));
 
                     led_n.set_low().ok();
                     led_s.set_low().ok();
                 }
-                State::Exec(In::Acc) => {
-                    let out = match lsm303dlhc.accel() {
-                        Ok(I16x3 { x, y, z }) => Out::Acc(x, y, z),
-                        Err(e) => Out::Error(format!("Accel failed: {e:?}")),
+                State::Exec(In::Acc(password, path)) => {
+                    use cardano_embedded_sdk::api::sign_data;
+                    use derivation_path::DerivationPath;
+
+                    let out = match (&entropy, path.parse::<DerivationPath>(), lsm303dlhc.accel()) {
+                        (Some(entropy), Ok(path), Ok(I16x3 { x, y, z })) => {
+                            let data = [x.to_be_bytes(), y.to_be_bytes(), z.to_be_bytes()]
+                                .into_iter()
+                                .flatten()
+                                .collect::<Vec<u8>>();
+                            let signature = sign_data(&data, entropy, &password, &path);
+                            Out::Acc(x, y, z, signature.to_bytes())
+                        }
+                        (None, _, _) => Out::Error(format!("Accel failed: no entropy")),
+                        (_, Err(e), _) => Out::Error(format!("Decode path failed: {e}")),
+                        (_, _, Err(e)) => Out::Error(format!("Accel failed: {e:?}")),
                     };
                     state = State::Write(Data::Head(minicbor::to_vec(&out).unwrap()));
                 }

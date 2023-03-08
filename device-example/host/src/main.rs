@@ -25,7 +25,7 @@ pub enum In {
         #[n(3)] String,
     ),
     #[n(3)]
-    Acc,
+    Acc(#[n(0)] Vec<u8>, #[n(1)] String),
 }
 
 #[derive(Clone, Debug, Encode, Decode)]
@@ -43,7 +43,7 @@ pub enum Out {
     #[n(5)]
     Read(#[n(0)] u64),
     #[n(6)]
-    Acc(#[n(0)] i16, #[n(1)] i16, #[n(2)] i16),
+    Acc(#[n(0)] i16, #[n(1)] i16, #[n(2)] i16, #[n(3)] Vec<u8>),
 }
 
 fn main() {
@@ -74,7 +74,7 @@ fn main() {
     println!("received init {:#?}", recieve(&mut port));
 
     println!("sending acc");
-    send(&mut port, In::Acc);
+    send(&mut port, In::Acc(password.to_vec(), path.to_string()));
     println!("receiving acc");
     println!("received acc {:#?}", recieve(&mut port));
 
