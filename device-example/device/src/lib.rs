@@ -36,6 +36,8 @@ pub enum In {
         #[n(2)] Vec<u8>,
         #[n(3)] String,
     ),
+    #[n(3)]
+    Acc,
 }
 
 #[derive(Clone, Debug, Encode, Decode)]
@@ -52,6 +54,8 @@ pub enum Out {
     Length(#[n(0)] u64),
     #[n(5)]
     Read(#[n(0)] u64),
+    #[n(6)]
+    Acc(#[n(0)] i16, #[n(1)] i16, #[n(2)] i16),
 }
 
 pub fn sign(tx_id: &[u8], entropy: &Entropy, password: &[u8], path: &str) -> Out {

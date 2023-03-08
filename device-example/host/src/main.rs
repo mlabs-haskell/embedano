@@ -24,6 +24,8 @@ pub enum In {
         #[n(2)] Vec<u8>,
         #[n(3)] String,
     ),
+    #[n(3)]
+    Acc,
 }
 
 #[derive(Clone, Debug, Encode, Decode)]
@@ -40,6 +42,8 @@ pub enum Out {
     Length(#[n(0)] u64),
     #[n(5)]
     Read(#[n(0)] u64),
+    #[n(6)]
+    Acc(#[n(0)] i16, #[n(1)] i16, #[n(2)] i16),
 }
 
 fn main() {
@@ -66,8 +70,13 @@ fn main() {
 
     println!("sending init");
     send(&mut port, In::Init(mnemonics.to_string()));
-    println!("recieving init");
-    println!("recieved init {:#?}", recieve(&mut port));
+    println!("receiving init");
+    println!("received init {:#?}", recieve(&mut port));
+
+    println!("sending acc");
+    send(&mut port, In::Acc);
+    println!("receiving acc");
+    println!("received acc {:#?}", recieve(&mut port));
 
     println!("sending sign");
     send(
@@ -78,9 +87,9 @@ fn main() {
             path.to_string(),
         ),
     );
-    println!("recieving sign");
+    println!("receiving sign");
     let result = recieve(&mut port);
-    println!("recieved sign {:#?}", &result);
+    println!("received sign {:#?}", &result);
 
     if let Ok(Some(Out::Sign(signature))) = result {
         let signature = Ed25519Signature::from_bytes(signature).expect("Decode signature failed!");
@@ -100,8 +109,8 @@ fn main() {
                 path.to_string(),
             ),
         );
-        println!("recieving verify");
-        println!("recieved verify {:#?}", recieve(&mut port));
+        println!("receiving verify");
+        println!("received verify {:#?}", recieve(&mut port));
     } else {
         println!("signing failed!")
     }

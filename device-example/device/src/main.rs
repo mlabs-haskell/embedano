@@ -18,16 +18,17 @@ use hal::pac;
 use hal::prelude::*;
 use hal::usb::{Peripheral, UsbBus};
 
-use usb_device::bus;
-use usb_device::class::UsbClass;
+use hal::i2c::I2c;
+use hal::time::rate::Hertz;
+use lsm303dlhc::{I16x3, Lsm303dlhc};
+
 use usb_device::prelude::*;
-use usbd_serial::*;
-use usbd_serial::{DefaultBufferStore, SerialPort, USB_CLASS_CDC};
+use usbd_serial::{SerialPort, USB_CLASS_CDC};
 
 use cardano_embedded_sdk::bip::bip39::{dictionary, Entropy, Mnemonics};
 
 extern crate alloc;
-use alloc::{format, vec, vec::Vec};
+use alloc::{format, vec};
 
 use device::*;
 
@@ -95,6 +96,28 @@ fn main() -> ! {
         .pe12
         .into_push_pull_output(&mut gpioe.moder, &mut gpioe.otyper);
     led_se.set_low().ok();
+
+    let mut nss = gpioe
+        .pe3
+        .into_push_pull_output(&mut gpioe.moder, &mut gpioe.otyper);
+    nss.set_high().unwrap();
+    let mut gpiob = dp.GPIOB.split(&mut rcc.ahb);
+    let scl =
+        gpiob
+            .pb6
+            .into_af_open_drain(&mut gpiob.moder, &mut gpiob.otyper, &mut gpiob.afrl);
+    let sda =
+        gpiob
+            .pb7
+            .into_af_open_drain(&mut gpiob.moder, &mut gpiob.otyper, &mut gpiob.afrl);
+    let i2c = I2c::new(
+        dp.I2C1,
+        (scl, sda),
+        Hertz::new(400_000),
+        clocks,
+        &mut rcc.apb1,
+    );
+    let mut lsm303dlhc = Lsm303dlhc::new(i2c).unwrap();
 
     let mut gpioa = dp.GPIOA.split(&mut rcc.ahb);
 
@@ -212,7 +235,7 @@ fn main() -> ! {
 
                     led_nw.set_low().ok();
                 }
-                State::Write(Data::Body(data, 0)) => {
+                State::Write(Data::Body(_data, 0)) => {
                     led_n.set_high().ok();
 
                     state = State::Read(Data::Head(vec![]));
@@ -281,6 +304,13 @@ fn main() -> ! {
 
                     led_n.set_low().ok();
                     led_s.set_low().ok();
+                }
+                State::Exec(In::Acc) => {
+                    let out = match lsm303dlhc.accel() {
+                        Ok(I16x3 { x, y, z }) => Out::Acc(x, y, z),
+                        Err(e) => Out::Error(format!("Accel failed: {e:?}")),
+                    };
+                    state = State::Write(Data::Head(minicbor::to_vec(&out).unwrap()));
                 }
             }
             usb_dev.poll(&mut [&mut serial]);
