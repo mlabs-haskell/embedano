@@ -1,0 +1,21 @@
+[package]
+name = "embedano-device"
+version = "0.1.0"
+authors = []
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+cortex-m = { version = "0.7.7", features = ["critical-section-single-core"]}
+cortex-m-rt = "0.6.15"
+nrf52840-hal = "0.16.0"
+cortex-m-semihosting = "0.3.3"
+nrf52840-dk-bsp = "0.2.0"
+nb = "1.0.0"
+panic-halt = "0.2.0"
+
+usb-device = "=0.2.9"
+usbd-serial = "=0.1.1"
+usbd-webusb = "=1.0.2"
+critical-section = "1.1.1"

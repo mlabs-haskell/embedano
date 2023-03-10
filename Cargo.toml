@@ -4,6 +4,7 @@ members = [
 	"rust-ed25519-bip32",
     "qemu-example",
 	"nrf52-demo/demo-client",
+	"nrf52-demo/embedano-device",
     "device-example/device",
     "device-example/host",
 ]
