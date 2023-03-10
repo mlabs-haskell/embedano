@@ -1,6 +1,6 @@
 use crate::{
     bip::bip39::Entropy,
-    crypto::{Bip32PrivateKey, Bip32PublicKey, Ed25519Signature},
+    crypto::{Bip32PrivateKey, Bip32PublicKey, Ed25519Signature, Ed25519KeyHash},
 };
 
 use alloc::{
@@ -42,6 +42,10 @@ impl TxId {
 
         Self::from_bytes(&tx_id[..])
     }
+
+    pub fn to_hex(&self) -> String {
+        hex::encode(self.0)
+    }
 }
 
 pub struct XPrvKey(Bip32PrivateKey);
@@ -79,7 +83,12 @@ pub struct XPubKey(Bip32PublicKey);
 // TODO: add `from_` methods (`from_hex`, `from_bytes`, etc)
 impl XPubKey {
     pub fn to_hex(&self) -> String {
-        hex::encode(self.0.as_bytes())
+       self.0.to_hex()
+    }
+
+    /// Get hex of key without chain code
+    pub fn raw_key_hex(&self) -> String {
+        self.0.to_raw_key().to_hex()
     }
 
     pub fn verify(&self, data: &[u8], signature: &Ed25519Signature) -> bool {
@@ -88,6 +97,14 @@ impl XPubKey {
 
     pub fn as_bytes(&self) -> Vec<u8> {
         self.0.as_bytes()
+    }
+
+    pub fn hash(&self) -> Ed25519KeyHash {
+        self.0.to_raw_key().hash()
+    }
+
+    pub fn hash_hex(&self) -> String {
+        self.0.to_raw_key().hash().to_hex()
     }
 }
 
