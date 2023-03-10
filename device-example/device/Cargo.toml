@@ -13,6 +13,8 @@ alloc-cortex-m = "=0.4.4"
 panic-halt = "=0.2.0"
 
 stm32f3xx-hal = { version = "=0.9.1", features = ["ld", "rt", "stm32f303xc"] }
+#stm32f3-discovery = "0.7.2"
+lsm303dlhc = "0.2.0"
 
 usb-device = "=0.2.9"
 usbd-serial = "=0.1.1"
@@ -21,6 +23,7 @@ usbd-webusb = "=1.0.2"
 cardano-embedded-sdk = { vestion = "0.1.0", path = "../../cardano-embedded-sdk" }
 derivation-path = { version = "0.2.0", default-features = false }
 
+minicbor = { version = "0.19.0", default-features = false, features = ["alloc", "derive"] }
 
 [profile.release]
 codegen-units = 1 # better optimizations
