@@ -186,6 +186,14 @@ fn main() -> ! {
                     };
                     state = State::Write(Data::Head(minicbor::to_vec(&out).unwrap()));
                 }
+                State::Exec(In::PubKey(password, path)) => {
+                    let out = if let Some(entropy) = &entropy {
+                        get_pub_key(entropy, &password, &path)
+                    } else {
+                        Out::Error(format!("Sign failed: no entropy"))
+                    };
+                    state = State::Write(Data::Head(minicbor::to_vec(&out).unwrap()));
+                }
             }
             usb_dev.poll(&mut [&mut serial]);
         }

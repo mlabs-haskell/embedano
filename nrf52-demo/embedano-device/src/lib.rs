@@ -38,6 +38,8 @@ pub enum In {
     ),
     #[n(3)]
     Temp(#[n(0)] Vec<u8>, #[n(1)] String),
+    #[n(4)]
+    PubKey(#[n(0)] Vec<u8>, #[n(1)] String)
 }
 
 #[derive(Clone, Debug, Encode, Decode)]
@@ -56,6 +58,8 @@ pub enum Out {
     Read(#[n(0)] u64),
     #[n(6)]
     Temp(#[n(0)] i32, #[n(1)] Vec<u8>),
+    #[n(7)]
+    PubKey(#[n(0)] String)
 }
 
 pub fn sign(tx_id: &[u8], entropy: &Entropy, password: &[u8], path: &str) -> Out {
@@ -66,6 +70,16 @@ pub fn sign(tx_id: &[u8], entropy: &Entropy, password: &[u8], path: &str) -> Out
         }
         (Err(e), _) => Out::Error(format!("Decode tx_id failed: {e:?}")),
         (_, Err(e)) => Out::Error(format!("Decode path failed: {e}")),
+    }
+}
+
+pub fn get_pub_key(entropy: &Entropy, password: &[u8], path: &str) -> Out {
+    match path.parse::<DerivationPath>() {
+        Ok(path) => {
+            let (_, pub_key) = embedano::derive_key_pair(entropy, password, &path);
+            Out::PubKey(pub_key.to_hex())
+        }
+        Err(e) => Out::Error(format!("Decode path failed: {e}")),
     }
 }
 

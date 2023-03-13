@@ -21,7 +21,6 @@ pub fn make_unsigned_tx(
     device_data: DeviceData,
     inputs: &TransactionInputs,
     ins_value: u64,
-    signer_pub_key: &XPubKey,
 ) -> Transaction {
     let mut receiver = TransactionOutput::new(to_address, &lovalace(MIN_ADA));
 
@@ -44,16 +43,7 @@ pub fn make_unsigned_tx(
 
     let tx_fee: Coin = coin(FEE);
 
-    //making body
-    let mut tx_body = TransactionBody::new_tx_body(&inputs, &outputs, &tx_fee);
-    let mut required_signers = RequiredSigners::new();
-    required_signers.add(
-        &Ed25519KeyHash::from_hex(signer_pub_key.hash_hex().as_str())
-            .expect("Should be able to parse public key hash from hex"),
-    );
-    tx_body.set_required_signers(&required_signers);
-    // tx_body.set_network_id(&NetworkId::mainnet()); // not sure if it needed
-
+    let tx_body = TransactionBody::new_tx_body(&inputs, &outputs, &tx_fee);
     Transaction::new(&tx_body, &TransactionWitnessSet::new(), None)
 }
 

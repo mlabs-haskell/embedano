@@ -15,6 +15,8 @@ pub enum In {
     ),
     #[n(3)]
     Temp(#[n(0)] Vec<u8>, #[n(1)] String),
+    #[n(4)]
+    PubKey(#[n(0)] Vec<u8>, #[n(1)] String)
 }
 
 #[derive(Clone, Debug, Encode, Decode)]
@@ -33,4 +35,6 @@ pub enum Out {
     Read(#[n(0)] u64),
     #[n(6)]
     Temp(#[n(0)] i32, #[n(1)] Vec<u8>),
+    #[n(7)]
+    PubKey(#[n(0)] String)
 }

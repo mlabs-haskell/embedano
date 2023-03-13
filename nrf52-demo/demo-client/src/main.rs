@@ -3,7 +3,7 @@ use std::{
     time::{self, Duration},
 };
 
-use cardano_embedded_sdk::crypto::Ed25519Signature;
+use cardano_embedded_sdk::{crypto::Ed25519Signature, types::XPubKey};
 use cardano_serialization_lib::{
     address::{Address, EnterpriseAddress, StakeCredential},
     crypto::Ed25519KeyHash,
@@ -98,9 +98,26 @@ fn main() {
     println!("Receiveddevice data {:?}", device_data);
 
     // FXIME: should be able to get pub key from device, not Dummy
-    let d_device = device_dummy::DeviceDummy::init(args.mnemonics.as_str());
-    let pub_key = d_device.get_pub_key(&password, &derivation_path);
-    let user_wallet_address = EnterpriseAddress::new(
+
+    println!("sending pub key request");
+    let pub_key_request = In::PubKey(
+        password_b.to_vec(),
+        derivation_path.to_string(),
+    );
+    transport::send(&mut port, pub_key_request);
+    println!("receiving pub key");
+    let result = transport::recieve(&mut port);
+    let pub_key_hex = match result {
+        Ok(Some(Out::PubKey(key_hex))) => key_hex,
+        x => panic!("Could not get hex of public key. Device returned: {:?}", x),
+    };
+    let pub_key = match XPubKey::from_hex(&pub_key_hex) {
+        Ok(pk) => pk,
+        Err(err) => panic!("Could not parse pub key from hex: {:?}", err),
+    };
+
+
+    let device_wallet_address = EnterpriseAddress::new(
         translate_network(network),
         &StakeCredential::from_keyhash(
             &Ed25519KeyHash::from_hex(pub_key.hash_hex().as_str())
@@ -108,23 +125,21 @@ fn main() {
         ),
     )
     .to_address();
-    // FXIME: should be able to get pub key from device, not Dummy - END
 
 
     let (inputs, ins_total_value) = node_client
-        .query_inputs(&user_wallet_address)
+        .query_inputs(&device_wallet_address)
         .expect("Should return inputs from user address. Is node running and available?");
 
 
     // make unsigned Tx (with empty witness set) to get id
     println!("Making unsigned Tx");
     let unsigned_tx = tx_build::make_unsigned_tx(
-        &user_wallet_address,
+        &device_wallet_address,
         &script_address,
         device_data,
         &inputs,
         ins_total_value, //for balancing
-        &pub_key,
     );
 
     let tx_id = node_client.get_tx_id(&unsigned_tx);
@@ -145,7 +160,7 @@ fn main() {
         Ok(Some(Out::Sign(signature))) => {
             signature
         },
-        x => panic!("Could not get Tx signature. Received from device: {:?}", x),
+        x => panic!("Could not get Tx signature. Device returned: {:?}", x),
     };
     // println!("received sign {:#?}", &result);
 
@@ -204,7 +219,6 @@ fn submit_data_to_blockchain(
         device_data,
         &inputs,
         ins_total_value, //for balancing
-        &pub_key,
     );
 
     let tx_id = node_client.get_tx_id(&unsigned_tx);
