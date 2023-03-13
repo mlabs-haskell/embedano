@@ -14,7 +14,7 @@ pub enum In {
         #[n(3)] String,
     ),
     #[n(3)]
-    Acc(#[n(0)] Vec<u8>, #[n(1)] String),
+    Temp(#[n(0)] Vec<u8>, #[n(1)] String),
 }
 
 #[derive(Clone, Debug, Encode, Decode)]
@@ -32,5 +32,5 @@ pub enum Out {
     #[n(5)]
     Read(#[n(0)] u64),
     #[n(6)]
-    Acc(#[n(0)] i16, #[n(1)] i16, #[n(2)] i16, #[n(3)] Vec<u8>),
+    Temp(#[n(0)] i32, #[n(3)] Vec<u8>),
 }

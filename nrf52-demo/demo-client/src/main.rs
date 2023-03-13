@@ -1,4 +1,4 @@
-use std::{thread, time};
+use std::{thread, time::{self, Duration}};
 
 use cardano_serialization_lib::{
     address::{Address, EnterpriseAddress, StakeCredential},
@@ -10,11 +10,14 @@ use derivation_path::DerivationPath;
 use device_dummy::DeviceDummy;
 use node_client::{Network, NodeClient};
 
+use crate::serialization::In;
+
 mod device_dummy;
 mod node_client;
 mod tx_build;
 mod tx_envelope;
 mod serialization;
+mod transport;
 
 #[derive(Parser, Debug)]
 #[command(about, long_about = None)]
@@ -42,6 +45,7 @@ struct Args {
 fn main() {
     let args = Args::parse();
 
+    let mnemonics = args.mnemonics.as_str();
     let derivation_path: DerivationPath = args
         .derivation_path
         .parse()
@@ -59,6 +63,17 @@ fn main() {
     for p in ports {
         println!("{}", p.port_name);
     }
+
+    let mut port = serialport::new("/dev/ttyACM0", 115_200)
+        .timeout(Duration::from_millis(100000))
+        .open()
+        .expect("Failed to open port");
+
+    println!("sending init");
+    transport::send(&mut port, In::Init(mnemonics.to_string()));
+    println!("receiving init");
+    println!("received init {:#?}", transport::recieve(&mut port));
+
     
     
     
