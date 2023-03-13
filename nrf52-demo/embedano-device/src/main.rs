@@ -169,14 +169,15 @@ fn main() -> ! {
                     use derivation_path::DerivationPath;
                     
                     let temperature: i32 = temp_sensor.measure().to_num();
-                    // let fake_accel: Result<I16x3, alloc::string::String> =
-                    //     Ok(I16x3 { x: 1, y: 1, z: 1 });
-                    // FIXME
-                    // let out = match (&entropy, path.parse::<DerivationPath>(), lsm303dlhc.accel()) {
+                    hprintln!("TEMP-0: {}", temperature);
                     let out = match (&entropy, path.parse::<DerivationPath>()) {
                         (Some(entropy), Ok(path)) => {
+                            hprintln!("TEMP-1: temp to bytes");
+                            
                             let data:Vec<u8> = temperature.to_be_bytes().into_iter().collect();
+                            hprintln!("TEMP-2: sign temp bytes");
                             let signature = sign_data(&data, entropy, &password, &path);
+                            hprintln!("TEMP-3: send temp");
                             Out::Temp(temperature, signature.to_bytes())
                         }
                         (None, _) => Out::Error(format!("Accel failed: no entropy")),

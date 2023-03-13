@@ -46,6 +46,8 @@ fn main() {
     let args = Args::parse();
 
     let mnemonics = args.mnemonics.as_str();
+    let password = args.password.as_bytes();
+
     let derivation_path: DerivationPath = args
         .derivation_path
         .parse()
@@ -74,7 +76,10 @@ fn main() {
     println!("receiving init");
     println!("received init {:#?}", transport::recieve(&mut port));
 
-    
+    println!("sending temp");
+    transport::send(&mut port, In::Temp(password.to_vec(), derivation_path.to_string()));
+    println!("receiving temp");
+    println!("received temp {:#?}", transport::recieve(&mut port));
     
     
     // REST OF STUFF

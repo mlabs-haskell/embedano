@@ -32,5 +32,5 @@ pub enum Out {
     #[n(5)]
     Read(#[n(0)] u64),
     #[n(6)]
-    Temp(#[n(0)] i32, #[n(3)] Vec<u8>),
+    Temp(#[n(0)] i32, #[n(1)] Vec<u8>),
 }
