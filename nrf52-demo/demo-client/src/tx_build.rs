@@ -8,7 +8,8 @@ use cardano_serialization_lib::{
     TransactionOutputs, TransactionWitnessSet,
 };
 
-use crate::device_dummy::DeviceData;
+use crate::types::DeviceData;
+
 
 // some constants for balancing
 const FEE: u64 = 200000;

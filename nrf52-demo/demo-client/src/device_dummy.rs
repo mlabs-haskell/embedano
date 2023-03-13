@@ -5,6 +5,9 @@ use cardano_embedded_sdk::types::{TxId, XPubKey};
 use derivation_path::DerivationPath;
 use rand::Rng;
 
+use crate::types::DeviceData;
+
+
 pub struct DeviceDummy {
     entropy: Entropy,
 }
@@ -44,7 +47,7 @@ impl DeviceDummy {
         derivation_path: &DerivationPath,
     ) -> DeviceData {
         let mut rng = rand::thread_rng();
-        let sensor_data: i8 = rng.gen();
+        let sensor_data: i32 = rng.gen();
         let sensor_data_b = sensor_data.to_ne_bytes();
         let signed_data = embedano::sign_data(
             &sensor_data_b,
@@ -59,7 +62,3 @@ impl DeviceDummy {
     }
 }
 
-pub struct DeviceData {
-    pub sensor_readings: i8,
-    pub signed_readings: Vec<u8>,
-}
