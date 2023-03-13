@@ -14,6 +14,7 @@ mod device_dummy;
 mod node_client;
 mod tx_build;
 mod tx_envelope;
+mod serialization;
 
 #[derive(Parser, Debug)]
 #[command(about, long_about = None)]
@@ -52,19 +53,28 @@ fn main() {
 
     let node_client = node_client::CliNodeClient::new(args.node_socket, args.network);
 
-    let device = device_dummy::DeviceDummy::init(args.mnemonics.as_str());
-
-    // for _ in 0..5 {
-    submit_data_to_blockchain(
-        &node_client,
-        &device,
-        args.network,
-        &script_address,
-        args.password.as_str(),
-        &derivation_path,
-    );
-    thread::sleep(time::Duration::from_secs(2))
-    // }
+    
+    let ports = serialport::available_ports().expect("No ports found!");
+    println!("ports:");
+    for p in ports {
+        println!("{}", p.port_name);
+    }
+    
+    
+    
+    // REST OF STUFF
+    // let device = device_dummy::DeviceDummy::init(args.mnemonics.as_str());
+    // // for _ in 0..5 {
+    // submit_data_to_blockchain(
+    //     &node_client,
+    //     &device,
+    //     args.network,
+    //     &script_address,
+    //     args.password.as_str(),
+    //     &derivation_path,
+    // );
+    // thread::sleep(time::Duration::from_secs(2))
+    // // }
 }
 
 fn submit_data_to_blockchain(

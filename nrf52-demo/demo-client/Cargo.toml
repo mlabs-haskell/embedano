@@ -14,4 +14,5 @@ cardano-embedded-sdk = { version = "0.1.0", path = "../../cardano-embedded-sdk" 
 derivation-path = { version = "0.2.0", default-features = false }
 rand = "0.8.3"
 clap = {version = "4.1.8", features = ["derive"]}
-# clap = "4.1.8"
+minicbor = { version = "0.19.0", default-features = false, features = ["std", "derive"] }
+serialport = "4.2.0"
