@@ -27,6 +27,8 @@
             cardano-node.packages.${system}.cardano-cli
             cardano-node.packages.${system}.bech32
             pkgs.nixpkgs-fmt
+            pkgs.pkg-config
+            pkgs.libusb
 
             (rust.override {
               extensions = [ "rust-analyzer" "rust-src" ];
