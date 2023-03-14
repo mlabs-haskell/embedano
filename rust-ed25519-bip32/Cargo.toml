@@ -1,0 +1,17 @@
+[package]
+name = "ed25519-bip32"
+version = "0.4.1"
+authors = ["Vincent Hanquez <vincent.hanquez@iohk.io>", "Nicolas Di Prima <nicolas.diprima@iohk.io>"]
+license = "MIT OR Apache-2.0"
+edition = "2018"
+keywords = [ "ed25519-bip32", "bip32", "ed25519" ]
+homepage = "https://github.com/typed-io/rust-ed25519-bip32/"
+repository = "https://github.com/typed-io/rust-ed25519-bip32/"
+description = "Ed25519 BIP32"
+categories = [ "cryptography" ]
+
+[dependencies]
+cryptoxide = "0.4"
+
+[features]
+with-bench = []

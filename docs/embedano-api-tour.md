@@ -1,36 +1,23 @@
-#![feature(alloc_error_handler)]
-#![no_std]
-#![no_main]
+# Embedano SDK API
 
-// pick a panicking behavior
-use panic_halt as _; // you can put a breakpoint on `rust_begin_unwind` to catch panics
-                     // use panic_abort as _; // requires nightly
-                     // use panic_itm as _; // logs messages over ITM; requires ITM support
-                     // use panic_semihosting as _; // logs messages to the host stderr; requires a debugger
+Main SDK functions are grouped in `api.rs` module and designed for easy integration with embedded firmware. They require basic pieces:
 
-// use cortex_m::asm;
-use alloc_cortex_m::CortexMHeap;
-use core::alloc::Layout;
-use cortex_m_rt::entry;
-use cortex_m_semihosting::{debug, hprintln};
+- entropy or seed of the wallet, that usually stored in device memory
+- password, that usually provided by the user
+- derivation path to determine which keys of HD wallet to use (see [HD Sequential wallets (à la BIP-44)](https://input-output-hk.github.io/cardano-wallet/concepts/address-derivation))
 
-use cardano_embedded_sdk::api as embedano;
-use cardano_embedded_sdk::bip::bip39::{dictionary, Entropy, Mnemonics};
-use cardano_embedded_sdk::types::{harden, TxId, XPrvKey};
-use derivation_path::DerivationPath;
+Main functions allow to:
 
-#[global_allocator]
-static ALLOCATOR: CortexMHeap = CortexMHeap::empty();
+- sign transaction id (hash of transaction body)
+- sing arbitrary data
+- derive private and public keys from known seed
+- check that particular public key belongs to HD wallet (that it can be derived from current seed, to be precise)
 
-const HEAP_SIZE: usize = 1024; // in bytes
+Here is a tour of available functionality:
 
-#[entry]
-fn main() -> ! {
-    hprintln!("Test: Generating keys").unwrap();
-
-    // from example/allocator.rs
-    unsafe { ALLOCATOR.init(cortex_m_rt::heap_start() as usize, HEAP_SIZE) }
-
+```rust
+    // Preparations: define some mnemonic and make entropy.
+    // (in real setup entropy or seed will be loaded from device memory)
     let mnemonics = "aim wool into nose tell ball arm expand design push elevator multiply glove lonely minimum";
     let mnemonics = Mnemonics::from_string(&dictionary::ENGLISH, mnemonics).unwrap();
 
@@ -46,7 +33,7 @@ fn main() -> ! {
     let signature = embedano::sign_tx_id(&tx_id, &entropy, password, &path);
 
     // Derive key pair using same path ant try to verify signature from `sign_tx_id`
-    let (_prv_key, pub_key) = embedano::derive_key_pair(&entropy, password, &path);
+    let (prv_key, pub_key) = embedano::derive_key_pair(&entropy, password, &path);
     assert!(pub_key.verify(tx_id.to_bytes(), &signature));
 
     // Check if public key can be derived from given entropy by signing nonce
@@ -69,7 +56,7 @@ fn main() -> ! {
 
     // Create root private key from entropy
     let root_key = XPrvKey::from_entropy(&entropy, password);
-    hprintln!("Root key: {}", root_key.to_hex()).unwrap();
+    println!("Root key: {}", root_key.to_hex());
 
     // Derive private key for same path that was used in `derive_key_pair` above
     let prv_key = root_key
@@ -78,27 +65,14 @@ fn main() -> ! {
         .derive(harden(0))
         .derive(0)
         .derive(0);
-    hprintln!("Private key: {}", prv_key.to_hex()).unwrap();
+    println!("Private key: {}", prv_key.to_hex());
 
     // Derive corresponding public key
     let pub_key = prv_key.to_public();
-    hprintln!("Public key: {}", pub_key.to_hex()).unwrap();
+    println!("Public key: {}", pub_key.to_hex());
 
     // Sign and verify using derived keys
     let some_data = b"some data";
     let signature = prv_key.sign(some_data);
-    hprintln!("Verify: {}", pub_key.verify(some_data, &signature)).unwrap();
-
-    debug::exit(debug::EXIT_SUCCESS);
-
-    loop {}
-}
-
-#[alloc_error_handler]
-fn alloc_error(_layout: Layout) -> ! {
-    hprintln!("ALLOC ERROR").unwrap();
-    debug::exit(debug::EXIT_FAILURE);
-    //let f: [u32] = todo!();
-
-    loop {}
-}
+    println!("Verify: {}", pub_key.verify(some_data, &signature))
+```
