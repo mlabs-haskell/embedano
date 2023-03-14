@@ -5,7 +5,7 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/release-22.05";
     utils.url = "github:numtide/flake-utils";
-    cardano-node.url = "github:input-output-hk/cardano-node/1.35.1";
+    cardano-node.url = "github:input-output-hk/cardano-node/1.35.4";
 
     rust-overlay = {
       url = "github:oxalica/rust-overlay";
