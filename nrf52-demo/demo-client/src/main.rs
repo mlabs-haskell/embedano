@@ -17,7 +17,6 @@ use node_client::{Network, NodeClient};
 
 use crate::{
     device::Device,
-    serialization::{In, Out},
 };
 
 mod device;
@@ -25,7 +24,6 @@ mod node_client;
 mod serialization;
 mod tx_build;
 mod tx_envelope;
-mod types;
 
 #[derive(Parser, Debug)]
 #[command(about, long_about = None)]
@@ -74,15 +72,13 @@ fn main() {
         println!("{}", p.port_name);
     }
 
-    
     println!("Creating and Initializing device");
     let mut device = Device::new("/dev/ttyACM0");
     device.init(mnemonics);
-    
+
     println!("Requesting temperature data");
     let temp_data = device.query_sensor_data(&password, &derivation_path);
     println!("Received sensor data: {:?}", temp_data.sensor_readings);
-
 
     println!("Building transaction");
     // Receive public key from device for given derivation path
@@ -118,15 +114,17 @@ fn main() {
 
     let tx_id = node_client.get_tx_id(&unsigned_tx);
 
-    println!("Transaction built and balanced.\n Transaction ID: {}", tx_id.to_hex());
-    
-    
+    println!(
+        "Transaction built and balanced.\n Transaction ID: {}",
+        tx_id.to_hex()
+    );
+
     println!("Signing transaction ID: {}", tx_id.to_hex());
     let tx_signature = device.sign_transaction_id(&tx_id, &password, &derivation_path);
-    
+
     println!("Adding signature to transaction");
     let signed_tx = tx_build::make_signed_tx(&unsigned_tx, &pub_key, tx_signature);
-    
+
     println!("Submitting signed transaction");
     let submit_result = node_client.submit_tx(&signed_tx);
     println!("Submission result: {:?}", submit_result)

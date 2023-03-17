@@ -1,10 +1,9 @@
 use cardano_embedded_sdk::types::XPubKey;
 use cardano_serialization_lib::{
     address::Address,
-    crypto::{Ed25519KeyHash, Ed25519Signature, PublicKey, Vkey, Vkeywitness, Vkeywitnesses},
+    crypto::{Ed25519Signature, PublicKey, Vkey, Vkeywitness, Vkeywitnesses},
     plutus::{PlutusData, PlutusList},
-    utils::{BigInt, BigNum, Coin, Value},
-    RequiredSigners, Transaction, TransactionBody, TransactionInputs, TransactionOutput,
+    utils::{BigInt, BigNum, Coin, Value}, Transaction, TransactionBody, TransactionInputs, TransactionOutput,
     TransactionOutputs, TransactionWitnessSet,
 };
 
