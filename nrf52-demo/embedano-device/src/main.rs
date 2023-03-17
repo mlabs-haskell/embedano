@@ -54,9 +54,8 @@ fn main() -> ! {
 
     let mut state = State::Read(Data::Head(vec![]));
 
-
     loop {
-        if !usb_dev.poll(&mut [&mut serial]) || !serial.dtr(){
+        if !usb_dev.poll(&mut [&mut serial]) || !serial.dtr() {
             continue;
         }
 
@@ -137,6 +136,7 @@ fn main() -> ! {
                 },
 
                 State::Exec(In::Init(mnemonics)) => {
+                    hprintln!("Firmware: initializing device");
                     let result = Mnemonics::from_string(&dictionary::ENGLISH, &mnemonics)
                         .map(|v| Entropy::from_mnemonics(&v))
                         .flatten()
@@ -144,12 +144,14 @@ fn main() -> ! {
                     let out = if let Err(e) = result {
                         Out::Error(format!("Decode mnemonics failed: {e}"))
                     } else {
+                        hprintln!("Firmware: device initialized with mnemonics");
                         Out::Init
                     };
                     state = State::Write(Data::Head(minicbor::to_vec(&out).unwrap()));
                 }
                 State::Exec(In::Sign(tx_id, password, path)) => {
                     let out = if let Some(entropy) = &entropy {
+                        hprintln!("Firmware: signing transaction id");
                         sign(&tx_id, entropy, &password, &path)
                     } else {
                         Out::Error(format!("Sign failed: no entropy"))
@@ -167,30 +169,28 @@ fn main() -> ! {
                 State::Exec(In::Temp(password, path)) => {
                     use cardano_embedded_sdk::api::sign_data;
                     use derivation_path::DerivationPath;
-                    
+
                     let temperature: i32 = temp_sensor.measure().to_num();
-                    hprintln!("TEMP-0: {}", temperature);
+                    hprintln!("Firmware: temperature: {}", temperature);
                     let out = match (&entropy, path.parse::<DerivationPath>()) {
                         (Some(entropy), Ok(path)) => {
-                            hprintln!("TEMP-1: temp to bytes");
-                            
-                            let data:Vec<u8> = temperature.to_be_bytes().into_iter().collect();
-                            hprintln!("TEMP-2: sign temp bytes");
+                            let data: Vec<u8> = temperature.to_be_bytes().into_iter().collect();
+                            hprintln!("Firmware: temperature: signing");
                             let signature = sign_data(&data, entropy, &password, &path);
-                            hprintln!("TEMP-3: send temp");
+                            hprintln!("Firmware: temperature: sending");
                             Out::Temp(temperature, signature.to_bytes())
                         }
-                        (None, _) => Out::Error(format!("Accel failed: no entropy")),
+                        (None, _) => Out::Error(format!("Getting temperature failed: no entropy")),
                         (_, Err(e)) => Out::Error(format!("Decode path failed: {e}")),
-                        // (_, _, Err(e)) => Out::Error(format!("Accel failed: {e:?}")),
                     };
                     state = State::Write(Data::Head(minicbor::to_vec(&out).unwrap()));
                 }
                 State::Exec(In::PubKey(password, path)) => {
                     let out = if let Some(entropy) = &entropy {
+                        hprintln!("Firmware: Sending public key");
                         get_pub_key(entropy, &password, &path)
                     } else {
-                        Out::Error(format!("Sign failed: no entropy"))
+                        Out::Error(format!("Public key derivation failed: no entropy"))
                     };
                     state = State::Write(Data::Head(minicbor::to_vec(&out).unwrap()));
                 }

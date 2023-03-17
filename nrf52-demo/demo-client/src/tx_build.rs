@@ -8,7 +8,8 @@ use cardano_serialization_lib::{
     TransactionOutputs, TransactionWitnessSet,
 };
 
-use crate::types::DeviceData;
+use crate::device::DeviceData;
+
 
 
 // some constants for balancing
@@ -22,7 +23,7 @@ pub fn make_unsigned_tx(
     inputs: &TransactionInputs,
     ins_value: u64,
 ) -> Transaction {
-    let mut receiver = TransactionOutput::new(to_address, &lovalace(MIN_ADA));
+    let mut receiver = TransactionOutput::new(to_address, &lovelace(MIN_ADA));
 
     let mut to_send_data = PlutusList::new();
     // adding raw data
@@ -35,7 +36,7 @@ pub fn make_unsigned_tx(
 
     receiver.set_plutus_data(&PlutusData::new_list(&to_send_data));
 
-    let change = TransactionOutput::new(&from_address, &lovalace(ins_value - MIN_ADA - FEE));
+    let change = TransactionOutput::new(&from_address, &lovelace(ins_value - MIN_ADA - FEE));
 
     let mut outputs = TransactionOutputs::new();
     outputs.add(&receiver);
@@ -68,6 +69,6 @@ fn coin(amt: u64) -> Coin {
     BigNum::from_str(&amt.to_string()).unwrap()
 }
 
-fn lovalace(amt: u64) -> Value {
+fn lovelace(amt: u64) -> Value {
     Value::new(&coin(amt))
 }
