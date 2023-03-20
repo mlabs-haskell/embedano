@@ -1,17 +1,27 @@
-use std::{thread, time};
+use std::{
+    thread,
+    time::{self, Duration},
+};
 
+use cardano_embedded_sdk::{crypto::Ed25519Signature, types::XPubKey};
 use cardano_serialization_lib::{
     address::{Address, EnterpriseAddress, StakeCredential},
     crypto::Ed25519KeyHash,
 };
 
+use cardano_embedded_sdk::crypto as sdk_crypto;
+
 use clap::{command, Parser};
 use derivation_path::DerivationPath;
-use device_dummy::DeviceDummy;
 use node_client::{Network, NodeClient};
 
-mod device_dummy;
+use crate::{
+    device::Device,
+};
+
+mod device;
 mod node_client;
+mod serialization;
 mod tx_build;
 mod tx_envelope;
 
@@ -41,6 +51,10 @@ struct Args {
 fn main() {
     let args = Args::parse();
 
+    let mnemonics = args.mnemonics;
+    let password = args.password;
+    let network = args.network;
+
     let derivation_path: DerivationPath = args
         .derivation_path
         .parse()
@@ -52,32 +66,27 @@ fn main() {
 
     let node_client = node_client::CliNodeClient::new(args.node_socket, args.network);
 
-    let device = device_dummy::DeviceDummy::init(args.mnemonics.as_str());
+    let ports = serialport::available_ports().expect("No ports found!");
+    println!("ports:");
+    for p in ports {
+        println!("{}", p.port_name);
+    }
 
-    // for _ in 0..5 {
-    submit_data_to_blockchain(
-        &node_client,
-        &device,
-        args.network,
-        &script_address,
-        args.password.as_str(),
-        &derivation_path,
-    );
-    thread::sleep(time::Duration::from_secs(2))
-    // }
-}
+    println!("Creating and Initializing device");
+    let mut device = Device::new("/dev/ttyACM0");
+    device.init(mnemonics);
 
-fn submit_data_to_blockchain(
-    node_client: &impl NodeClient,
-    device: &DeviceDummy,
-    network: Network,
-    script_address: &Address,
-    password: &str,
-    derivation_path: &DerivationPath,
-) {
-    let pub_key = device.get_pub_key(password, derivation_path);
-    // build users wallet address from public key
-    let user_wallet_address = EnterpriseAddress::new(
+    println!("Requesting temperature data");
+    let temp_data = device.query_sensor_data(&password, &derivation_path);
+    println!("Received sensor data: {:?}", temp_data.sensor_readings);
+
+    println!("Building transaction");
+    // Receive public key from device for given derivation path
+    let pub_key = device.get_public_key(&password, &derivation_path);
+
+    // Make address from received public key
+    // This address will be used to receive UTXOs for balancing and send back change
+    let device_wallet_address = EnterpriseAddress::new(
         translate_network(network),
         &StakeCredential::from_keyhash(
             &Ed25519KeyHash::from_hex(pub_key.hash_hex().as_str())
@@ -86,31 +95,37 @@ fn submit_data_to_blockchain(
     )
     .to_address();
 
-    // todo: throw error if inputs empty
+    // Get UTXOs from device address for balancing
     let (inputs, ins_total_value) = node_client
-        .query_inputs(&user_wallet_address)
+        .query_inputs(&device_wallet_address)
         .expect("Should return inputs from user address. Is node running and available?");
 
-    let device_data = device.get_signed_sensor_data(password, derivation_path);
-
-    // make unsigned Tx (with empty witness set) to get id
+    // Build balanced unsigned transaction
+    // Transaction will have output for script address
+    // with inlined datum which holds temperature data from the device
+    println!("Making unsigned Tx");
     let unsigned_tx = tx_build::make_unsigned_tx(
-        &user_wallet_address,
+        &device_wallet_address,
         &script_address,
-        device_data,
+        temp_data,
         &inputs,
         ins_total_value, //for balancing
-        &pub_key,
     );
 
     let tx_id = node_client.get_tx_id(&unsigned_tx);
 
-    println!("Tx ID: {}", tx_id.to_hex());
+    println!(
+        "Transaction built and balanced.\n Transaction ID: {}",
+        tx_id.to_hex()
+    );
 
-    let signature = device.sign_tx_id(&tx_id, password, derivation_path);
+    println!("Signing transaction ID: {}", tx_id.to_hex());
+    let tx_signature = device.sign_transaction_id(&tx_id, &password, &derivation_path);
 
-    let signed_tx = tx_build::make_signed_tx(&unsigned_tx, &pub_key, signature.to_bytes());
+    println!("Adding signature to transaction");
+    let signed_tx = tx_build::make_signed_tx(&unsigned_tx, &pub_key, tx_signature);
 
+    println!("Submitting signed transaction");
     let submit_result = node_client.submit_tx(&signed_tx);
     println!("Submission result: {:?}", submit_result)
 }

@@ -1,14 +1,15 @@
 use cardano_embedded_sdk::types::XPubKey;
 use cardano_serialization_lib::{
     address::Address,
-    crypto::{Ed25519KeyHash, Ed25519Signature, PublicKey, Vkey, Vkeywitness, Vkeywitnesses},
+    crypto::{Ed25519Signature, PublicKey, Vkey, Vkeywitness, Vkeywitnesses},
     plutus::{PlutusData, PlutusList},
-    utils::{BigInt, BigNum, Coin, Value},
-    RequiredSigners, Transaction, TransactionBody, TransactionInputs, TransactionOutput,
+    utils::{BigInt, BigNum, Coin, Value}, Transaction, TransactionBody, TransactionInputs, TransactionOutput,
     TransactionOutputs, TransactionWitnessSet,
 };
 
-use crate::device_dummy::DeviceData;
+use crate::device::DeviceData;
+
+
 
 // some constants for balancing
 const FEE: u64 = 200000;
@@ -20,9 +21,8 @@ pub fn make_unsigned_tx(
     device_data: DeviceData,
     inputs: &TransactionInputs,
     ins_value: u64,
-    signer_pub_key: &XPubKey,
 ) -> Transaction {
-    let mut receiver = TransactionOutput::new(to_address, &lovalace(MIN_ADA));
+    let mut receiver = TransactionOutput::new(to_address, &lovelace(MIN_ADA));
 
     let mut to_send_data = PlutusList::new();
     // adding raw data
@@ -35,7 +35,7 @@ pub fn make_unsigned_tx(
 
     receiver.set_plutus_data(&PlutusData::new_list(&to_send_data));
 
-    let change = TransactionOutput::new(&from_address, &lovalace(ins_value - MIN_ADA - FEE));
+    let change = TransactionOutput::new(&from_address, &lovelace(ins_value - MIN_ADA - FEE));
 
     let mut outputs = TransactionOutputs::new();
     outputs.add(&receiver);
@@ -43,16 +43,7 @@ pub fn make_unsigned_tx(
 
     let tx_fee: Coin = coin(FEE);
 
-    //making body
-    let mut tx_body = TransactionBody::new_tx_body(&inputs, &outputs, &tx_fee);
-    let mut required_signers = RequiredSigners::new();
-    required_signers.add(
-        &Ed25519KeyHash::from_hex(signer_pub_key.hash_hex().as_str())
-            .expect("Should be able to parse public key hash from hex"),
-    );
-    tx_body.set_required_signers(&required_signers);
-    // tx_body.set_network_id(&NetworkId::mainnet()); // not sure if it needed
-
+    let tx_body = TransactionBody::new_tx_body(&inputs, &outputs, &tx_fee);
     Transaction::new(&tx_body, &TransactionWitnessSet::new(), None)
 }
 
@@ -77,6 +68,6 @@ fn coin(amt: u64) -> Coin {
     BigNum::from_str(&amt.to_string()).unwrap()
 }
 
-fn lovalace(amt: u64) -> Value {
+fn lovelace(amt: u64) -> Value {
     Value::new(&coin(amt))
 }
