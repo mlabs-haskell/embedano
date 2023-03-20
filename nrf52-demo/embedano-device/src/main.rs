@@ -136,7 +136,7 @@ fn main() -> ! {
                 },
 
                 State::Exec(In::Init(mnemonics)) => {
-                    hprintln!("Firmware: initializing device").unwrap();
+                    hprintln!("Firmware: initializing device");
                     let result = Mnemonics::from_string(&dictionary::ENGLISH, &mnemonics)
                         .map(|v| Entropy::from_mnemonics(&v))
                         .flatten()
@@ -144,14 +144,14 @@ fn main() -> ! {
                     let out = if let Err(e) = result {
                         Out::Error(format!("Decode mnemonics failed: {e}"))
                     } else {
-                        hprintln!("Firmware: device initialized with mnemonics").unwrap();
+                        hprintln!("Firmware: device initialized with mnemonics");
                         Out::Init
                     };
                     state = State::Write(Data::Head(minicbor::to_vec(&out).unwrap()));
                 }
                 State::Exec(In::Sign(tx_id, password, path)) => {
                     let out = if let Some(entropy) = &entropy {
-                        hprintln!("Firmware: signing transaction id").unwrap();
+                        hprintln!("Firmware: signing transaction id");
                         sign(&tx_id, entropy, &password, &path)
                     } else {
                         Out::Error(format!("Sign failed: no entropy"))
@@ -171,13 +171,13 @@ fn main() -> ! {
                     use derivation_path::DerivationPath;
 
                     let temperature: i32 = temp_sensor.measure().to_num();
-                    hprintln!("Firmware: temperature: {}", temperature).unwrap();
+                    hprintln!("Firmware: temperature: {}", temperature);
                     let out = match (&entropy, path.parse::<DerivationPath>()) {
                         (Some(entropy), Ok(path)) => {
                             let data: Vec<u8> = temperature.to_be_bytes().into_iter().collect();
-                            hprintln!("Firmware: temperature: signing").unwrap();
+                            hprintln!("Firmware: temperature: signing");
                             let signature = sign_data(&data, entropy, &password, &path);
-                            hprintln!("Firmware: temperature: sending").unwrap();
+                            hprintln!("Firmware: temperature: sending");
                             Out::Temp(temperature, signature.to_bytes())
                         }
                         (None, _) => Out::Error(format!("Getting temperature failed: no entropy")),
@@ -187,7 +187,7 @@ fn main() -> ! {
                 }
                 State::Exec(In::PubKey(password, path)) => {
                     let out = if let Some(entropy) = &entropy {
-                        hprintln!("Firmware: Sending public key").unwrap();
+                        hprintln!("Firmware: Sending public key");
                         get_pub_key(entropy, &password, &path)
                     } else {
                         Out::Error(format!("Public key derivation failed: no entropy"))
