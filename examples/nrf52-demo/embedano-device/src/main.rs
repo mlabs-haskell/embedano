@@ -34,6 +34,8 @@ fn main() -> ! {
     unsafe { ALLOCATOR.init(cortex_m_rt::heap_start() as usize, HEAP_SIZE) }
 
     // Setting up serial port and USB device
+    // Initialization taken from GH hal UDB example:
+    // https://github.com/nrf-rs/nrf-hal/tree/939c0175dbbebdb9457a492a9912b755cc56737c/examples/usb
     let periph = nrf52840_hal::pac::Peripherals::take().unwrap();
     let clocks = Clocks::new(periph.CLOCK);
     let clocks = clocks.enable_ext_hfosc();
@@ -54,6 +56,7 @@ fn main() -> ! {
 
     let mut state = State::Read(Data::Head(vec![]));
 
+    // Main loop that polls USB and process requests from the host
     loop {
         if !usb_dev.poll(&mut [&mut serial]) || !serial.dtr() {
             continue;

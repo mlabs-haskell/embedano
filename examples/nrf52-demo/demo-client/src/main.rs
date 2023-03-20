@@ -16,7 +16,6 @@ use crate::device::Device;
 
 mod device;
 mod node_client;
-mod serialization;
 mod tx_build;
 mod tx_envelope;
 
@@ -176,6 +175,13 @@ fn submit_device_data(
     println!("Submission result: {:?}", submit_result)
 }
 
+/// Performs check of data posted to chain:
+/// - Initializes device with mnemonics
+/// - Request public key for account 0 address 0
+/// - Queries UTXOs with sensor readings from script address
+/// - Using public key from device verifies that bytes of temperature and time from datum
+///   correspond to signed data from the same datum
+///   (i.e. device can derive same private and public keys, that were used to send data to chain)
 fn verify(
     mnemonics: String,
     password: &String,
@@ -196,6 +202,7 @@ fn verify(
     let utxo_map: HashMap<String, Value> =
         serde_json::from_str(&utxo_map).expect("Couldn't parse UTXOs map");
 
+    // Verify data in UTXOs
     for (k, v) in utxo_map.iter() {
         let datum = &v["inlineDatum"].to_string();
         let datum = PlutusData::from_json(datum, PlutusDatumSchema::DetailedSchema).unwrap();

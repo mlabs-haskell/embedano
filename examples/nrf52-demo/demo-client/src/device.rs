@@ -4,9 +4,52 @@ use cardano_embedded_sdk::types::{TxId, XPubKey};
 use derivation_path::DerivationPath;
 use serialport::SerialPort;
 
-use crate::serialization::{In, Out};
+use minicbor::{Decode, Encode};
 use std::fmt::Debug;
 use std::time::{SystemTime, UNIX_EPOCH};
+
+/// Incoming messages that device receives from host.
+/// Serialized to CBOR.
+#[derive(Clone, Debug, Encode, Decode)]
+pub enum In {
+    #[n(0)]
+    Init(#[n(0)] String),
+    #[n(1)]
+    Sign(#[n(0)] Vec<u8>, #[n(1)] Vec<u8>, #[n(2)] String),
+    #[n(2)]
+    Verify(
+        #[n(0)] Vec<u8>,
+        #[n(1)] Vec<u8>,
+        #[n(2)] Vec<u8>,
+        #[n(3)] String,
+    ),
+    #[n(3)]
+    Temp(#[n(0)] Vec<u8>, #[n(1)] u64, #[n(2)] String),
+    #[n(4)]
+    PubKey(#[n(0)] Vec<u8>, #[n(1)] String),
+}
+
+/// Outgoing messages that device sends to host.
+/// Serialized to CBOR.
+#[derive(Clone, Debug, Encode, Decode)]
+pub enum Out {
+    #[n(0)]
+    Init,
+    #[n(1)]
+    Sign(#[n(0)] Vec<u8>),
+    #[n(2)]
+    Verifiy(#[n(0)] bool),
+    #[n(3)]
+    Error(#[n(0)] String),
+    #[n(4)]
+    Length(#[n(0)] u64),
+    #[n(5)]
+    Read(#[n(0)] u64),
+    #[n(6)]
+    Temp(#[n(0)] i32, #[n(1)] Vec<u8>),
+    #[n(7)]
+    PubKey(#[n(0)] String),
+}
 
 #[derive(Debug)]
 pub struct DeviceData {
