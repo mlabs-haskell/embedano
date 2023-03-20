@@ -1,6 +1,6 @@
 use crate::{
     bip::bip39::Entropy,
-    crypto::{Bip32PrivateKey, Bip32PublicKey, Ed25519Signature, Ed25519KeyHash},
+    crypto::{Bip32PrivateKey, Bip32PublicKey, Ed25519KeyHash, Ed25519Signature},
 };
 
 use alloc::{
@@ -48,7 +48,6 @@ impl TxId {
     }
 }
 
-
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct KeyParseError {
@@ -89,15 +88,17 @@ pub struct XPubKey(Bip32PublicKey);
 // TODO: add `from_` methods (`from_hex`, `from_bytes`, etc)
 impl XPubKey {
     pub fn to_hex(&self) -> String {
-       self.0.to_hex()
+        self.0.to_hex()
     }
 
-    pub fn from_hex(hex_str: &str) -> Result<Self, KeyParseError>{
+    pub fn from_hex(hex_str: &str) -> Result<Self, KeyParseError> {
         match Bip32PublicKey::from_hex(hex_str) {
             Ok(bip_key) => Ok(Self(bip_key)),
             Err(err) => {
                 let err_message = format!("Error parsing key: {}", err);
-                Err(KeyParseError {message: err_message})
+                Err(KeyParseError {
+                    message: err_message,
+                })
             }
         }
         // Self(Bip32PublicKey)

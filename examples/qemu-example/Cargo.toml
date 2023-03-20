@@ -14,7 +14,7 @@ alloc-cortex-m = "=0.4.4"
 panic-halt = "=0.2.0"
 
 bip32-ed25519 = { git = "https://github.com/digitalbitbox/rust-bip32-ed25519", tag = "v0.1.0" }
-cardano-embedded-sdk = { version = "0.1.0", path = "../cardano-embedded-sdk" }
+cardano-embedded-sdk = { version = "0.1.0", path = "../../cardano-embedded-sdk" }
 
 # this lets you use `cargo fix`!
 [[bin]]

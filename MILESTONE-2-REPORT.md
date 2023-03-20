@@ -45,9 +45,9 @@ To start dev shell with QEMU:
 To test example:
 
 ```shell
-cd qemu-example && cargo run --release
+cd examples/qemu-example && cargo run --release
 ```
 
 Note: don't forget `--release` flag, or binary won't fit into device memory.
 
-Source can be found [here](./qemu-example/src/main.rs).
+Source can be found [here](./examples/qemu-example/src/main.rs).
