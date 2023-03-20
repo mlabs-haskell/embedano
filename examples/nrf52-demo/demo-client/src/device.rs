@@ -15,20 +15,11 @@ pub struct DeviceData {
     pub measure_time: u64,
 }
 
-impl DeviceData {
-    pub fn to_bytes_chain(&self) -> Vec<u8> {
-        self.sensor_readings
-            .to_be_bytes()
-            .into_iter()
-            .chain(self.measure_time.to_be_bytes().into_iter())
-            .collect()
-    }
-}
-
 pub struct Device {
     port: Box<dyn SerialPort>,
 }
 
+/// Wrapper around serial port for device with helper functions
 impl Device {
     pub fn new(addr: &str) -> Self {
         let port = serialport::new(addr, 115_200)

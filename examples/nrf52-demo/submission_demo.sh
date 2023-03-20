@@ -11,4 +11,6 @@ set -euo pipefail
   --derivation-path "m/1852'/1815'/0'/0/0" \
   --script-address "addr_test1wq3605f486dnjtu77cha4w5v27t3cs6drr35esjjeu7m5acrfwwrn" \
   --network preprod \
-  --node-socket "./cardano-node.socket"
+  --node-socket "./cardano-node.socket" \
+  --device-port $1 \
+  --mode $2

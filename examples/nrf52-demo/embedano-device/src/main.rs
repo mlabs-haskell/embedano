@@ -175,10 +175,7 @@ fn main() -> ! {
                     hprintln!("Firmware: time: {}", time);
                     let out = match (&entropy, path.parse::<DerivationPath>()) {
                         (Some(entropy), Ok(path)) => {
-                            let data: Vec<u8> = 
-                                temperature.to_be_bytes().into_iter()
-                                .chain(time.to_be_bytes().into_iter())
-                                .collect();
+                            let data: Vec<u8> = chain_data_bytes(temperature, time);
                             hprintln!("Firmware: temperature: signing");
                             let signature = sign_data(&data, entropy, &password, &path);
                             hprintln!("Firmware: temperature: sending");
@@ -203,4 +200,11 @@ fn main() -> ! {
         }
         // MAIN LOOP END
     }
+}
+
+fn chain_data_bytes(a: i32, b: u64) -> Vec<u8> {
+    a.to_be_bytes()
+        .into_iter()
+        .chain(b.to_be_bytes().into_iter())
+        .collect::<Vec<u8>>()
 }
