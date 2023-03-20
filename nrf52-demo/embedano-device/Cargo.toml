@@ -8,16 +8,12 @@ edition = "2021"
 
 [dependencies]
 cardano-embedded-sdk = { vestion = "0.1.0", path = "../../cardano-embedded-sdk" }
-
 cortex-m = { version = "0.7.7", features = ["critical-section-single-core"]}
 cortex-m-rt = "0.6.15"
 nrf52840-hal = "0.16.0"
 cortex-m-semihosting = "0.3.3"
-nrf52840-dk-bsp = "0.2.0"
-nb = "1.0.0"
 panic-halt = "0.2.0"
 alloc-cortex-m = "=0.4.4"
-lsm303dlhc = "0.2.0"
 
 usb-device = "=0.2.9"
 usbd-serial = "=0.1.1"
