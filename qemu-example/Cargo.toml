@@ -6,28 +6,15 @@ name = "qemu-example"
 version = "0.1.0"
 
 [dependencies]
-cortex-m = "=0.7.6"
-cortex-m-rt = { version = "=0.7.3", features = ["device"] }
-cortex-m-semihosting = "=0.5.0"
-panic-halt = "=0.2.0"
-# bip32-ed25519 = { git = "https://github.com/digitalbitbox/rust-bip32-ed25519", tag = "v0.1.0", optional = true }
-bip32-ed25519 = { git = "https://github.com/digitalbitbox/rust-bip32-ed25519", tag = "v0.1.0" }
-
-cardano-embedded-sdk = { version = "0.1.0", path = "../cardano-embedded-sdk" }
+cortex-m = "=0.7.7"
+cortex-m-rt = "=0.7.3"
+cortex-m-semihosting = "0.3.3"
 derivation-path = { version = "0.2.0", default-features = false }
-
-# Uncomment for the panic example.
-# panic-itm = "0.4.1"
-
-# Uncomment for the allocator example.
 alloc-cortex-m = "=0.4.4"
+panic-halt = "=0.2.0"
 
-# Uncomment for the device example.
-# Update `memory.x`, set target to `thumbv7em-none-eabihf` in `.cargo/config`,
-# and then use `cargo build --examples device` to build it.
-# [dependencies.stm32f3]
-# features = ["stm32f303", "rt"]
-# version = "0.7.1"
+bip32-ed25519 = { git = "https://github.com/digitalbitbox/rust-bip32-ed25519", tag = "v0.1.0" }
+cardano-embedded-sdk = { version = "0.1.0", path = "../cardano-embedded-sdk" }
 
 # this lets you use `cargo fix`!
 [[bin]]
