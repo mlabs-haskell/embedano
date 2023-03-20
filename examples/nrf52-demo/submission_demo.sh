@@ -9,6 +9,6 @@ set -euo pipefail
   --mnemonics "initial label sand movie check train leaf escape hurt sort remove risk" \
   --password "" \
   --derivation-path "m/1852'/1815'/0'/0/0" \
-  --script-address "addr_test1wph0tef2u7jdhdpvkyf6fsvt8dc0m5u70ngfwwzxzstcfeq0j3v8e" \
+  --script-address "addr_test1wq3605f486dnjtu77cha4w5v27t3cs6drr35esjjeu7m5acrfwwrn" \
   --network preprod \
   --node-socket "./cardano-node.socket"

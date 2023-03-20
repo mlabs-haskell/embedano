@@ -166,15 +166,19 @@ fn main() -> ! {
                     };
                     state = State::Write(Data::Head(minicbor::to_vec(&out).unwrap()));
                 }
-                State::Exec(In::Temp(password, path)) => {
+                State::Exec(In::Temp(password, time, path)) => {
                     use cardano_embedded_sdk::api::sign_data;
                     use derivation_path::DerivationPath;
 
                     let temperature: i32 = temp_sensor.measure().to_num();
                     hprintln!("Firmware: temperature: {}", temperature);
+                    hprintln!("Firmware: time: {}", time);
                     let out = match (&entropy, path.parse::<DerivationPath>()) {
                         (Some(entropy), Ok(path)) => {
-                            let data: Vec<u8> = temperature.to_be_bytes().into_iter().collect();
+                            let data: Vec<u8> = 
+                                temperature.to_be_bytes().into_iter()
+                                .chain(time.to_be_bytes().into_iter())
+                                .collect();
                             hprintln!("Firmware: temperature: signing");
                             let signature = sign_data(&data, entropy, &password, &path);
                             hprintln!("Firmware: temperature: sending");

@@ -37,7 +37,7 @@ pub enum In {
         #[n(3)] String,
     ),
     #[n(3)]
-    Temp(#[n(0)] Vec<u8>, #[n(1)] String),
+    Temp(#[n(0)] Vec<u8>, #[n(1)] u64, #[n(2)] String),
     #[n(4)]
     PubKey(#[n(0)] Vec<u8>, #[n(1)] String)
 }

@@ -6,11 +6,23 @@ use serialport::SerialPort;
 
 use crate::serialization::{In, Out};
 use std::fmt::Debug;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Debug)]
 pub struct DeviceData {
     pub sensor_readings: i32,
     pub signed_readings: Vec<u8>,
+    pub measure_time: u64,
+}
+
+impl DeviceData {
+    pub fn to_bytes_chain(&self) -> Vec<u8> {
+        self.sensor_readings
+            .to_be_bytes()
+            .into_iter()
+            .chain(self.measure_time.to_be_bytes().into_iter())
+            .collect()
+    }
 }
 
 pub struct Device {
@@ -43,7 +55,15 @@ impl Device {
         derivation_path: &DerivationPath,
     ) -> DeviceData {
         // println!("sending temp");
-        let temp_request = In::Temp(password.as_bytes().to_vec(), derivation_path.to_string());
+        let measure_time = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("Time went backwards")
+            .as_secs();
+        let temp_request = In::Temp(
+            password.as_bytes().to_vec(),
+            measure_time,
+            derivation_path.to_string(),
+        );
         send(&mut self.port, temp_request);
         let temp_data = receive(&mut self.port);
         match temp_data {
@@ -53,6 +73,7 @@ impl Device {
                 DeviceData {
                     sensor_readings,
                     signed_readings,
+                    measure_time,
                 }
             }
             x => panic_to_unknown("Failed to get temperature data.", x),

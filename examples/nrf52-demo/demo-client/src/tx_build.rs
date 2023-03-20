@@ -3,13 +3,12 @@ use cardano_serialization_lib::{
     address::Address,
     crypto::{Ed25519Signature, PublicKey, Vkey, Vkeywitness, Vkeywitnesses},
     plutus::{PlutusData, PlutusList},
-    utils::{BigInt, BigNum, Coin, Value}, Transaction, TransactionBody, TransactionInputs, TransactionOutput,
-    TransactionOutputs, TransactionWitnessSet,
+    utils::{BigInt, BigNum, Coin, Value},
+    Transaction, TransactionBody, TransactionInputs, TransactionOutput, TransactionOutputs,
+    TransactionWitnessSet,
 };
 
 use crate::device::DeviceData;
-
-
 
 // some constants for balancing
 const FEE: u64 = 200000;
@@ -25,10 +24,14 @@ pub fn make_unsigned_tx(
     let mut receiver = TransactionOutput::new(to_address, &lovelace(MIN_ADA));
 
     let mut to_send_data = PlutusList::new();
-    // adding raw data
+    // adding temperature data
     let sensor_data = format!("\"{}\"", device_data.sensor_readings);
     let sensor_data = &BigInt::from_json(sensor_data.as_str()).unwrap();
     to_send_data.add(&PlutusData::new_integer(sensor_data));
+    // adding time data
+    let time_data = format!("\"{}\"", device_data.measure_time);
+    let time_data = &BigInt::from_json(time_data.as_str()).unwrap();
+    to_send_data.add(&PlutusData::new_integer(time_data));
     // adding signed bytes
     let signed_data = PlutusData::new_bytes(device_data.signed_readings);
     to_send_data.add(&signed_data);
