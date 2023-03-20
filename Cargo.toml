@@ -2,8 +2,9 @@
 members = [
 	"cardano-embedded-sdk",
 	"rust-ed25519-bip32",
-    "qemu-example",
-	"demo-client",
-    "device-example/device",
-    "device-example/host",
+	"examples/nrf52-demo/demo-client",
+	"examples/nrf52-demo/embedano-device",
+	"examples/stm32f-example/device",
+  "examples/stm32f-example/host",
+  "examples/qemu-example",
 ]

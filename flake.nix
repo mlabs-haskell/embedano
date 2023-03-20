@@ -17,7 +17,7 @@
   };
 
   outputs = inputs@{ self, nixpkgs, utils, rust-overlay, cardano-node, ... }:
-    (utils.lib.eachDefaultSystem (system:
+    (utils.lib.eachSystem [ utils.lib.system.x86_64-linux utils.lib.system.x86_64-darwin] (system:
       let
         pkgs = import nixpkgs { inherit system; overlays = [ rust-overlay.overlays.default ]; };
         # rust = pkgs.rust-bin.stable."1.65.0";
@@ -27,6 +27,8 @@
             cardano-node.packages.${system}.cardano-cli
             cardano-node.packages.${system}.bech32
             pkgs.nixpkgs-fmt
+            pkgs.pkg-config
+            pkgs.libusb
 
             (rust.override {
               extensions = [ "rust-analyzer" "rust-src" ];
@@ -57,7 +59,7 @@
             }
             ''
               echo $(cargo version)
-              cd ${./.}/qemu-example
+              cd ${./.}/examples/qemu-example
               cargo fmt --check
               touch $out
             '';

@@ -26,7 +26,7 @@ const HEAP_SIZE: usize = 1024; // in bytes
 
 #[entry]
 fn main() -> ! {
-    hprintln!("Test: Generating keys").unwrap();
+    hprintln!("Test: Generating keys");
 
     // from example/allocator.rs
     unsafe { ALLOCATOR.init(cortex_m_rt::heap_start() as usize, HEAP_SIZE) }
@@ -69,7 +69,7 @@ fn main() -> ! {
 
     // Create root private key from entropy
     let root_key = XPrvKey::from_entropy(&entropy, password);
-    hprintln!("Root key: {}", root_key.to_hex()).unwrap();
+    hprintln!("Root key: {}", root_key.to_hex());
 
     // Derive private key for same path that was used in `derive_key_pair` above
     let prv_key = root_key
@@ -78,16 +78,16 @@ fn main() -> ! {
         .derive(harden(0))
         .derive(0)
         .derive(0);
-    hprintln!("Private key: {}", prv_key.to_hex()).unwrap();
+    hprintln!("Private key: {}", prv_key.to_hex());
 
     // Derive corresponding public key
     let pub_key = prv_key.to_public();
-    hprintln!("Public key: {}", pub_key.to_hex()).unwrap();
+    hprintln!("Public key: {}", pub_key.to_hex());
 
     // Sign and verify using derived keys
     let some_data = b"some data";
     let signature = prv_key.sign(some_data);
-    hprintln!("Verify: {}", pub_key.verify(some_data, &signature)).unwrap();
+    hprintln!("Verify: {}", pub_key.verify(some_data, &signature));
 
     debug::exit(debug::EXIT_SUCCESS);
 
@@ -96,7 +96,7 @@ fn main() -> ! {
 
 #[alloc_error_handler]
 fn alloc_error(_layout: Layout) -> ! {
-    hprintln!("ALLOC ERROR").unwrap();
+    hprintln!("ALLOC ERROR");
     debug::exit(debug::EXIT_FAILURE);
     //let f: [u32] = todo!();
 
