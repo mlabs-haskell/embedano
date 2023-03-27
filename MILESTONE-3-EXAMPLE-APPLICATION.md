@@ -19,7 +19,7 @@ The project consists of two parts: a host application and device firmware. After
 ## Prerequisites
 
 - `Device address` should have some Ada, so `Host` can balance transactions properly.
-- `cardano-cli` of version `1.35.4` should be available in `PATH` on the `Host` - communications with cardano node (UTXO queries or submission) are performed with `cardano-cli` under the hood.
+- `cardano-cli` of version `1.35.4` with access to appropriate node socket should be available in `PATH` on the `Host` - communications with cardano node (UTXO queries or submission) are performed with `cardano-cli` under the hood.
 
 ## Workflow
 

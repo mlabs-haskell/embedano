@@ -10,6 +10,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 /// Incoming messages that device receives from host.
 /// Serialized to CBOR.
+/// Mirrors corresponding type in `lib.rs` in device package.
 #[derive(Clone, Debug, Encode, Decode)]
 pub enum In {
     #[n(0)]
@@ -31,6 +32,7 @@ pub enum In {
 
 /// Outgoing messages that device sends to host.
 /// Serialized to CBOR.
+/// Mirrors corresponding type in `lib.rs` in device package.
 #[derive(Clone, Debug, Encode, Decode)]
 pub enum Out {
     #[n(0)]

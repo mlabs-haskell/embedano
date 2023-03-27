@@ -177,7 +177,7 @@ fn submit_device_data(
 
 /// Performs check of data posted to chain:
 /// - Initializes device with mnemonics
-/// - Request public key for account 0 address 0
+/// - Request public key from device for account 0 address 0
 /// - Queries UTXOs with sensor readings from script address
 /// - Using public key from device verifies that bytes of temperature and time from datum
 ///   correspond to signed data from the same datum
