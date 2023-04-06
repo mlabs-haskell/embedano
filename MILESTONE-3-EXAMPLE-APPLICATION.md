@@ -1,10 +1,24 @@
 # Example Application
 
-## Idea
+- [Example Application](#example-application)
+  - [Application](#application)
+    - [Idea](#idea)
+    - [Project Description](#project-description)
+    - [Prerequisites](#prerequisites)
+    - [Workflow](#workflow)
+      - [Submitting Data to Chain](#submitting-data-to-chain)
+      - [Checking Data on Chain](#checking-data-on-chain)
+  - [Links](#links)
+    - [CardanoScan](#cardanoscan)
+
+
+## Application
+
+### Idea
 
 The device can measure temperature and sign measurements, and the host can post these measurements together with the timestamp and signature on-chain.
 
-## Project Description
+### Project Description
 
 The project consists of two parts: a host application and device firmware. After the firmware is flashed to the device, the device can be connected to a PC with the host application via USB to perform necessary communication. The firmware provides sensor data upon request and uses Embedano SDK methods under the hood for keys derivation and signing. The firmware does not assemble transactions; it only provides sensor data together with required signatures and keys. Transaction assembly and submission happen on the host.
 
@@ -16,14 +30,14 @@ The project consists of two parts: a host application and device firmware. After
 
 `Device address` - [enterprise address](https://docs.cardano.org/learn/cardano-addresses) derived from the mnemonic phrase for the specified derivation path. This address is used to pay the minimum required Ada and balance transactions to the `Script address`. Mnemonics and derivation paths are set by the `Host` during requests to `Device`.
 
-## Prerequisites
+### Prerequisites
 
 - `Device address` should have some Ada, so `Host` can balance transactions properly.
 - `cardano-cli` of version `1.35.4` with access to appropriate node socket should be available in `PATH` on the `Host` - communications with cardano node (UTXO queries or submission) are performed with `cardano-cli` under the hood.
 
-## Workflow
+### Workflow
 
-### Submitting Data to Chain
+#### Submitting Data to Chain
 
 - `Host` initiates `Device` with the mnemonic phrase that will be used by Embedano SDK for keys derivation and signing.
 - `Host` requests temperature sensor readings from `Device`, providing the timestamp of the operation (current time), and data required for keys derivation and signing (password and derivation path).
@@ -34,9 +48,24 @@ The project consists of two parts: a host application and device firmware. After
 - After receiving the signed transaction ID from `Device`, `Host` adds signed data to the witness set of balanced transaction, making the transaction signed.
 - `Host` submits the signed transaction.
 
-### Checking Data on Chain
+#### Checking Data on Chain
 
 - `Host` initiates `Device` with the mnemonic phrase that will be used by Embedano SDK for keys derivation and signing.
 - `Host` queries `Script address` to get all available UTXOs (we assume that only UTXOs with temperature measurements are there).
 - `Host` requests a public key from `Device` with the signing credentials that should correspond to the data stored on-chain (password and derivation path for key).
 - For each UTXO from `Script address`, `Host` parses temperature data, timestamp, and `signed data` from UTXO Datum. Then performs bytes concatenation for temperature data and timestamp, making `verification data`. Using the public key acquired from `Device`, `verification data`, and `signed data`, `Host` checks that temperature data and timestamp were indeed signed by the public key acquired from `Device`.
+
+## Links
+
+- live demo - TBD
+- [Cortex-M quick start template](https://github.com/rust-embedded/cortex-m-quickstart)
+- Board [nRF52840 DK](https://www.nordicsemi.com/Products/Development-hardware/nrf52840-dk) - used in demo
+- [gdb-multiarch debugger](https://howtoinstall.co/en/gdb-multiarch)
+- [J-Link software pack](https://www.segger.com/products/debug-probes/j-link/tools/j-link-software/)
+- [usbpid](https://learn.microsoft.com/en-us/windows/wsl/connect-usb) instruction
+
+### CardanoScan
+
+- [1st submitted transaction](https://preprod.cardanoscan.io/transaction/90516bf936e764cbc2cc16164d706b4c542cacec76b9fc45c679b191e0fdd414) - id `90516bf936e764cbc2cc16164d706b4c542cacec76b9fc45c679b191e0fdd414`
+- [2nd submitted transaction](https://preprod.cardanoscan.io/transaction/377f5e7bb8a2f865748a9456d6ad4ae9a6585dc94ea8b35e8a64dffc1e23ceab) - id `377f5e7bb8a2f865748a9456d6ad4ae9a6585dc94ea8b35e8a64dffc1e23ceab`
+- [demo script address - addr_test1wr5qpejpzx7szat38a58v246jk6hmexcvnfza5nsdvperqgvjcfxd](https://preprod.cardanoscan.io/address/addr_test1wr5qpejpzx7szat38a58v246jk6hmexcvnfza5nsdvperqgvjcfxd)
