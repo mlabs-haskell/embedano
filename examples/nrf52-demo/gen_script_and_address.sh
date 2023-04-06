@@ -12,7 +12,7 @@ set -euox pipefail
 OUT_FILE=./demo-client/cardano-data/script.plutus
 
 nix run github:mlabs-haskell/plutip/embedano-testnet#plutip:exe:generate-script -- \
-  --nonce embedano_device_002 \
+  --nonce embedano_device_006 \
   --out-file ${OUT_FILE}
 
 cardano-cli address build --payment-script-file ${OUT_FILE} $1
