@@ -23,6 +23,8 @@ pub enum State {
     Exec(In),
 }
 
+/// Incoming messages that device receives from host.
+/// Serialized to CBOR.
 #[derive(Clone, Debug, Encode, Decode)]
 pub enum In {
     #[n(0)]
@@ -37,11 +39,13 @@ pub enum In {
         #[n(3)] String,
     ),
     #[n(3)]
-    Temp(#[n(0)] Vec<u8>, #[n(1)] String),
+    Temp(#[n(0)] Vec<u8>, #[n(1)] u64, #[n(2)] String),
     #[n(4)]
-    PubKey(#[n(0)] Vec<u8>, #[n(1)] String)
+    PubKey(#[n(0)] Vec<u8>, #[n(1)] String),
 }
 
+/// Outgoing messages that device sends to host.
+/// Serialized to CBOR.
 #[derive(Clone, Debug, Encode, Decode)]
 pub enum Out {
     #[n(0)]
@@ -59,9 +63,10 @@ pub enum Out {
     #[n(6)]
     Temp(#[n(0)] i32, #[n(1)] Vec<u8>),
     #[n(7)]
-    PubKey(#[n(0)] String)
+    PubKey(#[n(0)] String),
 }
 
+/// Helper function to perform signing on the device
 pub fn sign(tx_id: &[u8], entropy: &Entropy, password: &[u8], path: &str) -> Out {
     match (TxId::from_bytes(tx_id), path.parse::<DerivationPath>()) {
         (Ok(tx_id), Ok(path)) => {
@@ -73,6 +78,7 @@ pub fn sign(tx_id: &[u8], entropy: &Entropy, password: &[u8], path: &str) -> Out
     }
 }
 
+/// Helper function to obtain public key on the device
 pub fn get_pub_key(entropy: &Entropy, password: &[u8], path: &str) -> Out {
     match path.parse::<DerivationPath>() {
         Ok(path) => {
@@ -83,6 +89,7 @@ pub fn get_pub_key(entropy: &Entropy, password: &[u8], path: &str) -> Out {
     }
 }
 
+/// Helper function to verify transaction ID on he device
 pub fn verify(
     tx_id: &[u8],
     signature: Vec<u8>,

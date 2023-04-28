@@ -34,6 +34,8 @@ fn main() -> ! {
     unsafe { ALLOCATOR.init(cortex_m_rt::heap_start() as usize, HEAP_SIZE) }
 
     // Setting up serial port and USB device
+    // Initialization taken from GH hal UDB example:
+    // https://github.com/nrf-rs/nrf-hal/tree/939c0175dbbebdb9457a492a9912b755cc56737c/examples/usb
     let periph = nrf52840_hal::pac::Peripherals::take().unwrap();
     let clocks = Clocks::new(periph.CLOCK);
     let clocks = clocks.enable_ext_hfosc();
@@ -54,6 +56,7 @@ fn main() -> ! {
 
     let mut state = State::Read(Data::Head(vec![]));
 
+    // Main loop that polls USB and process requests from the host
     loop {
         if !usb_dev.poll(&mut [&mut serial]) || !serial.dtr() {
             continue;
@@ -166,15 +169,16 @@ fn main() -> ! {
                     };
                     state = State::Write(Data::Head(minicbor::to_vec(&out).unwrap()));
                 }
-                State::Exec(In::Temp(password, path)) => {
+                State::Exec(In::Temp(password, time, path)) => {
                     use cardano_embedded_sdk::api::sign_data;
                     use derivation_path::DerivationPath;
 
                     let temperature: i32 = temp_sensor.measure().to_num();
                     hprintln!("Firmware: temperature: {}", temperature);
+                    hprintln!("Firmware: time: {}", time);
                     let out = match (&entropy, path.parse::<DerivationPath>()) {
                         (Some(entropy), Ok(path)) => {
-                            let data: Vec<u8> = temperature.to_be_bytes().into_iter().collect();
+                            let data: Vec<u8> = chain_data_bytes(temperature, time);
                             hprintln!("Firmware: temperature: signing");
                             let signature = sign_data(&data, entropy, &password, &path);
                             hprintln!("Firmware: temperature: sending");
@@ -199,4 +203,11 @@ fn main() -> ! {
         }
         // MAIN LOOP END
     }
+}
+
+fn chain_data_bytes(a: i32, b: u64) -> Vec<u8> {
+    a.to_be_bytes()
+        .into_iter()
+        .chain(b.to_be_bytes().into_iter())
+        .collect::<Vec<u8>>()
 }

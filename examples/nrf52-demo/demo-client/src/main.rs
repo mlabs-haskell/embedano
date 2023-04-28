@@ -1,27 +1,21 @@
-use std::{
-    thread,
-    time::{self, Duration},
-};
+use std::collections::HashMap;
 
-use cardano_embedded_sdk::{crypto::Ed25519Signature, types::XPubKey};
+use cardano_embedded_sdk::crypto::Ed25519Signature;
 use cardano_serialization_lib::{
     address::{Address, EnterpriseAddress, StakeCredential},
     crypto::Ed25519KeyHash,
+    plutus::{PlutusData, PlutusDatumSchema},
 };
 
-use cardano_embedded_sdk::crypto as sdk_crypto;
-
-use clap::{command, Parser};
+use clap::{command, Parser, ValueEnum};
 use derivation_path::DerivationPath;
 use node_client::{Network, NodeClient};
+use serde_json::{from_str, Value};
 
-use crate::{
-    device::Device,
-};
+use crate::device::Device;
 
 mod device;
 mod node_client;
-mod serialization;
 mod tx_build;
 mod tx_envelope;
 
@@ -46,14 +40,26 @@ struct Args {
     /// Path to node socket
     #[arg(long)]
     node_socket: String,
+    #[arg(long)]
+    mode: Mode,
+    #[arg(long)]
+    device_port: String,
+}
+
+#[derive(ValueEnum, Debug, Clone, Copy)]
+pub enum Mode {
+    Submit,
+    Verify,
 }
 
 fn main() {
     let args = Args::parse();
 
+    let mode = args.mode;
     let mnemonics = args.mnemonics;
     let password = args.password;
     let network = args.network;
+    let device_port = args.device_port;
 
     let derivation_path: DerivationPath = args
         .derivation_path
@@ -72,17 +78,56 @@ fn main() {
         println!("{}", p.port_name);
     }
 
-    println!("Creating and Initializing device");
-    let mut device = Device::new("/dev/ttyACM0");
+    match mode {
+        Mode::Submit => submit_device_data(
+            mnemonics,
+            &password,
+            &derivation_path,
+            script_address,
+            &node_client,
+            network,
+            &device_port,
+        ),
+        Mode::Verify => verify(
+            mnemonics,
+            &password,
+            &derivation_path,
+            script_address,
+            &node_client,
+            &device_port,
+        ),
+    }
+}
+
+/// Performs following steps:
+/// - Initializes device with mnemonic
+/// - Requests sensor data from device (temperature)
+/// - Requests public key from device for account 0 address 0
+/// - Requests UTXOs from the address dedicated to account 0 address 0
+/// - Builds and balances transaction using UTXOs from account 0 address 0: sensor readings added to Datum
+/// - Signs transaction ID using device
+/// - Adds witness with signature to transaction and submits it
+fn submit_device_data(
+    mnemonics: String,
+    password: &String,
+    derivation_path: &DerivationPath,
+    script_address: &Address,
+    node_client: &node_client::CliNodeClient,
+    network: Network,
+    device_port: &String,
+) {
+    println!("Initializing device");
+    let mut device = Device::new(device_port);
     device.init(mnemonics);
 
     println!("Requesting temperature data");
-    let temp_data = device.query_sensor_data(&password, &derivation_path);
+    let temp_data = device.query_sensor_data(password, derivation_path);
     println!("Received sensor data: {:?}", temp_data.sensor_readings);
 
     println!("Building transaction");
+    println!("Requesting public key from device device");
     // Receive public key from device for given derivation path
-    let pub_key = device.get_public_key(&password, &derivation_path);
+    let pub_key = device.get_public_key(password, derivation_path);
 
     // Make address from received public key
     // This address will be used to receive UTXOs for balancing and send back change
@@ -115,7 +160,7 @@ fn main() {
     let tx_id = node_client.get_tx_id(&unsigned_tx);
 
     println!(
-        "Transaction built and balanced.\n Transaction ID: {}",
+        "Transaction built and balanced.\n -> transaction ID: {}",
         tx_id.to_hex()
     );
 
@@ -130,9 +175,71 @@ fn main() {
     println!("Submission result: {:?}", submit_result)
 }
 
+/// Performs check of data posted to chain:
+/// - Initializes device with mnemonics
+/// - Request public key from device for account 0 address 0
+/// - Queries UTXOs with sensor readings from script address
+/// - Using public key from device verifies that bytes of temperature and time from datum
+///   correspond to signed data from the same datum
+///   (i.e. device can derive same private and public keys, that were used to send data to chain)
+fn verify(
+    mnemonics: String,
+    password: &String,
+    derivation_path: &DerivationPath,
+    script_address: &Address,
+    node_client: &node_client::CliNodeClient,
+    device_port: &String,
+) {
+    println!("Initializing device");
+    let mut device = Device::new(device_port);
+    device.init(mnemonics);
+
+    println!("Requesting public key from device device");
+    let pub_key = device.get_public_key(password, derivation_path);
+    println!("Public key hash: {}", pub_key.hash_hex());
+
+    let utxo_map = node_client.query_raw_inputs(script_address).unwrap();
+    let utxo_map: HashMap<String, Value> =
+        serde_json::from_str(&utxo_map).expect("Couldn't parse UTXOs map");
+
+    // Verify data in UTXOs
+    for (k, v) in utxo_map.iter() {
+        let datum = &v["inlineDatum"].to_string();
+        let datum = PlutusData::from_json(datum, PlutusDatumSchema::DetailedSchema).unwrap();
+        let datum = datum.as_list().unwrap();
+
+        let temperature = datum.get(0).as_integer().unwrap();
+        let temperature = from_str::<i32>(temperature.to_str().as_str()).unwrap();
+        println!("\nVerifying data\nUTXO ID: {}", k);
+        println!("Temperature: {:?}", temperature);
+
+        let time = datum.get(1).as_integer().unwrap();
+        let time = from_str::<u64>(time.to_str().as_str()).unwrap();
+        println!("Time: {:?}", time);
+
+        let sig = datum.get(2).as_bytes().unwrap();
+        let sig = Ed25519Signature::from_bytes(sig).unwrap();
+        println!("Signed data:  {:?}", sig.to_hex());
+
+        let data_to_verify = chain_data_bytes(temperature, time);
+
+        let ver = pub_key.verify(&data_to_verify, &sig);
+        println!("Verification passed: {:?}", ver);
+    }
+}
+
 fn translate_network(net: Network) -> u8 {
     match net {
         Network::Mainnet => 1,
         Network::Preprod => 0,
     }
+}
+
+/// Device performs same operation on data before signing it.
+/// See `chain_data_bytes` in `main.rs` of device package.
+fn chain_data_bytes(a: i32, b: u64) -> Vec<u8> {
+    a.to_be_bytes()
+        .into_iter()
+        .chain(b.to_be_bytes().into_iter())
+        .collect::<Vec<u8>>()
 }

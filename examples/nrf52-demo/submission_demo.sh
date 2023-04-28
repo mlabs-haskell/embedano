@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
-# Step by step keys deriation.
-# `cardano-address` only accept paths of 2, 3 or 4 indexes.
+# Demo runner
 
 set -euo pipefail
 
@@ -9,6 +8,8 @@ set -euo pipefail
   --mnemonics "initial label sand movie check train leaf escape hurt sort remove risk" \
   --password "" \
   --derivation-path "m/1852'/1815'/0'/0/0" \
-  --script-address "addr_test1wph0tef2u7jdhdpvkyf6fsvt8dc0m5u70ngfwwzxzstcfeq0j3v8e" \
+  --script-address "addr_test1wr5qpejpzx7szat38a58v246jk6hmexcvnfza5nsdvperqgvjcfxd" \
   --network preprod \
-  --node-socket "./cardano-node.socket"
+  --node-socket "./cardano-node.socket" \
+  --device-port $1 \
+  --mode $2

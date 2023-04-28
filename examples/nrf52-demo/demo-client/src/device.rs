@@ -4,19 +4,67 @@ use cardano_embedded_sdk::types::{TxId, XPubKey};
 use derivation_path::DerivationPath;
 use serialport::SerialPort;
 
-use crate::serialization::{In, Out};
+use minicbor::{Decode, Encode};
 use std::fmt::Debug;
+use std::time::{SystemTime, UNIX_EPOCH};
+
+/// Incoming messages that device receives from host.
+/// Serialized to CBOR.
+/// Mirrors corresponding type in `lib.rs` in device package.
+#[derive(Clone, Debug, Encode, Decode)]
+pub enum In {
+    #[n(0)]
+    Init(#[n(0)] String),
+    #[n(1)]
+    Sign(#[n(0)] Vec<u8>, #[n(1)] Vec<u8>, #[n(2)] String),
+    #[n(2)]
+    Verify(
+        #[n(0)] Vec<u8>,
+        #[n(1)] Vec<u8>,
+        #[n(2)] Vec<u8>,
+        #[n(3)] String,
+    ),
+    #[n(3)]
+    Temp(#[n(0)] Vec<u8>, #[n(1)] u64, #[n(2)] String),
+    #[n(4)]
+    PubKey(#[n(0)] Vec<u8>, #[n(1)] String),
+}
+
+/// Outgoing messages that device sends to host.
+/// Serialized to CBOR.
+/// Mirrors corresponding type in `lib.rs` in device package.
+#[derive(Clone, Debug, Encode, Decode)]
+pub enum Out {
+    #[n(0)]
+    Init,
+    #[n(1)]
+    Sign(#[n(0)] Vec<u8>),
+    #[n(2)]
+    Verifiy(#[n(0)] bool),
+    #[n(3)]
+    Error(#[n(0)] String),
+    #[n(4)]
+    Length(#[n(0)] u64),
+    #[n(5)]
+    Read(#[n(0)] u64),
+    #[n(6)]
+    Temp(#[n(0)] i32, #[n(1)] Vec<u8>),
+    #[n(7)]
+    PubKey(#[n(0)] String),
+}
 
 #[derive(Debug)]
 pub struct DeviceData {
     pub sensor_readings: i32,
     pub signed_readings: Vec<u8>,
+    pub measure_time: u64,
 }
 
 pub struct Device {
     port: Box<dyn SerialPort>,
 }
 
+/// Wrapper around serial port for device with helper functions
 impl Device {
     pub fn new(addr: &str) -> Self {
         let port = serialport::new(addr, 115_200)
@@ -43,7 +91,15 @@ impl Device {
         derivation_path: &DerivationPath,
     ) -> DeviceData {
         // println!("sending temp");
-        let temp_request = In::Temp(password.as_bytes().to_vec(), derivation_path.to_string());
+        let measure_time = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("Time went backwards")
+            .as_secs();
+        let temp_request = In::Temp(
+            password.as_bytes().to_vec(),
+            measure_time,
+            derivation_path.to_string(),
+        );
         send(&mut self.port, temp_request);
         let temp_data = receive(&mut self.port);
         match temp_data {
@@ -53,6 +109,7 @@ impl Device {
                 DeviceData {
                     sensor_readings,
                     signed_readings,
+                    measure_time,
                 }
             }
             x => panic_to_unknown("Failed to get temperature data.", x),
