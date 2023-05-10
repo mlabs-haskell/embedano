@@ -57,7 +57,7 @@ The project consists of two parts: a host application and device firmware. After
 
 ## Links
 
-- live demo - TBD
+- Live demo - [link](https://drive.google.com/drive/folders/1P8kPAvXWtOB8tDGSoNAiuJpSlz0tRNEs)
 - [Cortex-M quick start template](https://github.com/rust-embedded/cortex-m-quickstart)
 - Board [nRF52840 DK](https://www.nordicsemi.com/Products/Development-hardware/nrf52840-dk) - used in demo
 - [gdb-multiarch debugger](https://howtoinstall.co/en/gdb-multiarch)
