@@ -48,6 +48,13 @@ impl TxId {
     }
 }
 
+type TransactionIndex = u32;
+
+pub struct TransactionInput {
+    transaction_id: TxId,
+    index: TransactionIndex,
+  }
+
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct KeyParseError {
