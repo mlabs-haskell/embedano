@@ -6,5 +6,5 @@ monitor semihosting enable
 monitor semihosting IOClient 3
 monitor reset
 load
-# b main
-continue
+b main
+# continue

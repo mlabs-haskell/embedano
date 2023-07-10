@@ -1,6 +1,10 @@
+use std::result;
 use std::{thread, time::Duration};
 
+use cardano_embedded_sdk::tx_stream::{TxEntry, TxStream};
 use cardano_embedded_sdk::types::{TxId, XPubKey};
+use cardano_serialization_lib::utils::BigNum;
+use cardano_serialization_lib::{Transaction, TransactionInputs};
 use derivation_path::DerivationPath;
 use serialport::SerialPort;
 
@@ -28,6 +32,8 @@ pub enum In {
     Temp(#[n(0)] Vec<u8>, #[n(1)] u64, #[n(2)] String),
     #[n(4)]
     PubKey(#[n(0)] Vec<u8>, #[n(1)] String),
+    #[n(5)]
+    Stream(#[n(0)] TxStream),
 }
 
 /// Outgoing messages that device sends to host.
@@ -51,6 +57,8 @@ pub enum Out {
     Temp(#[n(0)] i32, #[n(1)] Vec<u8>),
     #[n(7)]
     PubKey(#[n(0)] String),
+    #[n(8)]
+    StreamResponse(#[n(0)] String),
 }
 
 #[derive(Debug)]
@@ -85,34 +93,20 @@ impl Device {
     }
 
     /// Receive from device current temperature (°C) and its signed bytes
-    pub fn query_sensor_data(
+    pub fn query_mock_sensor_data(
         &mut self,
-        password: &String,
-        derivation_path: &DerivationPath,
+        _password: &String,
+        _derivation_path: &DerivationPath,
     ) -> DeviceData {
-        // println!("sending temp");
         let measure_time = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .expect("Time went backwards")
             .as_secs();
-        let temp_request = In::Temp(
-            password.as_bytes().to_vec(),
-            measure_time,
-            derivation_path.to_string(),
-        );
-        send(&mut self.port, temp_request);
-        let temp_data = receive(&mut self.port);
-        match temp_data {
-            Ok(Some(Out::Temp(sensor_readings, signed_readings))) => {
-                println!("Device: getting sensor data - OK");
 
-                DeviceData {
-                    sensor_readings,
-                    signed_readings,
-                    measure_time,
-                }
-            }
-            x => panic_to_unknown("Failed to get temperature data.", x),
+        DeviceData {
+            sensor_readings: 24,
+            signed_readings: "ff".as_bytes().to_vec(),
+            measure_time: measure_time,
         }
     }
 
@@ -128,6 +122,7 @@ impl Device {
             Ok(Some(Out::PubKey(key_hex))) => key_hex,
             x => panic_to_unknown("Could not get hex of public key", x),
         };
+        // let pub_key_hex = "ced76eabfcda61c6e1e1b7fb5647df737bfac07ec10c9261f347a30ad618401156dc280f19712b6f0a2faff84285912ec539e2fdc8a90428bf8734f09a05fae4";
         match XPubKey::from_hex(&pub_key_hex) {
             Ok(pk) => {
                 println!("Device: getting public key - OK");
@@ -137,25 +132,68 @@ impl Device {
         }
     }
 
-    pub fn sign_transaction_id(
+
+    pub fn stream_tx(
         &mut self,
-        tx_id: &TxId,
+        tx: &Transaction,
         password: &String,
         derivation_path: &DerivationPath,
-    ) -> Vec<u8> {
-        let tx_id_sign_request = In::Sign(
-            tx_id.to_bytes().to_vec(),
-            password.as_bytes().to_vec(),
-            derivation_path.to_string(),
-        );
-        send(&mut self.port, tx_id_sign_request);
+    ) -> Result<Vec<u8>, String> {
+        self.stream_inputs(tx.body().inputs())?;
+        self.stream_fee(tx.body().fee())?;
+        self.finalize_stream(password, derivation_path)
+    }
+
+    fn stream_inputs(&mut self, ins: TransactionInputs) -> Result<String, String> {
+        for n in 0..ins.len() {
+            let inp = ins.get(n);
+            let hash = inp.transaction_id().to_bytes();
+            let ix = inp.index();
+
+            let inp_stream_req = In::Stream(TxStream::Entry(TxEntry::TxInput(hash, ix)));
+            send(&mut self.port, inp_stream_req);
+
+            match receive(&mut self.port) {
+                Ok(Some(Out::StreamResponse(msg))) => {
+                    println!("Device: streaming TxIn: {}", msg);
+                }
+                other => return Err(format!("Error streaming inputs: {:?}", other)),
+            }
+        }
+        Ok("".into())
+    }
+
+    fn stream_fee(&mut self, fee: BigNum) -> Result<String, String> {
+        let fee_request = In::Stream(TxStream::Entry(TxEntry::Fee(
+            cardano_serialization_lib::utils::from_bignum(&fee),
+        )));
+        send(&mut self.port, fee_request);
+        match receive(&mut self.port) {
+            Ok(Some(Out::StreamResponse(msg))) => {
+                println!("Device: streaming fee: {}", msg);
+                Ok("".into())
+            }
+            other => Err(format!("Error streaming fee: {:?}", other)),
+        }
+    }
+
+    fn finalize_stream(
+        &mut self,
+        password: &String,
+        derivation_path: &DerivationPath,
+    ) -> Result<Vec<u8>, String> {
+        println!("Device: finalizing stream and asking to sign transaction ID");
+        let done_request =
+            TxStream::Done(password.as_bytes().to_vec(), derivation_path.to_string());
+        send(&mut self.port, In::Stream(done_request));
         let result = receive(&mut self.port);
+
         match result {
             Ok(Some(Out::Sign(signature))) => {
                 println!("Device: signing transaction ID - OK");
-                signature
+                Ok(signature)
             }
-            x => panic_to_unknown("Could not get Tx signature.", x),
+            err => Err(format!("Error while finalizing stream: {:?}", err)),
         }
     }
 }

@@ -15,6 +15,7 @@ pub struct TxIdParseError {
     message: String,
 }
 
+#[derive(Debug)]
 pub struct TxId([u8; 32]);
 
 impl TxId {
@@ -50,9 +51,10 @@ impl TxId {
 
 type TransactionIndex = u32;
 
+#[derive(Debug)]
 pub struct TransactionInput {
-    transaction_id: TxId,
-    index: TransactionIndex,
+    pub transaction_id: TxId,
+    pub index: TransactionIndex,
   }
 
 #[allow(dead_code)]
