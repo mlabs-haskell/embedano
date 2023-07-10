@@ -132,7 +132,6 @@ impl Device {
         }
     }
 
-
     pub fn stream_tx(
         &mut self,
         tx: &Transaction,

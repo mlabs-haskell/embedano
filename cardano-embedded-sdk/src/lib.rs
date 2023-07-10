@@ -27,8 +27,8 @@ pub mod error;
 pub mod impl_mockchain;
 pub mod typed_bytes;
 
-pub mod util;
 pub mod tx_stream;
+pub mod util;
 
 #[macro_use]
 mod serialization_macros;

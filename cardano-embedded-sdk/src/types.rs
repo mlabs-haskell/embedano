@@ -55,7 +55,7 @@ type TransactionIndex = u32;
 pub struct TransactionInput {
     pub transaction_id: TxId,
     pub index: TransactionIndex,
-  }
+}
 
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
