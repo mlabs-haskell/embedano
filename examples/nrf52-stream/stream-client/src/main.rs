@@ -160,13 +160,3 @@ fn translate_network(net: Network) -> u8 {
         Network::Preprod => 0,
     }
 }
-
-/// Device performs same operation on data before signing it.
-/// This function performs same manipulation.
-/// See `chain_data_bytes` in `main.rs` of device package.
-fn chain_data_bytes(a: i32, b: u64) -> Vec<u8> {
-    a.to_be_bytes()
-        .into_iter()
-        .chain(b.to_be_bytes().into_iter())
-        .collect::<Vec<u8>>()
-}

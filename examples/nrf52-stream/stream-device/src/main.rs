@@ -233,9 +233,6 @@ fn main() -> ! {
     }
 }
 
-//     }
-// }
-
 fn chain_data_bytes(a: i32, b: u64) -> Vec<u8> {
     a.to_be_bytes()
         .into_iter()
