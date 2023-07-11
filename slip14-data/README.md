@@ -131,7 +131,6 @@ Transaction was generated and signed with `cardano-cli` v 1.35.3
 
  ```shell
 bb1eb401cd03b0cd8caa08997df0a2ab226772c4d3a08adfb5a60ba34de12dfb
-
 ```
 
 ### Transaction body (a.k.a. raw transaction)
