@@ -1,51 +1,16 @@
 # Embedano
 
-Secure and open-source software platform for embedded devices on Cardano blockchain, which can be used for hardware wallets and other devices buildable using its primitives.
+This is an open-source software platform for embedded devices on the Cardano blockchain. It can be used for hardware wallets and other devices that can be built using its primitives.
 
 [Catalyst Fund9 page](https://cardano.ideascale.com/c/idea/414017)
 
-[Design doc](docs/design-doc.md)
+## Documentation
 
-## Development
+- [Design doc](docs/design-doc.md)
+- [Core library](./docs/embedano-api-tour.md)
+- [Example project that uses core library and `cardano-cli` to enable Cardano network interactions on nRF52 Series chip](./MILESTONE-3-EXAMPLE-APPLICATION.md). Check out live demo in the "links" section.
+- [Modification of example project that streams transaction body for signing](./MILESTONE-4-TRANSACTION-STREAMING.md). Check out live demo in the "links" section.
 
-Current setup is based on [cortex-m-quickstart](https://github.com/rust-embedded/cortex-m-quickstart) and requires Rust `nightly`.
+## Acknowledgements
 
-### With Nix
-
-Nix setup uses `flakes` feature.
-
-To enable `flakes` add the following to Nix config:
-
-```shell
-experimental-features = nix-command flakes
-```
-
-Nix development shell will have nightly Rust and the following build targets available: `Cortex-M3`, `Cortex-M4/M7`, and `Cortex-M4F/M7F`.
-
-To start development shell:
-
-```shell
-nix develop
-```
-
-This setup also includes a development shell with [QEMU emulator](https://www.qemu.org/) available. To run shell with QEMU:
-
-```shell
-nix develop .#withQemu
-```
-
-Be aware, that shell with QEMU will download QEMU (~1.5 Gb). Runnable example can be found in [qemu-example](examples/qemu-example/src/main.rs), e.g. from repository root run:
-
-```shell
-nix develop .#withQemu
-
-# when shell is ready
-cd examples/qemu-example/
-cargo run --release
-```
-
-If everything works you should see `"Test: Generating keys"` and pair of keys in console output.
-
-### Without Nix
-
-If you want to install everything yourself from scratch please refer to [cortex-m-quickstart instructions](https://github.com/rust-embedded/cortex-m-quickstart).
+The Embedano core library  [cardano-embedded-sdk](./cardano-embedded-sdk/)  partially uses code from the open-source libraries [cardano-serialization-lib](https://github.com/Emurgo/cardano-serialization-lib) and [rust-ed25519-bip32](https://github.com/typed-io/rust-ed25519-bip32). Both libraries were instrumental in saving a lot of effort. Thank you!

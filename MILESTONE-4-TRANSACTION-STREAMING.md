@@ -8,8 +8,11 @@
     - [Starting USB device](#starting-usb-device)
     - [Running host client application](#running-host-client-application)
   - [Gaps and improvements](#gaps-and-improvements)
+  - [Links](#links)
 
 ## Example application
+
+Live demo in [links](#links) section.
 
 Example device firmware and client application that demonstrate transaction streaming are located in [examples/nrf52-stream](./examples/nrf52-stream/) directory. Both firmware and client are built on top of [nrf52-demo](./examples/nrf52-demo/) examples which were delivered and [demonstrated](https://drive.google.com/drive/folders/1P8kPAvXWtOB8tDGSoNAiuJpSlz0tRNEs) as a part of the Milestone 3 deliverables.
 
@@ -108,3 +111,8 @@ The application client will attempt to initialize the device, build the transact
 - In both [nrf52-demo milestone 3](./examples/nrf52-demo/) and [nrf52-stream milestone 4](./examples/nrf52-stream/) examples, there is duplication in types describing communication protocols. This duplication can be extracted to its own package or become part of the core [cardano-embedded-sdk](./cardano-embedded-sdk/) library.
 - [nrf52-demo milestone 3](./examples/nrf52-demo/) and [nrf52-stream milestone 4](./examples/nrf52-stream/) - examples can be merged into a single one after streaming for the whole transaction body is implemented.
 - Testing can be further expanded with automated tests running on the real hardware. See the [corresponding issue](https://github.com/mlabs-haskell/embedano/issues/31).
+
+## Links
+
+- [Live demo](https://drive.google.com/drive/folders/1T7fvXyYRIQkTNdeAHwGr6hjAfevlB6pb?usp=drive_link)
+- [CIP-21](https://cips.cardano.org/cips/cip21/)
