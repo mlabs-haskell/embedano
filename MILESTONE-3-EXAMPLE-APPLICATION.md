@@ -8,8 +8,11 @@
     - [Workflow](#workflow)
       - [Submitting Data to Chain](#submitting-data-to-chain)
       - [Checking Data on Chain](#checking-data-on-chain)
+  - [Running the demo](#running-the-demo)
+    - [Starting USB device](#starting-usb-device)
+    - [Running host client application](#running-host-client-application)
   - [Links](#links)
-    - [CardanoScan](#cardanoscan)
+    - [Transactions and data from live demo on CardanoScan](#transactions-and-data-from-live-demo-on-cardanoscan)
 
 
 ## Application
@@ -55,6 +58,56 @@ The project consists of two parts: a host application and device firmware. After
 - `Host` requests a public key from `Device` with the signing credentials that should correspond to the data stored on-chain (password and derivation path for key).
 - For each UTXO from `Script address`, `Host` parses temperature data, timestamp, and `signed data` from UTXO Datum. Then performs bytes concatenation for temperature data and timestamp, making `verification data`. Using the public key acquired from `Device`, `verification data`, and `signed data`, `Host` checks that temperature data and timestamp were indeed signed by the public key acquired from `Device`.
 
+## Running the demo
+
+The easiest way to run the demo is to use Nix, as the repository provides a ready-to-go Nix setup. The following instructions use Nix with flake.
+
+From the root of the project, enter the Nix shell:
+
+```shell
+nix develop
+```
+
+To flash firmware onto the device, some prior setup is required. The specifics of the setup will depend on your hardware and software. To see an example for the `NRF52 Development Kit board` and `WSL2 Debian`, check out the [live demo](https://drive.google.com/drive/folders/1P8kPAvXWtOB8tDGSoNAiuJpSlz0tRNEs).
+
+Current setup uses [this cargo config](./examples/nrf52-demo/embedano-device/.cargo/config.toml) and [this script.gdb](./examples/nrf52-demo/embedano-device/script.gdb) to run `gdb` and flash firmware when `cargo run` is executed.
+
+### Starting USB device
+
+To flash firmware, from the root of the repo switch to the device directory
+
+```shell
+cd examples/nrf52-demo/embedano-device
+```
+
+Make sure device is connected to the `gdb` server and `script.gdb` has correct IP set through `"target extended-remote ..."` command. Then run `cargo run`.
+
+If everything goes well, `script.gdb` should load firmware and start main loop. A new USB device should appear in the system, and the client application should be able to communicate with it through the newly opened serial port.
+
+### Running host client application
+
+In the second terminal `cd` to main stream example directory:
+
+```shell
+cd examples/nrf52-demo
+```
+
+This directory contains script [submission_demo.sh](./examples/nrf52-demo/submission_demo.sh) serves as a shortcut to run the client application. You will need to pass device serial and `mode of operation` as arguments.
+
+To submit transaction containing sensor readings from the device:
+
+```shell
+./submissionsubmission_demo.sh "/dev/ttyACM0" submit
+```
+
+To verify sensor readings stored on chain:
+
+```shell
+./submission_demo.sh "/dev/ttyACM0" verify
+```
+
+The application then will start selected scenario according to selected `mode of operation`. To get more information about modes please check out rust docs for `demo-client` or [live demo videos](https://drive.google.com/drive/folders/1P8kPAvXWtOB8tDGSoNAiuJpSlz0tRNEs).
+
 ## Links
 
 - Live demo - [link](https://drive.google.com/drive/folders/1P8kPAvXWtOB8tDGSoNAiuJpSlz0tRNEs)
@@ -64,7 +117,7 @@ The project consists of two parts: a host application and device firmware. After
 - [J-Link software pack](https://www.segger.com/products/debug-probes/j-link/tools/j-link-software/)
 - [usbpid](https://learn.microsoft.com/en-us/windows/wsl/connect-usb) instruction
 
-### CardanoScan
+### Transactions and data from live demo on CardanoScan
 
 - [1st submitted transaction](https://preprod.cardanoscan.io/transaction/90516bf936e764cbc2cc16164d706b4c542cacec76b9fc45c679b191e0fdd414) - id `90516bf936e764cbc2cc16164d706b4c542cacec76b9fc45c679b191e0fdd414`
 - [2nd submitted transaction](https://preprod.cardanoscan.io/transaction/377f5e7bb8a2f865748a9456d6ad4ae9a6585dc94ea8b35e8a64dffc1e23ceab) - id `377f5e7bb8a2f865748a9456d6ad4ae9a6585dc94ea8b35e8a64dffc1e23ceab`
