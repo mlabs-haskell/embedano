@@ -10,6 +10,7 @@ This is an open-source software platform for embedded devices on the Cardano blo
 - [Core library](./docs/embedano-api-tour.md)
 - [Example project that uses core library and `cardano-cli` to enable Cardano network interactions on nRF52 Series chip](./MILESTONE-3-EXAMPLE-APPLICATION.md). Check out live demo in the "links" section.
 - [Modification of example project that streams transaction body for signing](./MILESTONE-4-TRANSACTION-STREAMING.md). Check out live demo in the "links" section.
+- [Development environments](./docs/development.md)
 
 ## Acknowledgements
 
