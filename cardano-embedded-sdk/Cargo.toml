@@ -10,6 +10,7 @@ ed25519-bip32 = { version = "0.4.1", path = "../rust-ed25519-bip32" }
 hex = { version = "0.4.0", features = ["alloc"], default-features = false }
 rand_core = { version = "0.6.4", default-features = false }
 derivation-path = { version = "0.2.0", default-features = false }
+minicbor = { version = "0.19.0", default-features = false, features = ["alloc", "derive"] }
 
 cfg-if = "1.0.0"
 

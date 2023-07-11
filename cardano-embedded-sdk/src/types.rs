@@ -15,6 +15,7 @@ pub struct TxIdParseError {
     message: String,
 }
 
+#[derive(Debug)]
 pub struct TxId([u8; 32]);
 
 impl TxId {
@@ -46,6 +47,14 @@ impl TxId {
     pub fn to_hex(&self) -> String {
         hex::encode(self.0)
     }
+}
+
+type TransactionIndex = u32;
+
+#[derive(Debug)]
+pub struct TransactionInput {
+    pub transaction_id: TxId,
+    pub index: TransactionIndex,
 }
 
 #[allow(dead_code)]

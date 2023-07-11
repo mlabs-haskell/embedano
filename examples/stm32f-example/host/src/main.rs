@@ -124,7 +124,7 @@ fn send(port: &mut Box<dyn SerialPort>, value: In) {
     for chunk in data.chunks(64) {
         port.write(&chunk).unwrap();
     }
-//    port.flush().unwrap();
+    //    port.flush().unwrap();
     println!("{value:#?}\nSent: {len}");
 }
 

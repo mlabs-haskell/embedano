@@ -4,6 +4,8 @@ members = [
 	"rust-ed25519-bip32",
 	"examples/nrf52-demo/demo-client",
 	"examples/nrf52-demo/embedano-device",
+	"examples/nrf52-stream/stream-client",
+	"examples/nrf52-stream/stream-device",
 	"examples/stm32f-example/device",
   "examples/stm32f-example/host",
   "examples/qemu-example",
