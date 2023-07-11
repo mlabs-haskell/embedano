@@ -1,7 +1,6 @@
 #![no_std]
 
 extern crate alloc;
-use alloc::fmt::format;
 use alloc::{format, string::String, vec::Vec};
 use core::prelude::rust_2021::derive;
 use cortex_m_semihosting::hprintln;

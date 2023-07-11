@@ -50,7 +50,7 @@ pub fn make_unsigned_tx(
     Transaction::new(&tx_body, &TransactionWitnessSet::new(), None)
 }
 
-pub fn make_signed_tx(
+pub fn _make_signed_tx(
     unsigned_tx: &Transaction,
     signer_pub_key: &XPubKey,
     signature: Vec<u8>,

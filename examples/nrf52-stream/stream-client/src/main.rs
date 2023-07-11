@@ -1,16 +1,12 @@
-use std::collections::HashMap;
-
 use cardano_embedded_sdk::crypto::Ed25519Signature;
 use cardano_serialization_lib::{
     address::{Address, EnterpriseAddress, StakeCredential},
     crypto::Ed25519KeyHash,
-    plutus::{PlutusData, PlutusDatumSchema},
 };
 
-use clap::{command, Parser, ValueEnum};
+use clap::{command, Parser};
 use derivation_path::DerivationPath;
 use node_client::{Network, NodeClient};
-use serde_json::{from_str, Value};
 
 use crate::device::Device;
 

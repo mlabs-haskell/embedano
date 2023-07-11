@@ -1,8 +1,7 @@
-use std::result;
 use std::{thread, time::Duration};
 
 use cardano_embedded_sdk::tx_stream::{TxEntry, TxStream};
-use cardano_embedded_sdk::types::{TxId, XPubKey};
+use cardano_embedded_sdk::types::XPubKey;
 use cardano_serialization_lib::utils::BigNum;
 use cardano_serialization_lib::{Transaction, TransactionInputs};
 use derivation_path::DerivationPath;
