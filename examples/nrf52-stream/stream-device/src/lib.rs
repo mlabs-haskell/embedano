@@ -190,7 +190,7 @@ fn process_tx_entry(
 fn prompt_confirmation(confirmation_message: String) {
     hprintln!(
         "\n----- Display -----------------------
-        \n {}
+        \n{}
         \nConfirm - button-1 | Reject - button-2
         \n--------------------------------------",
         confirmation_message

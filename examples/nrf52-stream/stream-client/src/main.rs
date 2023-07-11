@@ -41,7 +41,6 @@ struct Args {
 }
 
 fn main() {
-    println!("test");
     let args = Args::parse();
 
     let mnemonics = args.mnemonics;
@@ -139,6 +138,17 @@ fn build_and_stream_tx(
     }
 
     println!("Streaming unsigned transaction to the device - 2");
+    let stream_result = device.stream_tx(&unsigned_tx, password, derivation_path);
+    match stream_result {
+        Ok(signature) => {
+            println!("Transaction was streamed to device successfully!");
+            let sig = Ed25519Signature::from_bytes(signature).unwrap();
+            println!("Signature: {:?}", sig);
+        }
+        Err(msg) => println!("Transaction stream failed: {}", msg),
+    }
+
+    println!("Streaming unsigned transaction to the device - 3");
     let stream_result = device.stream_tx(&unsigned_tx, password, derivation_path);
     match stream_result {
         Ok(signature) => {

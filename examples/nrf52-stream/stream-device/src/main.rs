@@ -151,7 +151,7 @@ fn main() -> ! {
                 },
 
                 State::Exec(In::Init(mnemonics)) => {
-                    hprintln!("Firmware: initializing device");
+                    hprintln!("Firmware: Initializing device");
                     let result = Mnemonics::from_string(&dictionary::ENGLISH, &mnemonics)
                         .map(|v| Entropy::from_mnemonics(&v))
                         .flatten()
@@ -159,7 +159,7 @@ fn main() -> ! {
                     let out = if let Err(e) = result {
                         Out::Error(format!("Decode mnemonics failed: {e}"))
                     } else {
-                        hprintln!("Firmware: device initialized with mnemonics");
+                        hprintln!("Firmware: Device initialized with mnemonics");
                         Out::Init
                     };
                     state = State::Write(Data::Head(minicbor::to_vec(&out).unwrap()));

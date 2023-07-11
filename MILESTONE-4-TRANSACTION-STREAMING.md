@@ -7,7 +7,7 @@
   - [Running the demo](#running-the-demo)
     - [Starting USB device](#starting-usb-device)
     - [Running host client appliation](#running-host-client-appliation)
-  - [Gap analysis](#gap-analysis)
+  - [Gaps and improvements](#gaps-and-improvements)
 
 ## Example application
 
@@ -22,11 +22,13 @@ The main difference is that now instead of calculating transaction ID on the cli
 - When device receives end-fo-the-stream message, it will finalize rolling hash computation and obtain transaction ID. Then device will ask the user (again through "simulated" screen) to confirm final transaction ID. If ID is confirmed, device will use password, derivation path and stored in memory entropy (seed phrase) to sign transaction ID and send signature back to the client.
 - Depending on message received from the device, client will output signature or error to the terminal
 
+More information about why transaction body streaming is required and what tools are currently available can found under [CIP-21 document](https://cips.cardano.org/cips/cip21/).
+
 ### Current limitations
 
-Due to the big amount of work required to write serialization for each and every part of the transaction body and lack of the resources, current example implements streaming only for transaction inputs and fee. So resulting transaction ID will serve just as an example and source of the data to sign (real transaction ID should contain hash of the whole body).
+During development we realized that amount of work required to write serialization for each and every part of the transaction body is bigger than resources available in our disposal. Current example implements streaming only for transaction inputs and fee. So resulting transaction ID will serve just as an example and source of the data to sign (real transaction ID should contain hash of the whole body).
 
-`cardano-embedded-sdk` was extended by `tx_stream.rs` module. It describes types that enable streaming of transaction inputs and fee over the USB connection. Client-device messaging protocol was also extended to be able to transfer new types described in `cardano-embedded-sdk` so both sides can act accordingly. `tx_stream.rs` and messaging protocol can be further extended to enable serialization and transmission of the rest required parts of transaction body.
+`cardano-embedded-sdk` was extended by `tx_stream.rs` module. It describes types that enable streaming of transaction inputs and fee over the USB connection. Client-device messaging protocol was also extended to be able to transfer new types described in `cardano-embedded-sdk` so both sides can act accordingly. `tx_stream.rs` and messaging protocol can be further extended to enable serialization and transmission of the rest required parts of transaction body. Processing pipelines on both device firmware and client application in the example are implemented in extendable way also.
 
 ## Firmware and client application code changes
 
@@ -40,7 +42,7 @@ There are couple key changes in the codebase of firmware and client application 
 
 ## Running the demo
 
-The easiest way to run the demo is to use Nix as it provides ready-to-go setup. The following instruction uses Nix with flake.
+The easiest way to run the demo is to use Nix as repository provides ready-to-go Nix setup. The following instructions use Nix with flake.
 
 From the root of the project enter Nix shell
 
@@ -48,7 +50,7 @@ From the root of the project enter Nix shell
 nix develop
 ```
 
-To flash firmware some prior setup is required that will depend on yor hardware and software. To see example for `NRF52 development kit board` + `WSL2 Debian` check out [live demo for Milestone 3](https://drive.google.com/drive/folders/1P8kPAvXWtOB8tDGSoNAiuJpSlz0tRNEs).
+To flash firmware to the device some prior setup is required. Setup will highly depend on yor hardware and software. To see example for `NRF52 development kit board` + `WSL2 Debian` check out [live demo for Milestone 3](https://drive.google.com/drive/folders/1P8kPAvXWtOB8tDGSoNAiuJpSlz0tRNEs).
 
 Current setup uses [this cargo config](./examples/nrf52-stream/stream-device/.cargo/config.toml) and [this script.gdb](./examples/nrf52-stream/stream-device/script.gdb) to run `gdb` and flash firmware when `cargo run` is executed.
 
@@ -81,28 +83,28 @@ You can adjust `script.gdb` to not to create breakpoint and just run firmware ri
 
 ### Running host client appliation
 
-In the second terminal cd to main stream example directory:
+In the second terminal `cd` to main stream example directory:
 
 ```shell
 cd examples/nrf52-stream
 ```
 
-This directory contains script [submission_demo.sh](./examples/nrf52-stream/submission_demo.sh)` which is shortcut to run client application. You will need to pass device serial port as an argument. E.g.:
+This directory contains script [submission_demo.sh](./examples/nrf52-stream/submission_demo.sh) which is shortcut to run client application. You will need to pass device serial port as an argument. E.g.:
 
 ```shell
 ./submission_demo.sh "/dev/ttyACM0"
 ```
 
-Application client then will attempt to initialize device, build transaction and stream it twice to the device so it is possible to try both scenarios:
+Application client then will attempt to initialize device, build transaction and stream it three times to the device so it is possible to try each of the following scenarios:
 
-- when all streamed entries and final transaction ID are confirmed - device will return signature
-- when any streamed entry or transaction is is discarded - device will return an error and streaming will be cancelled
+- All streamed entries and final transaction ID are confirmed - device will return signature
+- Any streamed entry is discarded by the user - device will return an error and streaming will be cancelled
+- Final transaction ID calulated by device is discarded by the user - device will return an error
 
-## Gap analysis
+## Gaps and improvements
 
-scratch:
-
-- Full body streaming possibility
-- Hasher should control what entries it hashes to make sure things are CIP-21 compliant
-- Protocol schema duplication in device and client libraries - should be extracted to some "common" package?
-
+- Full support for transaction body streaming. Biggest gap currently. Current codebase is extendable, but required work is very time-consuming.
+- Current hasher used for rolling hash calculation is very basic. Production-ready solution should track what entities were serialized and what is current entity to make sure transaction body confirms [CIP-21](https://cips.cardano.org/cips/cip21/). In case if it is not, streaming should be cancelled, rolling hash reset and error sent to the client.
+- In both [nrf52-demo milestone 3](./examples/nrf52-demo/) and [nrf52-stream milestone 4](./examples/nrf52-stream/) examples there is duplication in types describing communication protocol. Dis duplication can be extracted to own package or become part of the core [cardano-embedded-sdk](./cardano-embedded-sdk/) library.
+- [nrf52-demo milestone 3](./examples/nrf52-demo/) and [nrf52-stream milestone 4](./examples/nrf52-stream/) examples can be merged into the single one after streaming for the whole transaction body is implemented
+- testing can be further expanded with automated tests or the real hardware, see [corresponding issue](https://github.com/mlabs-haskell/embedano/issues/31)
