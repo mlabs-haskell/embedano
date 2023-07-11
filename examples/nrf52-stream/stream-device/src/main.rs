@@ -2,16 +2,22 @@
 #![no_std]
 #![feature(result_flattening)]
 
+use alloc::string::ToString;
+use cardano_embedded_sdk::tx_stream as embedano;
 use cortex_m_semihosting::hprintln;
 
+use nrf52840_hal::gpio::{Input, Pin, PullUp};
+use nrf52840_hal::gpiote::Gpiote;
 use nrf52840_hal::Temp;
 use panic_halt as _;
 
 use alloc_cortex_m::CortexMHeap;
 
 use cortex_m_rt::entry;
+use embedded_hal::digital::v2::InputPin;
 use nrf52840_hal::clocks::Clocks;
 use nrf52840_hal::usbd::{UsbPeripheral, Usbd};
+use stream_device::mock_hasher::MockHahser;
 use usb_device::class_prelude::UsbBusAllocator;
 use usb_device::device::{UsbDeviceBuilder, UsbVidPid};
 use usb_device::UsbError;
@@ -22,7 +28,7 @@ use cardano_embedded_sdk::bip::bip39::{dictionary, Entropy, Mnemonics};
 extern crate alloc;
 use alloc::{format, vec, vec::Vec};
 
-use embedano_device::*;
+use stream_device::*;
 
 #[global_allocator]
 static ALLOCATOR: CortexMHeap = CortexMHeap::empty();
@@ -54,7 +60,13 @@ fn main() -> ! {
     let mut entropy: Option<Entropy> = None;
     let mut temp_sensor = Temp::new(periph.TEMP);
 
+    let p0 = nrf52840_hal::gpio::p0::Parts::new(periph.P0);
+    let confirm_button = p0.p0_11.into_pullup_input().degrade();
+    let reject_button = p0.p0_12.into_pullup_input().degrade();
+
     let mut state = State::Read(Data::Head(vec![]));
+
+    let mut hasher = MockHahser::new();
 
     // Main loop that polls USB and process requests from the host
     loop {
@@ -139,7 +151,7 @@ fn main() -> ! {
                 },
 
                 State::Exec(In::Init(mnemonics)) => {
-                    hprintln!("Firmware: initializing device");
+                    hprintln!("Firmware: Initializing device");
                     let result = Mnemonics::from_string(&dictionary::ENGLISH, &mnemonics)
                         .map(|v| Entropy::from_mnemonics(&v))
                         .flatten()
@@ -147,7 +159,7 @@ fn main() -> ! {
                     let out = if let Err(e) = result {
                         Out::Error(format!("Decode mnemonics failed: {e}"))
                     } else {
-                        hprintln!("Firmware: device initialized with mnemonics");
+                        hprintln!("Firmware: Device initialized with mnemonics");
                         Out::Init
                     };
                     state = State::Write(Data::Head(minicbor::to_vec(&out).unwrap()));
@@ -198,6 +210,22 @@ fn main() -> ! {
                     };
                     state = State::Write(Data::Head(minicbor::to_vec(&out).unwrap()));
                 }
+                State::Exec(In::Stream(ref stream_item)) => {
+                    let out = if let Some(entropy) = &entropy {
+                        hprintln!("Firmware: Processing streamed transaction entry");
+                        process_stream_item(
+                            stream_item.clone(),
+                            &mut hasher,
+                            entropy,
+                            &confirm_button,
+                            &reject_button,
+                        )
+                    } else {
+                        Out::Error(format!("Sign failed: no entropy"))
+                    };
+                    await_release(vec![&confirm_button, &reject_button]);
+                    state = State::Write(Data::Head(minicbor::to_vec(&out).unwrap()));
+                }
             }
             usb_dev.poll(&mut [&mut serial]);
         }
@@ -210,4 +238,10 @@ fn chain_data_bytes(a: i32, b: u64) -> Vec<u8> {
         .into_iter()
         .chain(b.to_be_bytes().into_iter())
         .collect::<Vec<u8>>()
+}
+
+fn await_release(pins: Vec<&Pin<Input<PullUp>>>) {
+    for pin in pins {
+        while pin.is_low().unwrap() {}
+    }
 }

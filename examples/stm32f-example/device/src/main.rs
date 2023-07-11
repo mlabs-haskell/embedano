@@ -182,7 +182,7 @@ fn main() -> ! {
                             state = State::Read(Data::Head(data));
                         }
                         Err(e) => {
-                            let out = Out::Error(format!("Decode mnemonics failed: {e:?}"));
+                            let out = Out::Error(format!("Serial port read failed on Head: {e:?}"));
                             state = State::Write(Data::Head(minicbor::to_vec(&out).unwrap()));
                         }
                     }
@@ -197,7 +197,7 @@ fn main() -> ! {
                             state = State::Exec(exec);
                         }
                         Err(e) => {
-                            let out = Out::Error(format!("Decode mnemonics failed: {e}"));
+                            let out = Out::Error(format!("Incoming message read failed: {e}"));
                             state = State::Write(Data::Head(minicbor::to_vec(&out).unwrap()));
                         }
                     }
@@ -217,7 +217,7 @@ fn main() -> ! {
                             state = State::Read(Data::Body(data, rest));
                         }
                         Err(e) => {
-                            let out = Out::Error(format!("Decode mnemonics failed: {e:?}"));
+                            let out = Out::Error(format!("Serial port read failed on Body: {e:?}"));
                             state = State::Write(Data::Head(minicbor::to_vec(&out).unwrap()));
                         }
                     }
@@ -255,7 +255,7 @@ fn main() -> ! {
                             state = State::Write(Data::Body(data, rest));
                         }
                         Err(e) => {
-                            let out = Out::Error(format!("Decode mnemonics failed: {e:?}"));
+                            let out = Out::Error(format!("Serial port write failed: {e:?}"));
                             state = State::Write(Data::Head(minicbor::to_vec(&out).unwrap()));
                         }
                     }
