@@ -104,7 +104,7 @@ The application client will attempt to initialize the device, build the transact
 - Any streamed entry is discarded by the user - the device will return an error and the streaming will be cancelled.
 - The final transaction ID calculated by the device is discarded by the user - the device will return an error.
 
-## Gaps and improvements
+## Gaps and possible future improvements
 
 - Full support for transaction body streaming is the biggest gap currently. The current codebase is extendable, but the required work is time-consuming.
 - The current hasher used for rolling hash calculation is very basic. A production-ready solution should track what entities were serialized and what is the current entity to ensure transaction body confirms [CIP-21](https://cips.cardano.org/cips/cip21/). If it does not, streaming should be canceled, the rolling hash reset, and an error sent to the client.
